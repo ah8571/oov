@@ -14,86 +14,137 @@ Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Us
 
 ## Roadmap & Development Phases
 
+This section is now meant to be a working product plan rather than a pure brainstorming list. The goal is to identify what is already present in the repo, what is still blocking launch, and which longer-term assistant directions should be treated as Phase 2-3 expansion rather than MVP scope.
+
 ### Table of Contents
-1. [Phase 1: MVP with Cloud Infrastructure](#phase-1-mvp-with-cloud-infrastructure)
+1. [Current Status Snapshot](#current-status-snapshot)
+2. [Phase 1: Publishable MVP with Cloud Infrastructure](#phase-1-publishable-mvp-with-cloud-infrastructure)
 2. [Phase 2: OpenClaw Integration + Enhanced Privacy](#phase-2-openclaw-integration--enhanced-privacy)
 3. [Phase 3: Completely Local & Private](#phase-3-completely-local--private)
 
 ---
 
-## Phase 1: MVP with Cloud Infrastructure
+## Current Status Snapshot
 
-### Development Features
+### Already in place in the repo
 
-1. Get connected the traditional app tools like resend, posthog, sentry
-2. figuring out address issue or starting new llc..
-2. put paywall; put together stripe connection
-3. put together texting capability with twilio text registration
-2. duns & bradstreet/ other app ready fixes
-3. faster response like it was before not sure how we modified this but to have better control
-5. tracking (GTM, utm code based on venue, affiliate page)
-6. SEO pages - Comparing AI phone assistants (as an SEO oriented page); eventually on phone assistant connection with Openclaw/ comparing options; what exactly would people be searching related to this?
-2. **Security** User authentication** – Basic user accounts and data isolation; perhaps a verification code to their email or they can add a phone number for security in the future; Encrypted database storage (Supabase default AES-256); HTTPS for all API communication
-3. **Legal pages** – Create and publish Privacy Policy and Terms of Use; **GDPR Compliance (mandatory for any EU users):**
-- [ ] Create and publish Privacy Policy (see GDPR_COMPLIANCE.md; [ ] Add consent screen before first login (users must accept data processing); [ ] Implement user rights endpoints (download data, delete account); [ ] Sign Data Processing Agreements (DPA) with Supabase, Google Cloud, OpenAI; [ ] Set up breach notification procedures (72-hour notification requirement); [ ] Document data retention policies (auto-delete after 90 days for backups): 
-**User Rights to Implement**: **Right to Access** – Users can download all their data (Settings → "Download My Data"); **Right to Deletion** – Users can delete individual calls or entire account, **Right to Portability** – Users can export data in standard format, **Right to Correction** – Users can edit their profile and notes,  **Right to Withdraw Consent** – Users can delete account anytime; **Documentation:**; See [GDPR_COMPLIANCE.md](GDPR_COMPLIANCE.md) for complete implementation guide with code examples and Privacy Policy template
-4. Exact Credit Accounting: OpenAI response usage ↓ Send to internal event queue ↓ Aggregate usage ↓ Dashboard
-OpenAI ↓ Node backend ↓ Kafka / Redis stream ↓ Clickhouse / Postgres ↓ Grafana dashboard; const response = await openai.responses.create(...)
+- [x] Backend and mobile workspaces are initialized
+- [x] Twilio / speech / OpenAI / Supabase-oriented backend structure exists
+- [x] User authentication routes and JWT middleware exist
+- [x] Mobile app has transcript, notes, call detail, settings, and upgrade surfaces
+- [x] Core value proposition is already visible in the product shape: call history, transcript review, summary display, and notes
+- [x] Usage and call-cost tracking foundations exist in backend services
+- [x] SEO comparison pages exist for discovery
 
-const tokens = response.usage.total_tokens
+### Product reality check
 
-logUsage({
-  model: "gpt-5",
-  tokens: tokens,
-  user: userId
-})
+Emmaline is closest to viability when framed as a focused voice productivity tool, not a universal assistant on day one. The publishable version should be about:
 
-"usage": {
-  "prompt_tokens": 120,
-  "completion_tokens": 75,
-  "total_tokens": 195
-}
+- calling or speaking to the assistant hands-free
+- getting transcripts, summaries, and notes back reliably
+- giving users one or two clear modes rather than ten half-built promises
 
-call_id
-user_id
-duration
-tokens_used
-cost_estimate
-model
-timestamp
-5. Scaling & Monitoring Considerations
-**Key metrics to monitor as user base grows:**
-- **Backend server CPU/memory** – Monitor for capacity limits (~10-100 concurrent calls per server)
-- **Google Cloud STT concurrent connections** – Track API quota usage (requires paid tier above certain volume)
-- **OpenAI API token usage** – Monitor spend and rate limiting (tokens/minute limits)
-- **Database connection pool limits** – Supabase connections scale with user load (upgrade plan as needed)
-- **Auto-scaling backend** (via Docker/Kubernetes) more cost-effective than adding phone numbers; Monitor these four metrics to understand when to scale each component
+That means the best near-term product framing is:
+
+1. AI phone assistant for real conversations
+2. transcript and note-taking companion
+3. optional quiet listening / transcription mode for situations where the user wants capture, not conversation
+
+---
+
+## Phase 1: Publishable MVP with Cloud Infrastructure
+
+### Phase 1 Goal
+
+Ship a product that feels coherent and useful right away: voice-first conversation, saved transcripts, summaries, notes, and a lightweight listen mode that expands use cases without requiring full virtual-assistant automation.
+
+### Phase 1 Features Already Effectively Crossed Off
+
+- [x] Bootstrap individual workspaces with package.json
+- [x] Begin backend scaffolding
+- [x] Initialize React Native mobile app
+- [x] Basic user authentication foundation
+- [x] Transcript timeline, call detail, and notes UI foundations
+- [x] Exact usage / token / duration accounting foundation
+- [x] Upgrade / billing surface foundation
+- [x] SEO pages for AI phone assistant discovery
+
+### Phase 1 Publish Blockers
+
+These are the major items still worth focusing on to make the app viable rather than just technically interesting.
+
+1. Product mode clarity
+- [ ] Lock the Phase 1 product into two explicit user-facing modes:
+  - Call mode: talk with the AI assistant
+  - Listen mode: silent transcript / note-taking / summary capture
+- [ ] Add a listening / transcription mode as a first-class option in the app
+- [ ] Make sure summaries and notes are generated cleanly from both modes
+
+2. Reliability and responsiveness
+- [ ] Improve response speed and perceived responsiveness during live calls
+- [ ] Tighten transcript streaming reliability and end-of-call save behavior
+- [ ] Reduce the number of visible "processing" gaps that make the product feel unfinished
+
+3. Billing and monetization
+- [ ] Turn the upgrade / paywall foundation into a real purchasable flow
+- [ ] Decide whether RevenueCat, Superwall, or a simpler first-party gating approach is the Phase 1 path
+- [ ] Make usage limits understandable to users
+
+4. Tracking, monitoring, and launch instrumentation
+- [ ] Connect the standard launch tooling stack: Resend, PostHog, Sentry
+- [ ] Implement attribution and campaign tracking correctly:
+  - GTM / UTM on the website
+  - app analytics and install attribution in the app itself
+- [ ] Track the key funnel events: signup, trial/upgrade intent, call started, call completed, note created
+
+5. Legal and trust requirements
+- [ ] Publish Privacy Policy and Terms of Use
+- [ ] Add first-run consent for data processing
+- [ ] Implement minimum account-level deletion / export planning for privacy compliance
+- [ ] Finish the launch-safe subset of GDPR work before broad distribution
+
+### Phase 1 Scope To Defer Unless It Becomes Essential
+
+- [ ] Text chat with the AI assistant
+- [ ] Twilio text registration or SMS-based assistant flow
+- [ ] Dedicated personal phone number per user
+- [ ] Deep affiliate or venue-specific attribution systems
+
+### Phase 1 Positioning Notes
+
+The strongest publishable story is not "do everything a virtual assistant can do." It is:
+
+- hands-free AI conversation when the user wants to talk
+- quiet capture mode when the user wants transcription and notes
+- persistent transcripts, summaries, and notes after the session ends
+
+That is already a meaningful product lane, and it is easier to message than promising receptionist, translator, developer assistant, and legal assistant capabilities all at once.
 
 ---
 
 ## Phase 2: OpenClaw Integration + Enhanced Privacy
 
-- **Language teacher capability** supposedly a 'pair' option for languages to listen for is possible with STT
-- **Dedicated phone number** (need security implementation of only certain phone numbers it will interact with; also a security code)
-- **Text chat interface** – Message the AI bot in addition to calling
-- Email sorting and summarization via voice
-- Code project initiation on the go
-- Developer-focused virtual assistant features
-- Expanded multitasking for busy developers
+### Phase 2 Goal
+
+Extend the MVP into a more capable assistant without losing the core voice-and-notes workflow.
+
+### Phase 2 Product Expansion
+
+- Dedicated phone number and trusted-caller security model
+- Text chat interface alongside calling
+- Better conversation memory, topic organization, and search
+- Better summarization: action items, sentiment, context, structured outputs
 - OpenClaw ecosystem integration
-- Advanced conversation history and context retention
-- Topic-based conversation organization
+- Email sorting and summarization via voice
+- Developer-focused assistant tasks such as code project initiation on the go
+- Language-support experiments, including translation or language-teacher flows where speech tooling makes sense
 
 **Improvements:**
-- Better summarization (action items, sentiment, context)
+
 - Conversation search and filtering
 - Integration with developer tools (GitHub, email, project management)
-- Chat interface for text-based conversations (same AI, same notes)
-  - Send/receive messages from mobile app
-  - Real-time chat with AI buddy
-  - Auto-generate notes and summaries from chat
-  - Similar timeline view as voice calls
-  - Useful for quiet environments or when speaking isn't available
+- Chat interface for text-based conversations using the same note system
+- More structured output from both calls and listen sessions
 
 ### Privacy Model: Tier 2 - Enhanced Privacy with Local Options
 
@@ -127,6 +178,10 @@ timestamp
 
 ## Phase 3: Completely Local & Private
 
+### Phase 3 Goal
+
+Turn Emmaline from a focused phone companion into a broader assistant platform with local/privacy-first deployment options and specialized product tracks.
+
 ### Development Features
 
 - Full on-device AI conversation (no external API calls)
@@ -135,6 +190,29 @@ timestamp
 - Local LLM for responses (using models like Llama 2, Mistral)
 - Entirely self-contained system
 - Offline-capable (no internet required after initial setup)
+
+### Phase 3 Product Outlets
+
+These are interesting longer-term assistant directions, but they should be treated as extensions of the core product rather than launch promises.
+
+- Flexible virtual assistant layer for everyday coordination
+- Real-time translation workflows
+- Receptionist / front-desk mode
+  - handle bookings
+  - route problems to managers
+  - escalate based on business rules
+- Specialist assistant tracks built on the same voice / transcript / notes core:
+  - Lawyer specialization: review work, document drafting, intake
+  - Coder specialization: developer execution and project support
+  - Customer support agent: triage, response suggestions, escalation
+
+### Phase 3 Strategy Note
+
+The specialized assistants should not be treated as separate apps at first. The better path is:
+
+1. prove the core interaction model with call mode + listen mode + notes
+2. prove retention around transcripts and summaries
+3. add specialist workflows on top of the same infrastructure once the base product is stable
 
 ### Privacy Model: Tier 3 - Completely Local & Private
 
@@ -199,8 +277,13 @@ timestamp
 1. ✅ Define folder architecture (complete)
 2. ✅ Plan privacy model (complete)
 3. ✅ Create roadmap with phases (complete)
-4. Bootstrap individual workspaces with package.json
-5. Plan database schema
-6. Begin backend scaffolding
-7. Initialize React Native mobile app
-8. Design API contracts
+4. ✅ Bootstrap individual workspaces with package.json
+5. ✅ Begin backend scaffolding
+6. ✅ Initialize React Native mobile app
+7. ✅ Establish authentication, transcript, notes, and call detail foundations
+8. Finish Phase 1 publish blockers in this order:
+  - legal / privacy / consent
+  - billing and upgrade flow
+  - listen mode
+  - responsiveness and reliability tuning
+  - launch analytics and monitoring
