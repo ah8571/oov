@@ -119,11 +119,7 @@ const AppHome = ({ onLogout }) => {
     setUiState((currentState) => ({
       ...currentState,
       activeScreen: screen,
-      menuOpen: false,
-      transcriptStackVersion: screen === 'transcripts' ? currentState.transcriptStackVersion + 1 : currentState.transcriptStackVersion,
-      transcriptResetToken: screen === 'transcripts' ? currentState.transcriptResetToken + 1 : currentState.transcriptResetToken,
-      notesStackVersion: screen === 'notes' ? currentState.notesStackVersion + 1 : currentState.notesStackVersion,
-      notesResetToken: screen === 'notes' ? currentState.notesResetToken + 1 : currentState.notesResetToken
+        menuOpen: false
     }));
   };
 

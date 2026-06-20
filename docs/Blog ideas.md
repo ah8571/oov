@@ -1,0 +1,1 @@
+why chatgpt and other agents may be better language partners than google translate (re nuance, understanding what phrasing is more natural/ common/ being able to explain why something is the way it is etc.)

@@ -14,6 +14,30 @@ const API_BASE_URL =
   'http://localhost:3000/api';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
+const formatApiError = (error, fallbackMessage) => {
+  if (error.response?.data?.error) {
+    return error.response.data.error;
+  }
+
+  if (error.message === 'Network Error') {
+    return `Network error reaching ${API_BASE_URL}. Check backend health and the app's API configuration.`;
+  }
+
+  return error.message || fallbackMessage;
+};
+
+const logApiRequest = (method, path, details = {}) => {
+  console.log(`[API] ${method.toUpperCase()} ${API_BASE_URL}${path}`, details);
+};
+
+const logApiFailure = (method, path, error) => {
+  console.error(`[API] ${method.toUpperCase()} ${API_BASE_URL}${path} failed`, {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data || null
+  });
+};
+
 /**
  * Create axios instance with default config
  */
@@ -51,6 +75,7 @@ const removeTokenFromHeaders = () => {
  */
 export const registerUser = async (email, password) => {
   try {
+    logApiRequest('post', '/auth/register', { email });
     const response = await apiClient.post('/auth/register', { email, password });
 
     // Save token and user info
@@ -64,9 +89,10 @@ export const registerUser = async (email, password) => {
       token: response.data.token
     };
   } catch (error) {
+    logApiFailure('post', '/auth/register', error);
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Registration failed')
     };
   }
 };
@@ -76,6 +102,7 @@ export const registerUser = async (email, password) => {
  */
 export const loginUser = async (email, password) => {
   try {
+    logApiRequest('post', '/auth/login', { email });
     const response = await apiClient.post('/auth/login', { email, password });
 
     // Save token and user info
@@ -89,9 +116,10 @@ export const loginUser = async (email, password) => {
       token: response.data.token
     };
   } catch (error) {
+    logApiFailure('post', '/auth/login', error);
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Login failed')
     };
   }
 };
@@ -111,7 +139,7 @@ export const getCurrentUser = async () => {
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Failed to load current user')
     };
   }
 };
@@ -135,7 +163,7 @@ export const refreshAuthToken = async () => {
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Failed to refresh token')
     };
   }
 };
@@ -179,7 +207,7 @@ export const getCalls = async (limit = 50, offset = 0) => {
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Failed to load calls')
     };
   }
 };
@@ -199,7 +227,7 @@ export const getCallDetail = async (callId) => {
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Failed to load call details')
     };
   }
 };
@@ -244,7 +272,7 @@ export const getBillingStatus = async () => {
   } catch (error) {
     return {
       success: false,
-      error: error.response?.data?.error || error.message
+      error: formatApiError(error, 'Failed to fetch voice token')
     };
   }
 };

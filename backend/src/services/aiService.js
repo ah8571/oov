@@ -30,7 +30,21 @@ const getOpenAIClient = () => {
 const getChatModel = () => process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini';
 const getSummaryModel = () => process.env.OPENAI_SUMMARY_MODEL || getChatModel();
 
+const isTeacherLanguagePreference = (languagePreference) => {
+  return String(languagePreference || '').toLowerCase().includes('teacher');
+};
+
 const getLanguageInstruction = (languagePreference) => {
+  if (isTeacherLanguagePreference(languagePreference)) {
+    return [
+      'You are in English-Spanish teacher mode for beginners.',
+      'Default to English for explanations and structure, but provide Spanish examples naturally when asked.',
+      'When the user asks how to say something in Spanish, say the Spanish phrase first, then give a short English explanation or translation.',
+      'Keep bilingual replies short, clear, and easy to repeat out loud.',
+      'Prefer simple Spanish phrasing and gentle coaching over long grammar lectures.'
+    ].join(' ');
+  }
+
   return String(languagePreference || '').toLowerCase().startsWith('es')
     ? 'Respond in Spanish.'
     : 'Respond in English.';
@@ -52,6 +66,10 @@ const getNoteCapabilityInstruction = (options = {}) => {
 };
 
 const getNoteLanguageInstruction = (languagePreference) => {
+  if (isTeacherLanguagePreference(languagePreference)) {
+    return 'Write note content in English by default, but preserve short Spanish examples or vocabulary when they are important to the lesson.';
+  }
+
   return String(languagePreference || '').toLowerCase().startsWith('es')
     ? 'Write note content in Spanish.'
     : 'Write note content in English.';
@@ -121,9 +139,11 @@ export const generateResponse = async (conversationHistory, options = {}) => {
 };
 
 export const summarizeTranscript = async (fullTranscript, options = {}) => {
-  const summaryLanguageInstruction = String(options.languagePreference || '').toLowerCase().startsWith('es')
-    ? 'Return the summary, key points, and action items in Spanish. Preserve the participant\'s Spanish phrasing where it is natural to do so.'
-    : 'Return the summary, key points, and action items in English.';
+  const summaryLanguageInstruction = isTeacherLanguagePreference(options.languagePreference)
+    ? 'Return the summary, key points, and action items in English by default, while preserving useful Spanish phrases or vocabulary examples from the lesson.'
+    : String(options.languagePreference || '').toLowerCase().startsWith('es')
+      ? 'Return the summary, key points, and action items in Spanish. Preserve the participant\'s Spanish phrasing where it is natural to do so.'
+      : 'Return the summary, key points, and action items in English.';
 
   const summaryPrompt = `
 Please analyze the following conversation and provide:

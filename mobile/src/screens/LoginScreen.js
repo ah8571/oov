@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { loginUser, registerUser } from '../services/api.js';
 
 /**
@@ -21,13 +22,20 @@ const LoginScreen = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleAuth = async () => {
     setLoading(true);
     setError('');
 
     try {
+      console.log('[Auth] Submit pressed', {
+        mode: isLogin ? 'login' : 'register',
+        email: email.trim().toLowerCase()
+      });
+
       if (!email || !password) {
+        console.warn('[Auth] Validation failed: missing email or password');
         setError('Please fill in all fields');
         setLoading(false);
         return;
@@ -37,13 +45,20 @@ const LoginScreen = ({ onLoginSuccess }) => {
         ? await loginUser(email.trim().toLowerCase(), password)
         : await registerUser(email.trim().toLowerCase(), password);
 
+      console.log('[Auth] Response received', {
+        success: response.success,
+        error: response.error || null
+      });
+
       if (!response.success) {
         setError(response.error || 'Authentication failed');
         return;
       }
 
+      console.log('[Auth] Login success, handing user to app shell');
       onLoginSuccess(response.user);
     } catch (err) {
+      console.error('[Auth] Unexpected exception', err);
       setError(err.message || 'Authentication failed');
     } finally {
       setLoading(false);
@@ -73,15 +88,30 @@ const LoginScreen = ({ onLoginSuccess }) => {
             editable={!loading}
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#8f98a3"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-          />
+          <View style={styles.passwordField}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor="#8f98a3"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={styles.passwordToggle}
+              onPress={() => setShowPassword((current) => !current)}
+              disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#b0b7c0"
+              />
+            </TouchableOpacity>
+          </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -165,6 +195,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
     color: '#f5f7fa'
+  },
+  passwordField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#050607',
+    borderWidth: 1,
+    borderColor: '#f5f7fa',
+    borderRadius: 10,
+    marginBottom: 12,
+    paddingLeft: 16
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingRight: 12,
+    fontSize: 14,
+    color: '#f5f7fa'
+  },
+  passwordToggle: {
+    paddingHorizontal: 16,
+    paddingVertical: 14
   },
   errorText: {
     color: '#ff9aa8',

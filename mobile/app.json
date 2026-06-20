@@ -3,7 +3,7 @@
     "name": "Emmaline",
     "slug": "emmaline",
     "version": "0.1.0",
-    "icon": "./assets/launch-splash-icon.png",
+    "icon": "./assets/app-icon-padded.png",
     "newArchEnabled": false,
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
       "**/*"
     ],
     "ios": {
-      "icon": "./assets/launch-splash-icon.png",
+      "icon": "./assets/app-icon-padded.png",
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Emmaline needs microphone access so you can talk to your AI assistant during in-app calls."
@@ -22,8 +22,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/launch-splash-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/app-icon-padded.png",
+        "backgroundColor": "#050607"
       },
       "permissions": [
         "RECORD_AUDIO",

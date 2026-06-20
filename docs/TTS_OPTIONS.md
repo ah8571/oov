@@ -3,79 +3,40 @@
 ## Goal
 Choose a voice provider that sounds natural for real-time phone conversations in Emmaline.
 
-## Shortlist
+## multilingual support [Gemini]
 
-### 1) ElevenLabs
-- Best-in-class naturalness/prosody for conversational voices.
-- Strong voice quality across accents and emotional tone.
-- Good fit if voice quality is the top priority.
-- Tradeoff: can be more expensive and requires careful latency tuning for live calls.
+Advanced Speech-to-Text (STT) for Real-Time Code-Switching
 
-### 2) OpenAI TTS
-- Very strong overall quality and consistency.
-- Clean integration if OpenAI is already used for response generation.
-- Good developer experience and straightforward API usage.
-- Tradeoff: naturalness can be slightly behind top ElevenLabs voices for some use cases.
+The following modern APIs accept a streaming audio feed and dynamically transcribe multiple languages within the same session without requiring manual toggling:
 
-### 3) Cartesia
-- Optimized for low-latency conversational output.
-- Good balance of quality + speed for real-time interaction.
-- Good option when responsiveness is a primary constraint.
-- Tradeoff: voice catalog/style controls are narrower than larger providers.
+Deepgram Flux Multilingual: Purpose-built specifically for live conversational AI voice agents. It handles up to 10 core languages in a single streaming session, adapting dynamically mid-stream as the conversation evolves, while maintaining ultra-low latency.
 
-### 4) PlayHT
-- Good quality and broad voice library.
-- Useful when you need many voice personas quickly.
-- Tradeoff: quality can vary between voices/models.
+AssemblyAI Universal-Streaming: Capable of real-time code-switching across six major languages (English, Spanish, French, German, Italian, Portuguese). It handles language transitions in a single forward pass without delays, making it highly effective for mixed-language speech.
 
-### 5) Google Cloud Text-to-Speech
-- Reliable enterprise platform with broad language coverage.
-- Already present in this codebase.
-- Good baseline quality and stable infra.
-- Tradeoff: often less expressive than top specialized conversational providers.
+Soniox v5 Real-Time: Designed for messy, real-world live environments. It natively supports real-time speaker separation and automatically detects and tracks over 60 languages as they happen without losing transcription accuracy.
 
-### 6) Azure Neural TTS
-- Strong enterprise option with broad region/language support.
-- Good quality, SSML controls, and compliance tooling.
-- Tradeoff: voice “human-ness” can still trail top premium options in some A/B tests.
+2. Text-to-Speech (TTS) with Multilingual Fluency
+For the output side, standard TTS engines sound robotic or completely break down if text contains a foreign word. You need a single model variant that handles multiple languages fluently:
 
-## Recommended path for Emmaline
-1. Start A/B testing with **ElevenLabs** and **OpenAI TTS**.
-2. Keep **Google Cloud TTS** as a fallback because it is already scaffolded.
-3. Evaluate with call-specific metrics:
-   - perceived naturalness,
-   - turn latency,
-   - interruption handling,
-   - cost per minute.
+ElevenLabs Multilingual v2: Widely considered the gold standard for emotional, lifelike voice synthesis. A single voice profile can read text in 29+ languages flawlessly, maintaining the exact same voice persona, accent adjustments, and emotional tone across language changes. Standard ElevenLabs models (like Turbo v2 or Flash v2) are optimized purely for English. If they encounter Spanish, they will read the Spanish words using harsh, phonetic English rules (e.g., pronouncing "buenos" like "bway-nos").The Fix: You must explicitly pass eleven_multilingual_v2 or eleven_flash_v2_5 as the model_id. These models automatically detect the language transitions at a syllable level and switch pronunciation rules instantly
 
-## Provider toggle now available in backend
-Set these values in backend environment:
+OpenAI GPT-4o Realtime API: If you want an all-in-one system, this natively combines STT, reasoning, and TTS into a single end-to-end network. It supports streaming audio in over 70 input languages and can instantly respond back with low-latency audio output, removing the need to stitch separate STT and TTS models together.
 
-```env
-TTS_PROVIDER=elevenlabs
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
-ELEVENLABS_VOICE_ID=JBFqnCBsd6RMkjVDRZzb
-ELEVENLABS_MODEL_ID=eleven_multilingual_v2
-```
+[User Audio Stream] 
+       │
+       ▼
+[Student Audio: EN + ES mixed] 
+               │
+               ▼
+   1. Deepgram Nova-3 (STT) ────► Parameter: language="multi"
+               │
+               ▼
+   2. LLM Orchestrator (System Prompt) ──► Understands code-switching & context
+               │
+               ▼
+   3. ElevenLabs Flash v2.5 (TTS) ────► Unified voice profile, ~75ms inference
+               │
+               ▼
+ [Tutor Audio: EN + ES mixed]
 
-Alternative values:
 
-```env
-TTS_PROVIDER=openai
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_TTS_MODEL=gpt-4o-mini-tts
-OPENAI_TTS_VOICE=alloy
-```
-
-```env
-TTS_PROVIDER=google
-GOOGLE_CLOUD_PROJECT_ID=your_project_id
-GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
-```
-
-## Current codebase status (important)
-- Twilio media stream transport is wired (`/ws/media-stream`).
-- OpenAI text-response service exists (`aiService.js`).
-- Google STT service exists (`speechToTextService.js`) but is not fully connected to live stream processing.
-- Multi-provider TTS service exists (`textToSpeechService.js`) with `google`, `openai`, and `elevenlabs`, but it is not yet wired into the active Twilio media loop.
-- The real-time speech pipeline in `mediaStreamHandler.js` is still TODO in key sections.

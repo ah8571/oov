@@ -8,7 +8,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Keyboard,
-  Platform
+  Platform,
+  Pressable
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';
@@ -59,6 +60,8 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const lastSavedSnapshotRef = useRef('');
   const isMountedRef = useRef(true);
   const lastNotesResetTokenRef = useRef(notesResetToken);
+  const titleInputRef = useRef(null);
+  const pendingEditorFocusRef = useRef(false);
 
   const updateSaveState = (nextValue) => {
     if (isMountedRef.current) {
@@ -248,6 +251,64 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       isActive = false;
     };
   }, [existingNote?.id]);
+
+  useEffect(() => {
+    const activeNoteId = existingNote?.id || noteIdRef.current;
+
+    if (!activeNoteId) {
+      return undefined;
+    }
+
+    let isActive = true;
+
+    const syncRemoteNote = async () => {
+      const response = await getNote(activeNoteId);
+
+      if (!isActive || !response.success || !response.note) {
+        return;
+      }
+
+      const remoteTitle = response.note.title || '';
+      const remoteContent = normalizeNoteContentToHtml(response.note.content || '', {
+        title: remoteTitle
+      });
+      const remoteSnapshot = buildSnapshot({
+        noteId: response.note.id || activeNoteId,
+        title: remoteTitle,
+        content: remoteContent,
+        topicId: response.note.topicId || null
+      });
+
+      if (remoteSnapshot === lastSavedSnapshotRef.current) {
+        return;
+      }
+
+      const localPayload = buildDraftPayload();
+      const localSnapshot = localPayload
+        ? buildSnapshot({
+            noteId: noteIdRef.current,
+            title: localPayload.title,
+            content: localPayload.content,
+            topicId: localPayload.topicId
+          })
+        : '';
+
+      if (localSnapshot && localSnapshot !== lastSavedSnapshotRef.current) {
+        return;
+      }
+
+      hydrateNote(response.note);
+    };
+
+    const unsubscribeFocus = navigation.addListener('focus', syncRemoteNote);
+    const pollId = setInterval(syncRemoteNote, 4000);
+
+    return () => {
+      isActive = false;
+      clearInterval(pollId);
+      unsubscribeFocus();
+    };
+  }, [existingNote?.id, navigation]);
 
   useEffect(() => {
     const loadTopics = async () => {
@@ -531,6 +592,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         scrollEventThrottle={16}
       >
         <TextInput
+          ref={titleInputRef}
           style={[
             styles.titleInput,
             {
@@ -544,10 +606,31 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           placeholderTextColor={colors.mutedText}
           value={title}
           onChangeText={setTitle}
+          blurOnSubmit={false}
+          onBlur={() => {
+            if (!pendingEditorFocusRef.current) {
+              return;
+            }
+
+            requestAnimationFrame(() => {
+              richTextRef.current?.focusContentEditor?.();
+            });
+          }}
           editable
         />
 
-        <View style={[styles.editorShell, { borderTopColor: colors.border }] }>
+        <Pressable
+          style={[styles.editorShell, { borderTopColor: colors.border }]}
+          onPress={() => {
+            pendingEditorFocusRef.current = true;
+            requestAnimationFrame(() => {
+              richTextRef.current?.focusContentEditor?.();
+            });
+          }}
+          onPressIn={() => {
+            pendingEditorFocusRef.current = true;
+          }}
+        >
           <RichEditor
             key={existingNote?.id || noteId || 'new-note'}
             ref={richTextRef}
@@ -563,6 +646,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               }
             }}
             onFocus={() => {
+              pendingEditorFocusRef.current = false;
               setEditorFocused(true);
               const metricsHeight = Keyboard.metrics?.()?.height || 0;
               if (metricsHeight > 0) {
@@ -571,6 +655,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               }
             }}
             onBlur={() => {
+              pendingEditorFocusRef.current = false;
               setEditorFocused(false);
             }}
             onChange={(nextContent) => {
@@ -589,7 +674,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               cssText: `body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: ${colors.background}; color: ${colors.text}; margin: 0; padding: 0; } #editor, .pell-content { font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; background-color: ${colors.background}; } p, div, li, span { margin: 0 0 12px 0; font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; } ul, ol { padding-left: 22px; margin: 0 0 12px 0; } h1 { margin: 0 0 12px 0; font-size: ${heading1Size}px; line-height: ${Math.round(heading1Size * 1.2)}px; } h2 { margin: 0 0 12px 0; font-size: ${heading2Size}px; line-height: ${Math.round(heading2Size * 1.25)}px; } h3 { margin: 0 0 12px 0; font-size: ${heading3Size}px; line-height: ${Math.round(heading3Size * 1.3)}px; }`
             }}
           />
-        </View>
+        </Pressable>
 
         {topics.length > 0 ? (
           <View style={styles.topicSelector}>

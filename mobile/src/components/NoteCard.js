@@ -22,7 +22,7 @@ const NoteCard = ({ note, onPress, noteTextScale = 1 }) => {
   return (
     <TouchableOpacity style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, { color: colors.text, fontSize: 14 * noteTextScale }]} numberOfLines={1}>{note.title}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text, fontSize: 14 * noteTextScale }]}>{note.title}</Text>
         <Text style={[styles.cardDate, { color: colors.mutedText, fontSize: 11.5 * noteTextScale }]}>{formatDate(note.updatedAt || note.createdAt)}</Text>
       </View>
       
@@ -46,19 +46,24 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 6
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#212529',
-    flex: 1
+    flex: 1,
+    flexWrap: 'wrap',
+    lineHeight: 19,
+    paddingRight: 8
   },
   cardDate: {
     fontSize: 12,
     color: '#6c757d',
-    marginLeft: 6
+    marginLeft: 6,
+    marginTop: 1,
+    flexShrink: 0
   },
   cardContent: {
     fontSize: 13,

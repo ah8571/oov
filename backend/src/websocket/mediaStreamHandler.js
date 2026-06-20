@@ -52,6 +52,11 @@ const CALL_LANGUAGE_CONFIG = {
     languageCode: 'es-US',
     voice: process.env.GOOGLE_TTS_VOICE_ES || 'es-US-Neural2-A',
     greeting: 'Hola, soy Emmaline. Cuéntame qué quieres pensar en voz alta. Si quieres que cree, actualice o lea una nota mientras hablamos, solo dímelo y puedo hacerlo.'
+  },
+  teacher_es_en: {
+    languageCode: 'en-US',
+    voice: process.env.GOOGLE_TTS_VOICE_TEACHER || process.env.GOOGLE_TTS_VOICE || 'en-US-Neural2-C',
+    greeting: 'Hi, this is Emmaline. We are in English and Spanish teacher mode, so you can ask me how to say things in Spanish, practice short phrases, and I will keep the explanations beginner friendly.'
   }
 };
 

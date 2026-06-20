@@ -5,14 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../theme/appTheme.js';
 import FloatingBackButton from '../components/FloatingBackButton';
 
-const estimateCreditsFromUsd = (value) => {
-  const usd = Number(value || 0);
+const getTranscriptModeLabel = (callRecord) => {
+  const rawMode = callRecord?.callType || callRecord?.transcriptType || callRecord?.mode || callRecord?.sourceType || '';
 
-  if (usd <= 0) {
-    return 0;
+  if (typeof rawMode === 'string' && /listen/i.test(rawMode)) {
+    return 'Listen Mode';
   }
 
-  return Math.max(1, Math.ceil(usd * 100));
+  return 'Live Call';
 };
 
 const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptResetToken = 0 }) => {
@@ -23,9 +23,41 @@ const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptRese
   const [loading, setLoading] = useState(true);
   const lastTranscriptResetTokenRef = useRef(transcriptResetToken);
 
+  async function loadCallDetail() {
+    setLoading(true);
+    try {
+      const response = await getCallDetail(callId);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Unable to load call details');
+      }
+
+      setCall(response.call);
+    } catch (error) {
+      console.error('Error loading call:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadCallDetail();
   }, [callId]);
+
+  useEffect(() => {
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadCallDetail();
+    });
+
+    const pollId = setInterval(() => {
+      loadCallDetail();
+    }, 4000);
+
+    return () => {
+      clearInterval(pollId);
+      unsubscribeFocus();
+    };
+  }, [callId, navigation]);
 
   useEffect(() => {
     return () => {
@@ -44,23 +76,6 @@ const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptRese
       navigation.popToTop?.();
     }
   }, [navigation, transcriptResetToken]);
-
-  const loadCallDetail = async () => {
-    setLoading(true);
-    try {
-      const response = await getCallDetail(callId);
-
-      if (!response.success) {
-        throw new Error(response.error || 'Unable to load call details');
-      }
-
-      setCall(response.call);
-    } catch (error) {
-      console.error('Error loading call:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />;
@@ -93,8 +108,8 @@ const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptRese
     });
   };
 
-  const estimatedCredits = estimateCreditsFromUsd(call.totalBillableCostUsd);
   const floatingBackInset = Math.max(insets.top - 12, 0) + 30;
+  const transcriptModeLabel = getTranscriptModeLabel(call);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}> 
@@ -105,6 +120,10 @@ const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptRese
         onScroll={(event) => onAppHeaderScroll?.(Math.max(0, event.nativeEvent.contentOffset.y || 0))}
         scrollEventThrottle={16}
       >
+        <View style={styles.section}>
+          <Text style={[styles.sectionEyebrow, { color: colors.mutedText }]}>{transcriptModeLabel}</Text>
+        </View>
+
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Date</Text>
           <View style={styles.metaRow}>
@@ -125,18 +144,6 @@ const CallDetailScreen = ({ route, navigation, onAppHeaderScroll, transcriptRese
             ))}
           </View>
         )}
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Estimated Usage</Text>
-          {Number(call.totalBillableCostUsd || 0) > 0 ? (
-            <>
-              <Text style={[styles.usageValue, { color: colors.text }]}>{estimatedCredits} credit{estimatedCredits === 1 ? '' : 's'}</Text>
-              <Text style={[styles.usageMeta, { color: colors.mutedText }]}>Estimated from the current billable usage total of {formatUsd(call.totalBillableCostUsd)}.</Text>
-            </>
-          ) : (
-            <Text style={[styles.transcriptText, { color: colors.mutedText }]}>No estimated cost data recorded for this call yet.</Text>
-          )}
-        </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript</Text>
@@ -174,6 +181,13 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 28
   },
+  sectionEyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6c757d',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -189,15 +203,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#495057',
     marginBottom: 8
-  },
-  usageValue: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 6
-  },
-  usageMeta: {
-    fontSize: 14,
-    lineHeight: 20
   },
   metaRow: {
     marginBottom: 2

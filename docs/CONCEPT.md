@@ -2,19 +2,15 @@
 
 ## Overview
 
-Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Users can call a dedicated phone number and speak with an AI assistant in real-time while multitasking—cooking, commuting, shopping, or any daily activity. Conversations are automatically transcribed, summarized, and organized in a minimalistic note-taking interface for later review and reference.
+Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Users can call a dedicated phone number and speak with an AI assistant in real-time while multitasking — cooking, commuting, shopping, or any daily activity. Conversations are automatically transcribed, summarized, and organized in a minimalistic note-taking interface for later review and reference.
 
-### The Value Proposition
-- **Hands-free interaction**: No need to text or type—just call and talk
-- **True multitasking**: Engage with AI while fully focused on other tasks
-- **Persistent knowledge**: Transcripts and summaries are stored and retrievable
-- **Minimal friction**: Simple, clean interface for organizing thoughts
+
+
 
 ---
 
 ## Roadmap & Development Phases
 
-This section is now meant to be a working product plan rather than a pure brainstorming list. The goal is to identify what is already present in the repo, what is still blocking launch, and which longer-term assistant directions should be treated as Phase 2-3 expansion rather than MVP scope.
 
 ### Table of Contents
 1. [Current Status Snapshot](#current-status-snapshot)
@@ -24,16 +20,32 @@ This section is now meant to be a working product plan rather than a pure brains
 
 ---
 
+
+### The Value Proposition
+- **Hands-free interaction**: No need to text or type—just call and talk
+- **True multitasking**: Engage with AI while fully focused on other tasks
+- **Persistent knowledge**: Transcripts and summaries are stored and retrievable
+- **Minimal friction**: Simple, clean interface for organizing thoughts
+- **Skill capabilities, a kind of accessible business assistant layer**: 
+- transcriptions
+- conversations with AI
+- read documents -> create summaries, perhaps even for discussion or flash cards of the material
+- language teacher 
+- receptionist set up (ie an AI voice assistant for small businesses - but how would we set up infrastructure for this if people are also texting... could receive messages like 2nd number)
+- document creator like with genspark
+- perhaps extensions with openclaw
+
+---
+
 ## Phase 1: Publishable MVP with Cloud Infrastructure
 
 
 ### Phase 1 Publish Blockers
 
-These are the major items still worth focusing on to make the app viable rather than just technically interesting.
 
 1. Product mode clarity
 - [ ] Lock the Phase 1 product into two explicit user-facing modes:
-  - Call mode: talk with the AI assistant
+  - Call mode: talk with the AI assistant / note-taking
   - Listen mode: silent transcript / note-taking / summary capture
 - [ ] Add a listening / transcription mode as a first-class option in the app
 - [ ] Make sure summaries and notes are generated cleanly from both modes
@@ -42,6 +54,9 @@ These are the major items still worth focusing on to make the app viable rather 
 - [ ] Improve response speed and perceived responsiveness during live calls
 - [ ] Tighten transcript streaming reliability and end-of-call save behavior
 - [ ] Reduce the number of visible "processing" gaps that make the product feel unfinished
+- [ ] Validate a Phase 1 multilingual speech path for basic language-learning use cases:
+  - compare Google STT against providers like Deepgram for mixed-language real-time transcription
+  - compare current TTS against multilingual-capable options like ElevenLabs for more natural bilingual output
 
 3. Billing and monetization
 - [ ] Turn the upgrade / paywall foundation into a real purchasable flow
@@ -56,11 +71,20 @@ These are the major items still worth focusing on to make the app viable rather 
   - GTM / UTM on the website
   - app analytics and install attribution in the app itself
 - [ ] Track the key funnel events: signup, trial/upgrade intent, call started, call completed, note created
-- [ ] Map the LLMs/providers we want to test and compare quality vs. cost
-  - OpenAI
-  - DeepSeek
-  - Kimi
-  - other low-cost / open-source-compatible providers we connect over time
+- [ ] Map the model and speech providers we want to test and compare quality vs. cost
+  - STT / realtime speech candidates for multilingual handling:
+    - Google
+    - Deepgram
+    - OpenAI Realtime where it simplifies the stack
+  - TTS candidates for multilingual output:
+    - Google
+    - ElevenLabs multilingual models
+    - OpenAI audio / realtime voice options where quality or latency is competitive
+  - LLM candidates:
+    - OpenAI
+    - DeepSeek
+    - Kimi
+    - other low-cost / open-source-compatible providers we connect over time
 - [ ] Add a simple quality review loop for model outputs so we can test whether cheaper providers are good enough before routing real users onto them
 
 5. Legal and trust requirements
@@ -69,16 +93,59 @@ These are the major items still worth focusing on to make the app viable rather 
 - [ ] Implement minimum account-level deletion / export planning for privacy compliance
 - [ ] Finish the launch-safe subset of GDPR work before broad distribution
 
-### Phase 1 Scope To Defer Unless It Becomes Essential
-
+6. Important Phase 1 improvements after the core blockers
 - [ ] Text chat with the AI assistant
 - [ ] Twilio text registration or SMS-based assistant flow
 - [ ] Dedicated personal phone number per user
-- [ ] Deep affiliate or venue-specific attribution systems
+- [ ] Affiliate link / promo code creation
+
+
+### Phase 1 Dedicated Personal Number Architecture
+
+- [ ] Define the subscription rule for number ownership:
+  - who is eligible for a personal number
+  - whether the number is included in plan pricing or billed as an add-on
+  - what happens to the number if payment fails or a subscription is cancelled
+- [ ] Design the provisioning flow for assigning a number to a user:
+  - purchase or assign from Twilio inventory
+  - store the number, capability flags, and ownership state on the user account
+  - avoid orphaned or duplicate number assignments
+- [ ] Define inbound routing behavior for calls and texts to the user's Emmaline number:
+  - route into the correct assistant context
+  - preserve conversation history and transcript ownership per user
+  - support both voice calls and future SMS-based assistant flows
+- [ ] Decide the first trust and abuse controls:
+  - rate limits
+  - who can call or text the number
+  - whether unknown callers are allowed, blocked, or filtered
+- [ ] Plan the basic lifecycle operations needed for MVP stability:
+  - number assignment
+  - number release or reassignment
+  - temporary suspension
+  - support/admin recovery for failed provisioning
+- [ ] Decide what minimal in-app UI is needed once the architecture exists:
+  - show the user's assigned number
+  - explain what the number can be used for
+  - provide lightweight status messaging if the number is pending, active, or unavailable
 
 
 
 ---
+## Later concepts
+
+Potential outlets
+- A kind of flexible virtual assistant
+- real time interpretor: can be with headphones or speaker
+- a text reader
+
+Learning about: Elsa Speak, Speak and babbel for speech learning; the quantity of talk based language learning apps
+
+Speciality applications
+receptionist: could be molded into a receptionist that handles bookings/ sends problems to managers
+Lawyer specialization
+Ex. Eve - handling a lot of review work, document drafting and intake
+Slides/ documentation creation:
+Ex. Genspark
 
 ## Phase 2: OpenClaw Integration + Enhanced Privacy
 

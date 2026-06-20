@@ -14,6 +14,7 @@ let speechClient = null;
 const LANGUAGE_CONFIGS = {
   en: {
     languageCode: 'en-US',
+    alternativeLanguageCodes: [],
     speechContexts: [
       'reminder', 'note', 'todo', 'schedule', 'call', 'email',
       'meeting', 'project', 'task', 'follow up', 'action item'
@@ -21,15 +22,32 @@ const LANGUAGE_CONFIGS = {
   },
   es: {
     languageCode: 'es-US',
+    alternativeLanguageCodes: [],
     speechContexts: [
       'recordatorio', 'nota', 'tarea', 'agenda', 'llamar', 'correo',
       'reunion', 'proyecto', 'seguimiento', 'accion'
+    ]
+  },
+  teacher_es_en: {
+    languageCode: 'en-US',
+    alternativeLanguageCodes: ['es-US'],
+    speechContexts: [
+      'reminder', 'note', 'todo', 'schedule', 'call', 'email',
+      'meeting', 'project', 'task', 'follow up', 'action item',
+      'translate', 'translation', 'teacher', 'practice', 'repeat after me',
+      'recordatorio', 'nota', 'tarea', 'agenda', 'llamar', 'correo',
+      'reunion', 'proyecto', 'seguimiento', 'accion', 'traducir', 'traduccion',
+      'profesor', 'practicar', 'repite despues de mi'
     ]
   }
 };
 
 export const resolveLanguagePreference = (languagePreference) => {
   const value = String(languagePreference || '').trim().toLowerCase();
+
+  if (value.includes('teacher') || value.includes('bilingual') || value.includes('multilingual')) {
+    return 'teacher_es_en';
+  }
 
   if (value.startsWith('es')) {
     return 'es';
@@ -62,6 +80,9 @@ const getStreamingRecognizeConfig = (options = {}) => {
       encoding: 'MULAW',
       sampleRateHertz: 8000,
       languageCode: languageConfig.languageCode,
+      ...(languageConfig.alternativeLanguageCodes?.length
+        ? { alternativeLanguageCodes: languageConfig.alternativeLanguageCodes }
+        : {}),
       enableAutomaticPunctuation: true,
       model: 'phone_call',
       useEnhanced: true,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -18,29 +18,27 @@ import { designTokens } from '../theme/designSystem.js';
  */
 const BOTTOM_SAFE_ZONE = 44;
 
+const getTranscriptModeLabel = (callRecord) => {
+  const rawMode = callRecord?.callType || callRecord?.transcriptType || callRecord?.mode || callRecord?.sourceType || '';
+
+  if (typeof rawMode === 'string' && /listen/i.test(rawMode)) {
+    return 'Listen Mode';
+  }
+
+  return 'Live Call';
+};
+
 const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [transcripts, setTranscripts] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadTranscripts();
-  }, []);
+  const loadTranscripts = useCallback(async (options = {}) => {
+    if (!options.silent) {
+      setLoading(true);
+    }
 
-  useEffect(() => {
-    return () => {
-      onAppHeaderScroll?.(0);
-    };
-  }, [onAppHeaderScroll]);
-
-  const handleListScroll = (event) => {
-    const nextOffsetY = Math.max(0, event.nativeEvent.contentOffset.y || 0);
-    onAppHeaderScroll?.(nextOffsetY);
-  };
-
-  const loadTranscripts = async () => {
-    setLoading(true);
     try {
       const response = await getCalls();
 
@@ -52,8 +50,40 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
     } catch (error) {
       console.error('Error loading transcripts:', error);
     } finally {
-      setLoading(false);
+      if (!options.silent) {
+        setLoading(false);
+      }
     }
+  }, []);
+
+  useEffect(() => {
+    loadTranscripts();
+  }, [loadTranscripts]);
+
+  useEffect(() => {
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadTranscripts({ silent: true });
+    });
+
+    const pollId = setInterval(() => {
+      loadTranscripts({ silent: true });
+    }, 4000);
+
+    return () => {
+      clearInterval(pollId);
+      unsubscribeFocus();
+    };
+  }, [loadTranscripts, navigation]);
+
+  useEffect(() => {
+    return () => {
+      onAppHeaderScroll?.(0);
+    };
+  }, [onAppHeaderScroll]);
+
+  const handleListScroll = (event) => {
+    const nextOffsetY = Math.max(0, event.nativeEvent.contentOffset.y || 0);
+    onAppHeaderScroll?.(nextOffsetY);
   };
 
   const formatDate = (dateString) => {
@@ -97,12 +127,15 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
       onPress={() => navigation.navigate('CallDetail', { callId: item.id })}
     >
       <View style={styles.transcriptHeader}>
-        <Text style={[styles.time, { color: colors.text }]}>
-          {new Date(item.startedAt).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </Text>
+        <View style={styles.transcriptMetaColumn}>
+          <Text style={[styles.time, { color: colors.text }]}>
+            {new Date(item.startedAt).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </Text>
+          <Text style={[styles.modeLabel, { color: colors.mutedText }]}>{getTranscriptModeLabel(item)}</Text>
+        </View>
         <Text style={[styles.duration, { color: colors.mutedText }]}>{item.callDurationSeconds}s</Text>
       </View>
       <Text style={[styles.preview, { color: colors.mutedText }]} numberOfLines={2}>
@@ -203,10 +236,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8
   },
+  transcriptMetaColumn: {
+    flexShrink: 1,
+    gap: 2
+  },
   time: {
     fontSize: 14,
     fontWeight: '600',
     color: '#212529'
+  },
+  modeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6c757d',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4
   },
   duration: {
     fontSize: 12,

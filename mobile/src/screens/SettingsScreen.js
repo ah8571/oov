@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { getBillingStatus, getCalls } from '../services/api.js';
+import { getBillingStatus } from '../services/api.js';
 import {
   getCallLanguagePreference,
   getNoteTextScalePreference,
@@ -23,6 +23,11 @@ const LANGUAGE_OPTIONS = [
     value: 'es',
     title: 'Spanish',
     description: 'Use Spanish for speech recognition and spoken replies.'
+  },
+  {
+    value: 'teacher_es_en',
+    title: 'English / Spanish Teacher',
+    description: 'A beginner-friendly bilingual mode that listens for both languages and teaches Spanish with short English support.'
   }
 ];
 
@@ -87,32 +92,19 @@ const NOTE_TEXT_SIZE_OPTIONS = [
 
 const areRatesEqual = (left, right) => Math.abs(Number(left) - Number(right)) < 0.001;
 const areDelayValuesEqual = (left, right) => Number(left) === Number(right);
-const estimateCreditsFromUsd = (value) => {
-  const usd = Number(value || 0);
-
-  if (usd <= 0) {
-    return 0;
-  }
-
-  return Math.max(1, Math.ceil(usd * 100));
-};
-
 const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
   const { colors, isDarkMode, toggleTheme } = useAppTheme();
   const [callLanguage, setCallLanguage] = useState('en');
   const [speechRate, setSpeechRate] = useState(1);
   const [callResponseDelayMs, setCallResponseDelayMs] = useState(1600);
   const [noteTextScale, setNoteTextScale] = useState(1);
-  const [usageSummary, setUsageSummary] = useState({
-    loading: true,
-    estimatedCredits: 0,
-    callCount: 0
-  });
   const [billingSummary, setBillingSummary] = useState({
     loading: true,
     availableVoiceMinutes: 0,
     remainingFreeTrialSeconds: 0
   });
+  const scrollViewRef = useRef(null);
+  const scrollOffsetRef = useRef(0);
 
   useEffect(() => {
     const loadPreferences = async () => {
@@ -155,51 +147,19 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
     loadBillingSummary();
   }, []);
 
-  useEffect(() => {
-    const loadUsageSummary = async () => {
-      try {
-        const limit = 100;
-        let offset = 0;
-        let allCalls = [];
+  const handleScroll = (event) => {
+    scrollOffsetRef.current = Math.max(0, event.nativeEvent.contentOffset.y || 0);
+  };
 
-        while (true) {
-          const response = await getCalls(limit, offset);
+  const restoreScrollOffset = () => {
+    if (scrollOffsetRef.current <= 0) {
+      return;
+    }
 
-          if (!response.success) {
-            throw new Error(response.error || 'Unable to load usage totals');
-          }
-
-          const nextCalls = response.calls || [];
-          allCalls = allCalls.concat(nextCalls);
-
-          if (allCalls.length >= Number(response.total || 0) || nextCalls.length < limit) {
-            break;
-          }
-
-          offset += limit;
-        }
-
-        const totalBillableCostUsd = allCalls.reduce(
-          (sum, call) => sum + Number(call.totalBillableCostUsd || 0),
-          0
-        );
-
-        setUsageSummary({
-          loading: false,
-          estimatedCredits: estimateCreditsFromUsd(totalBillableCostUsd),
-          callCount: allCalls.length
-        });
-      } catch (error) {
-        setUsageSummary({
-          loading: false,
-          estimatedCredits: 0,
-          callCount: 0
-        });
-      }
-    };
-
-    loadUsageSummary();
-  }, []);
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ y: scrollOffsetRef.current, animated: false });
+    });
+  };
 
   const handleSelectLanguage = async (value) => {
     setCallLanguage(value);
@@ -256,7 +216,14 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      ref={scrollViewRef}
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.contentContainer}
+      onScroll={handleScroll}
+      onContentSizeChange={restoreScrollOffset}
+      scrollEventThrottle={16}
+    >
       <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
       </View>
@@ -284,22 +251,8 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Estimated usage</Text>
-        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>A simple internal estimate of your usage so far across all saved calls.</Text>
-
-        <View style={[styles.speedometerCard, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-          <Text style={[styles.speedometerLabel, { color: colors.mutedText }]}>Estimated credits used</Text>
-          <Text style={[styles.speedometerValue, { color: colors.text }]}>
-            {usageSummary.loading ? '...' : usageSummary.estimatedCredits}
-          </Text>
-        </View>
-
-        <Text style={[styles.usageFootnote, { color: colors.mutedText }]}>
-          {usageSummary.loading
-            ? 'Loading your total usage.'
-            : `Across ${usageSummary.callCount} call${usageSummary.callCount === 1 ? '' : 's'} so far.`}
-        </Text>
-
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Voice access</Text>
+        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>See your current voice balance and upgrade path.</Text>
         <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.infoCardCopy}>
             <Text style={[styles.infoCardTitle, { color: colors.text }]}>Voice access</Text>

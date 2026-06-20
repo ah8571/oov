@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Alert, View, Image, Text } from 'react-native';
+import { StyleSheet, Alert, View, Image, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
@@ -37,6 +37,7 @@ const AppContent = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [showLaunchSplash, setShowLaunchSplash] = useState(true);
+  const [showCallModePicker, setShowCallModePicker] = useState(false);
 
   const colors = isDarkMode ? darkColors : lightColors;
   const appBottomRailHeight = Math.max(insets.bottom, 12) + APP_BOTTOM_RAIL_HEIGHT;
@@ -95,6 +96,7 @@ const AppContent = () => {
     setAudioDevices([]);
     setSelectedAudioDevice(null);
     setIsMuted(false);
+    setShowCallModePicker(false);
 
     endVoiceCall().catch(() => {
       // Best-effort cleanup when the user logs out.
@@ -113,7 +115,11 @@ const AppContent = () => {
     return () => clearTimeout(statusTimer);
   }, [callStatus]);
 
-  const handleInitiateCall = async () => {
+  const startLiveCall = async () => {
+    if (isCalling) {
+      return;
+    }
+
     if (getVoiceCallActive()) {
       const endResponse = await endVoiceCall();
       if (!endResponse.success) {
@@ -123,10 +129,6 @@ const AppContent = () => {
 
       setIsCalling(false);
       setCallStatus('ended');
-      return;
-    }
-
-    if (isCalling) {
       return;
     }
 
@@ -211,6 +213,29 @@ const AppContent = () => {
       setCallStatus('failed');
       Alert.alert('Call error', error.message || 'Unexpected error while starting the call.');
     }
+  };
+
+  const handleInitiateCall = async () => {
+    if (getVoiceCallActive()) {
+      await startLiveCall();
+      return;
+    }
+
+    setShowCallModePicker(true);
+  };
+
+  const handleSelectCallMode = async (mode) => {
+    setShowCallModePicker(false);
+
+    if (mode === 'live_call') {
+      await startLiveCall();
+      return;
+    }
+
+    Alert.alert(
+      'Listen Mode coming soon',
+      'The launcher is in place, but Listen Mode still needs the dedicated recording and summary pipeline before it can be used in the app.'
+    );
   };
 
   const handleSelectAudioRoute = async (deviceUuid) => {
@@ -314,6 +339,39 @@ const AppContent = () => {
             bottomInset={appBottomRailHeight}
           />
         ) : null}
+
+        {showCallModePicker ? (
+          <View style={styles.modePickerOverlay}>
+            <TouchableOpacity style={styles.modePickerBackdrop} activeOpacity={1} onPress={() => setShowCallModePicker(false)} />
+            <View style={[styles.modePickerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}> 
+              <Text style={[styles.modePickerTitle, { color: colors.text }]}>Choose a mode</Text>
+              <Text style={[styles.modePickerSubtitle, { color: colors.mutedText }]}>Start a live assistant call now, or prepare for the quieter listen-and-summarize flow.</Text>
+
+              <TouchableOpacity
+                style={[styles.modePickerOption, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+                onPress={() => handleSelectCallMode('live_call')}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Live Call</Text>
+                <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Talk with Emmaline in real time and save the transcript, summary, and notes.</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modePickerOption, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+                onPress={() => handleSelectCallMode('listen_mode')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.modePickerOptionHeader}>
+                  <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Listen Mode</Text>
+                  <View style={[styles.modePickerSoonBadge, { backgroundColor: colors.chipSelectedBg }]}> 
+                    <Text style={[styles.modePickerSoonBadgeText, { color: colors.chipSelectedText }]}>Soon</Text>
+                  </View>
+                </View>
+                <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Record, transcribe, and summarize a conversation without the live assistant voice loop.</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
       </View>
     </AppThemeProvider>
   );
@@ -358,5 +416,67 @@ const styles = StyleSheet.create({
   },
   bottomRail: {
     borderTopWidth: 1
+  },
+  modePickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    zIndex: 1200
+  },
+  modePickerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.28)'
+  },
+  modePickerCard: {
+    marginHorizontal: 16,
+    marginBottom: 96,
+    borderRadius: 24,
+    borderWidth: 1,
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 16,
+    gap: 12,
+    shadowColor: '#000000',
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12
+  },
+  modePickerTitle: {
+    fontSize: 20,
+    fontWeight: '700'
+  },
+  modePickerSubtitle: {
+    fontSize: 13,
+    lineHeight: 18
+  },
+  modePickerOption: {
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 6
+  },
+  modePickerOptionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10
+  },
+  modePickerOptionTitle: {
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  modePickerOptionDescription: {
+    fontSize: 13,
+    lineHeight: 18
+  },
+  modePickerSoonBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4
+  },
+  modePickerSoonBadgeText: {
+    fontSize: 11,
+    fontWeight: '700'
   }
 });
