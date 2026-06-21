@@ -17,7 +17,8 @@
       "icon": "./assets/app-icon-padded.png",
       "supportsTablet": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Emmaline needs microphone access so you can talk to your AI assistant during in-app calls."
+        "NSMicrophoneUsageDescription": "Emmaline needs microphone access so you can talk to your AI assistant during in-app calls.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
