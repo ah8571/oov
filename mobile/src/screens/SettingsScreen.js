@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { getBillingStatus } from '../services/api.js';
+
+import { deleteAccount, getBillingStatus } from '../services/api.js';
 import {
   getCallLanguagePreference,
   getNoteTextScalePreference,
@@ -92,7 +93,7 @@ const NOTE_TEXT_SIZE_OPTIONS = [
 
 const areRatesEqual = (left, right) => Math.abs(Number(left) - Number(right)) < 0.001;
 const areDelayValuesEqual = (left, right) => Number(left) === Number(right);
-const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
+const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDeleted }) => {
   const { colors, isDarkMode, toggleTheme } = useAppTheme();
   const [callLanguage, setCallLanguage] = useState('en');
   const [speechRate, setSpeechRate] = useState(1);
@@ -210,6 +211,34 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
           text: 'Log out',
           style: 'destructive',
           onPress: () => onLogout?.()
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete account',
+      'This will permanently remove your Emmaline account and the account-linked transcripts, notes, and related records stored for that account. This cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: async () => {
+            const response = await deleteAccount({ source: 'mobile_settings' });
+
+            if (!response.success) {
+              Alert.alert('Delete failed', response.error || 'Unable to delete your account right now.');
+              return;
+            }
+
+            Alert.alert('Account deleted', 'Your Emmaline account has been removed.');
+            onAccountDeleted?.();
+          }
         }
       ]
     );
@@ -406,7 +435,34 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Account</Text>
-        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>End your current session on this device.</Text>
+        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>Support, legal documents, and account controls.</Text>
+
+        <TouchableOpacity
+          style={[styles.linkCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => onOpenScreen?.('support')}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.linkCardTitle, { color: colors.text }]}>Support</Text>
+          <Text style={[styles.linkCardDescription, { color: colors.mutedText }]}>Send a request to support@emmaline.app from inside the app.</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.linkCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => onOpenScreen?.('privacy')}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.linkCardTitle, { color: colors.text }]}>Privacy Policy</Text>
+          <Text style={[styles.linkCardDescription, { color: colors.mutedText }]}>Review how Emmaline handles voice, transcript, support, and account data.</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.linkCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => onOpenScreen?.('terms')}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.linkCardTitle, { color: colors.text }]}>Terms of Use</Text>
+          <Text style={[styles.linkCardDescription, { color: colors.mutedText }]}>Review account, subscription, restore, and acceptable-use terms.</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.upgradeCardButton, { backgroundColor: colors.text }]}
@@ -422,6 +478,14 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade }) => {
           activeOpacity={0.85}
         >
           <Text style={[styles.logoutButtonText, { color: colors.text }]}>Log out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.deleteButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={handleDeleteAccount}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.deleteButtonText}>Delete account</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -584,6 +648,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16
   },
+  deleteButton: {
+    minHeight: 54,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16
+  },
   upgradeCardButton: {
     minHeight: 54,
     borderRadius: 12,
@@ -599,6 +671,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#212529'
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#d64545'
+  },
+  linkCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 6
+  },
+  linkCardTitle: {
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  linkCardDescription: {
+    fontSize: 13,
+    lineHeight: 18
   }
 });
 

@@ -15,13 +15,40 @@ const router = express.Router();
  */
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, marketingOptIn = false } = req.body;
+    const {
+      email,
+      password,
+      marketingOptIn = false,
+      termsAccepted = false,
+      privacyAccepted = false,
+      termsVersion,
+      privacyVersion,
+      consentSource = 'mobile_signup',
+      requiredConsentText,
+      marketingConsentText,
+      marketingPolicyVersion
+    } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const result = await registerUser(email, password, marketingOptIn);
+    if (!termsAccepted || !privacyAccepted) {
+      return res.status(400).json({ error: 'You must accept the Terms of Use and Privacy Policy to create an account' });
+    }
+
+    const result = await registerUser(email, password, {
+      marketingOptIn,
+      termsAccepted,
+      privacyAccepted,
+      termsVersion,
+      privacyVersion,
+      consentSource,
+      requiredConsentText,
+      marketingConsentText,
+      marketingPolicyVersion,
+      consentUserAgent: req.get('user-agent') || 'unknown'
+    });
 
     return res.status(201).json({
       message: 'User registered successfully',

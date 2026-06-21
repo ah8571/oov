@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
       source,
       marketingConsent: Boolean(marketingConsent),
       consentSource: consentSource || source || 'landing-page',
-      policyVersion: policyVersion || '2026-02-27',
+      policyVersion: policyVersion || '2026-06-21',
       consentTimestamp,
       userAgent
     });

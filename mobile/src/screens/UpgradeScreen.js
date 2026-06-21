@@ -25,8 +25,8 @@ const UpgradeScreen = () => {
 
   const handleUpgradePress = () => {
     Alert.alert(
-      'Stripe next',
-      'The upgrade screen is in place. The next step is wiring this button to Stripe checkout or in-app subscriptions.'
+      'Billing not live yet',
+      'Subscriptions are not enabled in this build yet. The next implementation step is wiring App Store and Google Play subscriptions through RevenueCat and adding restore purchases.'
     );
   };
 
@@ -41,7 +41,7 @@ const UpgradeScreen = () => {
           <Text style={[styles.heroEyebrow, { color: colors.accent }]}>Emmaline Pro</Text>
           <Text style={[styles.heroTitle, { color: colors.text }]}>$10 / month after your first 5 free minutes</Text>
           <Text style={[styles.heroDescription, { color: colors.mutedText }]}>
-            Start with 5 free minutes to try the assistant. Upgrade when you want ongoing voice access without hitting the trial limit.
+            Start with 5 free minutes to try the assistant. Subscription billing will be finalized through the mobile app stores, with RevenueCat planned as the entitlement layer.
           </Text>
 
           <TouchableOpacity
@@ -69,6 +69,7 @@ const UpgradeScreen = () => {
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>What Pro unlocks</Text>
+        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>Restore purchases and subscription management language will be added alongside the store billing rollout.</Text>
 
         {[
           'Keep talking after the free 5-minute trial is used.',

@@ -1,0 +1,186 @@
+{
+  "policyVersion": "2026-06-21",
+  "termsVersion": "2026-06-21",
+  "supportEmail": "support@emmaline.app",
+  "consentText": {
+    "required": "I agree to the Terms of Use and Privacy Policy, including Emmaline's handling of call audio, transcripts, notes, uploaded documents, and AI processing.",
+    "marketing": "I agree to receive the educational newsletter and product updates from Emmaline. I can unsubscribe at any time."
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "2026-06-21",
+    "intro": [
+      "This Privacy Policy explains how Emmaline collects, uses, stores, and shares information when you use the Emmaline mobile app, website, and related services.",
+      "Emmaline is a voice-first AI assistant. That means some of the information you share with us may include voice audio, transcripts, notes, uploaded documents, and support messages."
+    ],
+    "sections": [
+      {
+        "title": "Information We Collect",
+        "body": [
+          "We collect account details you provide directly, such as your email address, password, marketing preferences, and support messages.",
+          "When you use voice and reader features, we may collect call audio, call metadata, transcripts, summaries, notes, uploaded text or PDF content, and usage records tied to your account."
+        ],
+        "bullets": [
+          "Account information such as email address and authentication details",
+          "Call audio, call timestamps, phone assignment metadata, transcripts, summaries, and note content",
+          "Reader uploads and pasted text you ask Emmaline to read or process",
+          "Support form submissions, deletion requests, and consent records",
+          "Device and request metadata needed for security, fraud prevention, and service operations"
+        ]
+      },
+      {
+        "title": "How We Use Information",
+        "body": [
+          "We use information to provide the service, authenticate users, power voice calls, generate transcripts and summaries, respond to support requests, manage subscriptions if offered, and improve reliability.",
+          "We do not currently use third-party advertising networks inside the app or website."
+        ],
+        "bullets": [
+          "Deliver voice, transcript, note, reader, and account features",
+          "Process AI-generated responses, summaries, and speech features",
+          "Send operational emails such as support replies or account notices",
+          "Send optional newsletters and product updates only if you opt in",
+          "Maintain security, prevent abuse, and investigate service issues"
+        ]
+      },
+      {
+        "title": "Permissions and Sensitive Features",
+        "body": [
+          "The app requests microphone access so you can place in-app voice calls and record Listen Mode sessions. The app only accesses the microphone after your device-level permission prompt and your in-app action.",
+          "If you import documents or create support requests, the app only sends that content when you explicitly choose to upload or submit it."
+        ],
+        "bullets": [
+          "Microphone permission for voice calling and recorded speech features",
+          "Document picker access only when you choose to import a file",
+          "No background phone monitoring or third-party ad tracking"
+        ]
+      },
+      {
+        "title": "Third-Party Services",
+        "body": [
+          "We use third-party infrastructure providers to operate Emmaline. These providers process data on our behalf to deliver specific parts of the service.",
+          "Your use of Emmaline may involve the services listed below depending on which features you use."
+        ],
+        "bullets": [
+          "Twilio for voice calling and phone infrastructure",
+          "OpenAI for transcription, summarization, and AI response generation",
+          "Google Cloud for some speech recognition and text-to-speech features",
+          "Supabase for application data storage and account-related records",
+          "Resend for support and waitlist or newsletter-related email delivery when configured"
+        ]
+      },
+      {
+        "title": "Retention",
+        "body": [
+          "We keep information for as long as needed to operate the service, meet legal obligations, resolve disputes, and enforce agreements.",
+          "If you delete your account, we will remove or de-identify account-linked data from active systems, subject to backup, fraud-prevention, or legal retention needs."
+        ],
+        "bullets": [
+          "Account and consent records are retained for compliance and audit purposes",
+          "Call, transcript, note, and reader content are retained until you delete them or your account is deleted, unless a shorter retention rule is introduced",
+          "Support requests may be retained to resolve the issue and document outcomes"
+        ]
+      },
+      {
+        "title": "Your Choices and Rights",
+        "body": [
+          "You can review the Privacy Policy and Terms of Use inside the app and on the website.",
+          "You can contact us to request account access, export help, correction help, or deletion support. We also provide an in-app account deletion path for authenticated users."
+        ],
+        "bullets": [
+          "Access and review your account information in the app",
+          "Request support, deletion, or account-data help at support@emmaline.app",
+          "Unsubscribe from marketing emails at any time",
+          "Request account-data access or export support through our support channel"
+        ]
+      },
+      {
+        "title": "Children's Privacy",
+        "body": [
+          "Emmaline is not directed to children under 13, and we do not knowingly collect personal information from children under 13.",
+          "If you believe a child under 13 has provided personal information to Emmaline, contact support@emmaline.app so we can investigate and remove the information if appropriate."
+        ]
+      },
+      {
+        "title": "Contact Us",
+        "body": [
+          "For privacy questions, deletion requests, export requests, or support, contact support@emmaline.app."
+        ]
+      }
+    ]
+  },
+  "termsOfService": {
+    "title": "Terms of Use",
+    "lastUpdated": "2026-06-21",
+    "intro": [
+      "These Terms of Use govern your access to and use of the Emmaline app, website, and related services.",
+      "By creating an account or using Emmaline, you agree to these Terms of Use and our Privacy Policy."
+    ],
+    "sections": [
+      {
+        "title": "Eligibility and Accounts",
+        "body": [
+          "You are responsible for the accuracy of your account information and for maintaining the confidentiality of your login credentials.",
+          "You may not use Emmaline in violation of law, to infringe the rights of others, or to submit harmful, fraudulent, or abusive content."
+        ]
+      },
+      {
+        "title": "Service Description",
+        "body": [
+          "Emmaline offers voice-assisted AI features including calling, transcription, summaries, notes, reader tools, and related account services.",
+          "Some outputs are generated by AI systems and may be incomplete, inaccurate, or unsuitable for high-risk decisions. You are responsible for reviewing and using outputs appropriately."
+        ]
+      },
+      {
+        "title": "Acceptable Use",
+        "body": [
+          "You agree not to misuse Emmaline, interfere with the service, reverse engineer restricted components, attempt unauthorized access, or use the service to violate the privacy or rights of others."
+        ],
+        "bullets": [
+          "Do not use the service for unlawful harassment, fraud, or abuse",
+          "Do not attempt to access another user's data or account",
+          "Do not upload content you do not have permission to use"
+        ]
+      },
+      {
+        "title": "Subscriptions and Billing",
+        "body": [
+          "If Emmaline offers paid subscriptions, those subscriptions may be purchased through the Apple App Store, Google Play, or subscription infrastructure providers that support our app billing operations.",
+          "Subscriptions renew automatically unless canceled before the renewal date. You can manage or cancel subscriptions through the platform where you purchased them. If restore purchases is available in the app, you should use it when changing devices or reinstalling the app."
+        ],
+        "bullets": [
+          "Charges are billed in advance according to the plan shown at purchase",
+          "Trials, promotional pricing, and entitlements may change or end according to the offer terms",
+          "Refund requests are generally handled by the app store or billing platform used for the purchase",
+          "We may use a provider such as RevenueCat to manage subscription state, restore entitlements, and synchronize billing events"
+        ]
+      },
+      {
+        "title": "Account Management and Deletion",
+        "body": [
+          "You may request deletion of your Emmaline account through the in-app settings flow or by contacting support@emmaline.app.",
+          "Deleting your account may permanently remove access to transcripts, notes, reader history, and related data linked to the account."
+        ]
+      },
+      {
+        "title": "Intellectual Property",
+        "body": [
+          "Emmaline and its service materials are owned by us or our licensors. Except for the rights granted to you to use the service, we reserve all rights not expressly granted."
+        ]
+      },
+      {
+        "title": "Disclaimers and Liability",
+        "body": [
+          "Emmaline is provided on an as-is and as-available basis. To the maximum extent permitted by law, we disclaim warranties not expressly stated in these terms.",
+          "To the maximum extent permitted by law, Emmaline will not be liable for indirect, incidental, special, consequential, or punitive damages, or for decisions made based on AI-generated outputs."
+        ]
+      },
+      {
+        "title": "Changes and Contact",
+        "body": [
+          "We may update these Terms of Use from time to time. If we make material changes, we may update the effective date and provide notice where required.",
+          "For terms, billing, support, or deletion questions, contact support@emmaline.app."
+        ]
+      }
+    ]
+  }
+}

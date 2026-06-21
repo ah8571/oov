@@ -1,41 +1,40 @@
 # App Store Publishing
 
-- [ ] Enroll in the Apple Developer Program/ Google Play's
-- [ ] If publishing as an organization, obtain a D-U-N-S number and complete organization enrollment
-- [ ] confirm each of the accounts with Apple and Google 
-- [ ] Confirm whether the Play Console account is a personal account created after November 13, 2023
-- [ ] If the new Google personal-account testing gate applies, plan for at least 12 opted-in testers over 14 continuous days before requesting production access
-- [ ] Any sensitive capture of behavior or info is explained clearly in-product and in policy text
-- [ ] Confirm the Privacy Policy accurately explains:
+- [x] Enroll in the Apple Developer Program/ Google Play's
+- [x] If publishing as an organization, obtain a D-U-N-S number and complete organization enrollment
+- [x] confirm each of the accounts with Apple and Google 
+- [x] Confirm whether the Play Console account is a personal account created after November 13, 2023
+- [x] If the new Google personal-account testing gate applies, plan for at least 12 opted-in testers over 14 continuous days before requesting production access
+- [x] Any sensitive capture of behavior or info is explained clearly in-product and in policy text
+- [x] Confirm the Privacy Policy accurately explains:
    - native phone functions that track private info
    - AI processing and third-party service involvement
    - account data collected and retained
    - deletion and support contact path
    - COPPA compliance if targeting kids
 - [ ] Confirm any required-reason API usage is declared with an allowed Apple reason
-- [ ] Account deletion exists if users can create accounts
-- [ ] Reviewers will not encounter placeholder content, unfinished flows, dead buttons, or confusing states
-- [ ] Confirm the support email address works with a support page (H. Tomar) 
+- [ still need to set up billing ] Reviewers will not encounter placeholder content, unfinished flows, dead buttons, or confusing states
+- [ ] Confirm the support email address works with a support page (H. Tomar)
 - [ ] Publish a stable Privacy Policy URL
 - [ ] Publish a stable Terms of Use URL
-- [ ] Confirm both legal pages are reachable without logging in 
-- [ ] Confirm the Terms of Use align with the current product behavior and billing model
-- [ ] If using subscriptions now or soon, prepare subscription terms, restore flow, and account-management language 
-- [ ] Confirm all sensitive behaviors are user-consented and clearly explained with a user prompt agreement in app
-- [ ] Confirm users can initiate account deletion inside the app or through a clearly documented in-app path
-- [ ] Confirm export or account-data access planning is at least minimally defined if referenced in policy text
+- [ ] Confirm both legal pages are reachable without logging in
+- [x] Confirm the Terms of Use align with the current product behavior and billing model
+- [ ] If using subscriptions now or soon, prepare subscription terms, restore flow, and account-management language
+- [x] Confirm all sensitive behaviors are user-consented and clearly explained with a user prompt agreement in app
+- [x] Confirm users can initiate account deletion inside the app or through a clearly documented in-app path
+- [x] Confirm export or account-data access planning is at least minimally defined if referenced in policy text
 - [ ] Confirm no internal-only switches, debug menus, or developer tools are exposed in release builds
 - [ ] Confirm crash reporting and error telemetry are enabled for release builds
-- [ ] Confirm auth works in release builds
+- [ need to set up email verification when initially creating for spare emails ] Confirm auth works in release builds
 - [ ] Test the main user flows end to end on a physical iPhone and Android, not just on a desktop simulator
 - [ ] "Check localizations (if supporting multiple languages)" @Hartdrawss
-- [ ] Test on multiple device sizes where possible
+- [n/a] Test on multiple device sizes where possible
 - [ ] Verify there are no crashes in the core flows
-- [ ] Confirm logout works in release builds
+- [x] Confirm logout works in release builds
 - [ ] Confirm deep links or universal/app links work if the app uses them
 - [ ] Confirm Android target API level satisfies the current Google Play requirement
 - [ ] Verify permission-denied flows behave gracefully
-- [ ] Verify network failure states behave gracefully ie with airplane mode
+- [ need to remove developer language ] Verify network failure states behave gracefully ie with airplane mode
 - [ ] Run a smoke test on the exact build intended for store submission
 - [ ] App icon for Apple at 1024x1024
 - [ ] App icon for Google Play at 512x512
@@ -57,8 +56,17 @@
 - [ ] Screenshots show the real, current product. Screenshots do not contain placeholder content, unfinished UI, or fake data that looks deceptive and no transparency
 - [ ] Text overlays are readable
 - [ ] Optional app preview video if you decide it is worth the effort
-- [ ] Confirm third-party api sdks and infrastructure answers include real behavior from services such as Twilio, OpenAI, Supabase
+- [x] Confirm third-party api sdks and infrastructure answers include real behavior from services such as Twilio, OpenAI, Supabase
 - [ ] "All third-party SDKs approved versions" or "latest versions" @Hartdrawss
+
+## Implementation Status Notes
+
+- Privacy Policy and Terms of Use exist in the mobile app and website codebase.
+- Public website routes now exist for `/privacy`, `/terms`, and `/support`, but they still need deployment verification before the publishing checklist can treat them as live URLs.
+- Signup now records required consent and optional marketing consent on `public.users`, not Supabase Auth.
+- In-app account deletion and support-request submission are implemented in code, but production validation still depends on applying the latest Supabase migration and confirming support-email environment variables.
+- Subscription copy is aligned to the current product state, but RevenueCat integration, restore purchases, and store-product setup are still pending.
+- Crash reporting and release telemetry are still pending vendor setup and code integration.
 
 ## Reviewer
 

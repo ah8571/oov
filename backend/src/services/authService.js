@@ -41,9 +41,21 @@ export const verifyToken = (token) => {
 /**
  * Register a new user
  */
-export const registerUser = async (email, password, marketingOptIn = false) => {
+export const registerUser = async (email, password, consentOptions = {}) => {
   const supabase = getSupabase();
   const supabaseDebug = getSupabaseDebugInfo();
+  const {
+    marketingOptIn = false,
+    termsAccepted = false,
+    privacyAccepted = false,
+    termsVersion = null,
+    privacyVersion = null,
+    consentSource = 'mobile_signup',
+    requiredConsentText = null,
+    marketingConsentText = null,
+    marketingPolicyVersion = null,
+    consentUserAgent = 'unknown'
+  } = consentOptions;
 
   // Validate input
   if (!email || !password) {
@@ -52,6 +64,10 @@ export const registerUser = async (email, password, marketingOptIn = false) => {
 
   if (password.length < 8) {
     throw new Error('Password must be at least 8 characters long');
+  }
+
+  if (!termsAccepted || !privacyAccepted) {
+    throw new Error('Terms of Use and Privacy Policy acceptance are required');
   }
 
   // Check if user already exists
@@ -102,6 +118,7 @@ export const registerUser = async (email, password, marketingOptIn = false) => {
   const passwordHash = await bcrypt.hash(password, 10);
   const emailPrefix = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase() || 'user';
   const username = `${emailPrefix}_${Date.now().toString().slice(-6)}`;
+  const nowIso = new Date().toISOString();
 
   // Create user in database
   const { data: newUser, error } = await supabase
@@ -111,7 +128,18 @@ export const registerUser = async (email, password, marketingOptIn = false) => {
       username,
       password_hash: passwordHash,
       marketing_opt_in: Boolean(marketingOptIn),
-      created_at: new Date().toISOString()
+      created_at: nowIso,
+      consent_source: consentSource,
+      consent_user_agent: consentUserAgent,
+      terms_accepted_at: nowIso,
+      privacy_accepted_at: nowIso,
+      terms_version: termsVersion,
+      privacy_version: privacyVersion,
+      terms_consent_text: requiredConsentText,
+      privacy_consent_text: requiredConsentText,
+      marketing_consent_at: marketingOptIn ? nowIso : null,
+      marketing_policy_version: marketingPolicyVersion,
+      marketing_consent_text: marketingOptIn ? marketingConsentText : null
     })
     .select()
     .single();

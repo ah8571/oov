@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 
+import legalContent from '../../../shared/legalContent.json';
+
 export default function Waitlist() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ export default function Waitlist() {
         email,
         source: 'landing-page',
         consentSource: 'landing-page',
-        policyVersion: '2026-02-27'
+        policyVersion: legalContent.policyVersion
       });
 
       setMessage('✓ Thanks for signing up! Check your email for updates.');

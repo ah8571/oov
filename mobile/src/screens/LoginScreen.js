@@ -10,19 +10,23 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import legalContent from '../../../shared/legalContent.json';
 import { loginUser, registerUser } from '../services/api.js';
 
 /**
  * LoginScreen
  * Initial authentication screen for users
  */
-const LoginScreen = ({ onLoginSuccess }) => {
+const LoginScreen = ({ navigation, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedRequiredTerms, setAcceptedRequiredTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   const handleAuth = async () => {
     setLoading(true);
@@ -41,9 +45,25 @@ const LoginScreen = ({ onLoginSuccess }) => {
         return;
       }
 
+      if (!isLogin && !acceptedRequiredTerms) {
+        setError('You must agree to the Terms of Use and Privacy Policy to create an account.');
+        setLoading(false);
+        return;
+      }
+
       const response = isLogin
         ? await loginUser(email.trim().toLowerCase(), password)
-        : await registerUser(email.trim().toLowerCase(), password);
+        : await registerUser(email.trim().toLowerCase(), password, {
+            marketingOptIn,
+            termsAccepted: acceptedRequiredTerms,
+            privacyAccepted: acceptedRequiredTerms,
+            termsVersion: legalContent.termsVersion,
+            privacyVersion: legalContent.policyVersion,
+            consentSource: 'mobile_signup',
+            requiredConsentText: legalContent.consentText.required,
+            marketingConsentText: legalContent.consentText.marketing,
+            marketingPolicyVersion: legalContent.policyVersion
+          });
 
       console.log('[Auth] Response received', {
         success: response.success,
@@ -115,6 +135,43 @@ const LoginScreen = ({ onLoginSuccess }) => {
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+          {!isLogin ? (
+            <View style={styles.consentGroup}>
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setAcceptedRequiredTerms((current) => !current)}
+                activeOpacity={0.85}
+                disabled={loading}
+              >
+                <View style={[styles.checkbox, acceptedRequiredTerms && styles.checkboxChecked]}>
+                  {acceptedRequiredTerms ? <Ionicons name="checkmark" size={14} color="#050607" /> : null}
+                </View>
+                <Text style={styles.checkboxText}>{legalContent.consentText.required}</Text>
+              </TouchableOpacity>
+
+              <View style={styles.linkRow}>
+                <TouchableOpacity onPress={() => navigation.navigate('TermsOfService')} disabled={loading}>
+                  <Text style={styles.linkText}>Read Terms</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')} disabled={loading}>
+                  <Text style={styles.linkText}>Read Privacy Policy</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity
+                style={styles.checkboxRow}
+                onPress={() => setMarketingOptIn((current) => !current)}
+                activeOpacity={0.85}
+                disabled={loading}
+              >
+                <View style={[styles.checkbox, marketingOptIn && styles.checkboxChecked]}>
+                  {marketingOptIn ? <Ionicons name="checkmark" size={14} color="#050607" /> : null}
+                </View>
+                <Text style={styles.checkboxText}>{legalContent.consentText.marketing}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleAuth}
@@ -133,6 +190,8 @@ const LoginScreen = ({ onLoginSuccess }) => {
             onPress={() => {
               setIsLogin(!isLogin);
               setError('');
+              setAcceptedRequiredTerms(false);
+              setMarketingOptIn(false);
             }}
             disabled={loading}
           >
@@ -222,6 +281,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 12,
     fontWeight: '500'
+  },
+  consentGroup: {
+    gap: 12,
+    marginBottom: 4
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f5f7fa',
+    marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  checkboxChecked: {
+    backgroundColor: '#f5f7fa'
+  },
+  checkboxText: {
+    flex: 1,
+    color: '#d6dbe1',
+    fontSize: 12,
+    lineHeight: 18
+  },
+  linkRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginLeft: 32,
+    marginTop: -2
+  },
+  linkText: {
+    color: '#f5f7fa',
+    fontSize: 12,
+    fontWeight: '600'
   },
   button: {
     backgroundColor: '#f5f7fa',

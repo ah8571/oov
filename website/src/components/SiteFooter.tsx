@@ -50,15 +50,15 @@ export default function SiteFooter() {
             <Link href="/#waitlist" className="transition hover:text-white">
               Join Waitlist
             </Link>
-            <a href="#" className="transition hover:text-white">
+            <Link href="/privacy" className="transition hover:text-white">
               Privacy
-            </a>
-            <a href="#" className="transition hover:text-white">
+            </Link>
+            <Link href="/terms" className="transition hover:text-white">
               Terms
-            </a>
-            <a href="mailto:contact@emmaline.app" className="transition hover:text-white">
-              Contact
-            </a>
+            </Link>
+            <Link href="/support" className="transition hover:text-white">
+              Support
+            </Link>
           </div>
           <p className="text-sm text-white/35">© 2026 Emmaline. All rights reserved.</p>
         </div>

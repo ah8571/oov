@@ -33,7 +33,7 @@ export const addNewsletterSubscriber = async ({
   source = 'landing-page',
   marketingConsent = false,
   consentSource = 'landing-page',
-  policyVersion = '2026-02-27',
+  policyVersion = '2026-06-21',
   consentTimestamp,
   userAgent = 'unknown'
 }) => {

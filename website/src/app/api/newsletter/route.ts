@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import legalContent from '../../../../../shared/legalContent.json';
+
 /**
  * Newsletter subscription endpoint
  * Stores emails in backend database for the waitlist
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
         source,
         marketingConsent: true,
         consentSource: consentSource || source || 'landing-page',
-        policyVersion: policyVersion || '2026-02-27',
+        policyVersion: policyVersion || legalContent.policyVersion,
         consentTimestamp: new Date().toISOString(),
         userAgent: req.headers.get('user-agent') || 'unknown',
         timestamp: new Date().toISOString()

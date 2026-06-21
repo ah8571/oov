@@ -12,6 +12,8 @@ import CreateNoteScreen from '../screens/CreateNoteScreen';
 import CallDetailScreen from '../screens/CallDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import UpgradeScreen from '../screens/UpgradeScreen';
+import LegalDocumentScreen from '../screens/LegalDocumentScreen';
+import SupportScreen from '../screens/SupportScreen';
 import { isAuthenticated as hasAuthToken, getUser } from '../utils/secureStorage.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
@@ -146,6 +148,10 @@ const AppHome = ({ onLogout }) => {
     );
   };
 
+  const handleAccountDeleted = async () => {
+    await onLogout?.();
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View
@@ -242,6 +248,13 @@ const AppHome = ({ onLogout }) => {
               <Text style={[styles.menuItemText, { color: colors.text }]}>Settings</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => openScreen('support')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Support</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[styles.menuItem, styles.menuItemLast, { borderTopColor: colors.border }]}
               onPress={handleLogoutPress}
               activeOpacity={0.8}
@@ -267,9 +280,15 @@ const AppHome = ({ onLogout }) => {
             ? <NotesStack stackKey={`notes-${notesStackVersion}`} onAppHeaderScroll={handleAppHeaderScroll} notesResetToken={notesResetToken} />
             : activeScreen === 'reader'
               ? <ReaderScreen onAppHeaderScroll={handleAppHeaderScroll} />
+              : activeScreen === 'support'
+                ? <SupportScreen />
+                : activeScreen === 'privacy'
+                  ? <LegalDocumentScreen documentKey="privacyPolicy" />
+                  : activeScreen === 'terms'
+                    ? <LegalDocumentScreen documentKey="termsOfService" />
             : activeScreen === 'upgrade'
               ? <UpgradeScreen />
-              : <SettingsScreen onLogout={onLogout} onOpenUpgrade={() => openScreen('upgrade')} />}
+              : <SettingsScreen onLogout={onLogout} onOpenUpgrade={() => openScreen('upgrade')} onOpenScreen={openScreen} onAccountDeleted={handleAccountDeleted} />}
       </View>
     </View>
   );
@@ -348,7 +367,13 @@ const AppNavigator = ({ onAuthStateChange }) => {
               animationEnabled: false
             }}
           >
-            {() => <LoginScreen onLoginSuccess={handleLoginSuccess} />}
+            {(screenProps) => <LoginScreen {...screenProps} onLoginSuccess={handleLoginSuccess} />}
+          </Stack.Screen>
+          <Stack.Screen name="PrivacyPolicy" options={{ headerShown: false }}>
+            {() => <LegalDocumentScreen documentKey="privacyPolicy" />}
+          </Stack.Screen>
+          <Stack.Screen name="TermsOfService" options={{ headerShown: false }}>
+            {() => <LegalDocumentScreen documentKey="termsOfService" />}
           </Stack.Screen>
         </Stack.Navigator>
       ) : (

@@ -73,10 +73,34 @@ const removeTokenFromHeaders = () => {
 /**
  * Register a new user
  */
-export const registerUser = async (email, password) => {
+export const registerUser = async (email, password, options = {}) => {
   try {
-    logApiRequest('post', '/auth/register', { email });
-    const response = await apiClient.post('/auth/register', { email, password });
+    const {
+      marketingOptIn = false,
+      termsAccepted = false,
+      privacyAccepted = false,
+      termsVersion,
+      privacyVersion,
+      consentSource,
+      requiredConsentText,
+      marketingConsentText,
+      marketingPolicyVersion
+    } = options;
+
+    logApiRequest('post', '/auth/register', { email, marketingOptIn, consentSource });
+    const response = await apiClient.post('/auth/register', {
+      email,
+      password,
+      marketingOptIn,
+      termsAccepted,
+      privacyAccepted,
+      termsVersion,
+      privacyVersion,
+      consentSource,
+      requiredConsentText,
+      marketingConsentText,
+      marketingPolicyVersion
+    });
 
     // Save token and user info
     await SecureStorage.saveToken(response.data.token);
@@ -183,6 +207,51 @@ export const logoutUser = async () => {
     return {
       success: false,
       error: error.message
+    };
+  }
+};
+
+export const submitSupportRequest = async ({ name = '', email, subject, message, source = 'mobile_support' }) => {
+  try {
+    await addTokenToHeaders();
+    const response = await apiClient.post('/support/requests', {
+      name,
+      email,
+      subject,
+      message,
+      source
+    });
+
+    return {
+      success: true,
+      supportRequest: response.data.supportRequest || null
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatApiError(error, 'Failed to submit support request')
+    };
+  }
+};
+
+export const deleteAccount = async ({ reason = '', source = 'mobile_settings' } = {}) => {
+  try {
+    await addTokenToHeaders();
+    const response = await apiClient.delete('/support/account', {
+      data: {
+        reason,
+        source
+      }
+    });
+
+    return {
+      success: true,
+      message: response.data.message
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatApiError(error, 'Failed to delete account')
     };
   }
 };
