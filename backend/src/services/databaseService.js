@@ -77,20 +77,41 @@ const normalizePhoneNumberForStorage = (rawValue) => {
   return value.slice(0, 20);
 };
 
+const isMissingCallModeColumnError = (error) => {
+  const message = [error?.message, error?.details, error?.hint]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return message.includes('call_mode') && (message.includes('schema cache') || message.includes('column'));
+};
+
 export const saveCall = async (userId, callData) => {
-  const { data, error } = await supabase
+  const basePayload = {
+    user_id: userId,
+    phone_number: normalizePhoneNumberForStorage(callData.phoneNumber),
+    call_duration_seconds: callData.duration,
+    started_at: callData.startedAt,
+    ended_at: callData.endedAt,
+    call_status: callData.status,
+    twilio_call_sid: callData.twilioCallSid
+  };
+
+  let { data, error } = await supabase
     .from('calls')
     .insert({
-      user_id: userId,
-      phone_number: normalizePhoneNumberForStorage(callData.phoneNumber),
-      call_mode: callData.callMode || 'live_call',
-      call_duration_seconds: callData.duration,
-      started_at: callData.startedAt,
-      ended_at: callData.endedAt,
-      call_status: callData.status,
-      twilio_call_sid: callData.twilioCallSid
+      ...basePayload,
+      call_mode: callData.callMode || 'live_call'
     })
     .select();
+
+  if (error && isMissingCallModeColumnError(error)) {
+    console.warn('calls.call_mode is missing from the live schema cache; retrying saveCall without call_mode');
+    ({ data, error } = await supabase
+      .from('calls')
+      .insert(basePayload)
+      .select());
+  }
 
   if (error) {
     console.error('Error saving call:', error);
@@ -531,18 +552,7 @@ export const linkNotesToCall = async (userId, noteIds = [], callId) => {
 };
 
 export const getUserPricingTier = async (userId) => {
-  const { data, error } = await supabase
-    .from('users')
-    .select('privacy_tier')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('Error fetching user pricing tier:', error);
-    throw error;
-  }
-
-  return data?.privacy_tier || 'tier1';
+  return 'tier1';
 };
 
 export const getUserBillingProfile = async (userId) => {

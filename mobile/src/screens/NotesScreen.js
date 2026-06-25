@@ -284,6 +284,8 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
           ))}
         </ScrollView>
       ) : null}
+
+      <View style={styles.listHeaderSpacer} />
     </>
   );
 
@@ -434,6 +436,9 @@ const styles = StyleSheet.create({
   notesList: {
     paddingHorizontal: 10,
     paddingTop: 10
+  },
+  listHeaderSpacer: {
+    height: 6
   }
 });
 

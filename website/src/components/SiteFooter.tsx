@@ -28,7 +28,7 @@ export default function SiteFooter() {
         <div className="space-y-4">
           <p className="text-sm uppercase tracking-[0.24em] text-white/45">Emmaline</p>
           <p className="max-w-md text-sm leading-7 text-white/60">
-            A voice-first AI phone assistant designed for real conversations, everyday help, and a more dedicated assistant experience over time.
+            A voice-first assistant designed for real conversations, everyday help, and a more expansive calling and texting experience over time.
           </p>
           <SocialLinks />
         </div>

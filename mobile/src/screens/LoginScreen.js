@@ -56,13 +56,7 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
         : await registerUser(email.trim().toLowerCase(), password, {
             marketingOptIn,
             termsAccepted: acceptedRequiredTerms,
-            privacyAccepted: acceptedRequiredTerms,
-            termsVersion: legalContent.termsVersion,
-            privacyVersion: legalContent.policyVersion,
-            consentSource: 'mobile_signup',
-            requiredConsentText: legalContent.consentText.required,
-            marketingConsentText: legalContent.consentText.marketing,
-            marketingPolicyVersion: legalContent.policyVersion
+            privacyAccepted: acceptedRequiredTerms
           });
 
       console.log('[Auth] Response received', {
@@ -93,7 +87,7 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Emmaline</Text>
-          <Text style={styles.subtitle}>AI Phone Assistant</Text>
+          <Text style={styles.subtitle}>Voice Assistant</Text>
         </View>
 
         <View style={styles.form}>

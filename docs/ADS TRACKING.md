@@ -1,4 +1,8 @@
 
+Key links to review:
+https://www.revenuecat.com/docs/integrations/attribution/appsflyer
+https://www.appsflyer.com/pricing/
+
 Mobile install attribution for ads: an MMP like Tenjin, AppsFlyer, Adjust, Branch, or Singular
 
 For Emmaline’s current stage, the simplest sensible stack would be:

@@ -6,7 +6,7 @@ export default function SupportPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader ctaHref="/#waitlist" ctaLabel="Join Waitlist" />
-      <div className="mx-auto max-w-5xl px-4 py-16 md:py-24">
+      <div className="mx-auto max-w-5xl px-4 py-16 pb-28 md:py-24 md:pb-32">
         <div className="grid gap-10 md:grid-cols-[0.95fr,1.05fr] md:items-start">
           <div className="space-y-6">
             <p className="text-xs uppercase tracking-[0.24em] text-white/45">Support</p>

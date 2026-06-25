@@ -32,7 +32,7 @@ const FloatingCallButton = ({
   const statusBottom = floatingBottom + 116;
   const audioCardBottom = floatingBottom + 80;
   const circleIconColor = isDarkMode ? '#ffffff' : '#111111';
-  const controlBackgroundColor = isDarkMode ? '#000000' : '#ffffff';
+  const controlBackgroundColor = isDarkMode ? colors.surface : colors.surface;
   const controlSize = designTokens.chrome.menuButtonSize;
   const callIconSize = Math.round(controlSize * 0.47);
   const closeIconSize = Math.round(controlSize * 0.56);
@@ -117,7 +117,8 @@ const FloatingCallButton = ({
           style={[
             styles.button,
             {
-              backgroundColor: controlBackgroundColor,
+              backgroundColor: isActiveCall ? colors.surfaceAlt : controlBackgroundColor,
+              borderColor: colors.border,
               width: controlSize,
               height: controlSize
             },
@@ -137,8 +138,8 @@ const FloatingCallButton = ({
       </Animated.View>
 
       {statusLabel ? (
-        <View style={[styles.statusIndicator, { bottom: statusBottom, backgroundColor: colors.status }]}>
-          <Text style={styles.statusText}>{statusLabel}</Text>
+        <View style={[styles.statusIndicator, { bottom: statusBottom, backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.statusText, { color: colors.text }]}>{statusLabel}</Text>
         </View>
       ) : null}
     </>
@@ -156,6 +157,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.16,
@@ -175,6 +178,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     backgroundColor: '#007AFF',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -185,7 +190,6 @@ const styles = StyleSheet.create({
     elevation: 5
   },
   statusText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: '600'
   },

@@ -78,28 +78,16 @@ export const registerUser = async (email, password, options = {}) => {
     const {
       marketingOptIn = false,
       termsAccepted = false,
-      privacyAccepted = false,
-      termsVersion,
-      privacyVersion,
-      consentSource,
-      requiredConsentText,
-      marketingConsentText,
-      marketingPolicyVersion
+      privacyAccepted = false
     } = options;
 
-    logApiRequest('post', '/auth/register', { email, marketingOptIn, consentSource });
+    logApiRequest('post', '/auth/register', { email, marketingOptIn });
     const response = await apiClient.post('/auth/register', {
       email,
       password,
       marketingOptIn,
       termsAccepted,
-      privacyAccepted,
-      termsVersion,
-      privacyVersion,
-      consentSource,
-      requiredConsentText,
-      marketingConsentText,
-      marketingPolicyVersion
+      privacyAccepted
     });
 
     // Save token and user info

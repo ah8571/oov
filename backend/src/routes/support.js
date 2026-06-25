@@ -4,8 +4,10 @@ import authMiddleware, { optionalAuth } from '../middleware/auth.js';
 import {
   createSupportRequest,
   deleteUserAccount,
+  isSupportConfirmationConfigured,
   isSupportEmailConfigured,
   logAccountDeletionRequest,
+  sendSupportConfirmationEmail,
   sendSupportRequestEmail
 } from '../services/supportService.js';
 
@@ -38,20 +40,42 @@ router.post('/requests', optionalAuth, async (req, res) => {
       userAgent: req.get('user-agent') || 'unknown'
     });
 
-    let emailDelivery = { sent: false, reason: 'Support email not configured' };
+    let emailDelivery = {
+      supportInbox: { sent: false, reason: 'Support email not configured' },
+      requesterConfirmation: { sent: false, reason: 'Support confirmation email not configured' }
+    };
 
     if (isSupportEmailConfigured()) {
-      emailDelivery = await sendSupportRequestEmail({
-        requestId: supportRequest.id,
-        userId: req.user?.userId || null,
-        accountEmail: req.user?.email || null,
-        name,
-        email,
-        subject,
-        message,
-        source,
-        category
-      });
+      try {
+        emailDelivery.supportInbox = await sendSupportRequestEmail({
+          requestId: supportRequest.id,
+          userId: req.user?.userId || null,
+          accountEmail: req.user?.email || null,
+          name,
+          email,
+          subject,
+          message,
+          source,
+          category
+        });
+      } catch (emailError) {
+        console.error('Support inbox email error:', emailError.message);
+        emailDelivery.supportInbox = { sent: false, reason: emailError.message };
+      }
+    }
+
+    if (isSupportConfirmationConfigured()) {
+      try {
+        emailDelivery.requesterConfirmation = await sendSupportConfirmationEmail({
+          requestId: supportRequest.id,
+          name,
+          email,
+          subject
+        });
+      } catch (emailError) {
+        console.error('Support confirmation email error:', emailError.message);
+        emailDelivery.requesterConfirmation = { sent: false, reason: emailError.message };
+      }
     }
 
     return res.status(201).json({

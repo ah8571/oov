@@ -60,7 +60,7 @@ const splitTextIntoSpeechChunks = (text) => {
 };
 
 const ReaderScreen = ({ onAppHeaderScroll }) => {
-  const { colors } = useAppTheme();
+  const { colors, isDarkMode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [documentTitle, setDocumentTitle] = useState('');
   const [readerText, setReaderText] = useState('');
@@ -197,6 +197,8 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
   const wordCount = String(readerText || '').trim() ? String(readerText || '').trim().split(/\s+/).filter(Boolean).length : 0;
   const bottomContentInset = Math.max(insets.bottom, BOTTOM_SAFE_ZONE);
+  const primaryButtonBackground = isDarkMode ? colors.surfaceAlt : colors.text;
+  const primaryButtonTextColor = isDarkMode ? colors.text : '#ffffff';
 
   return (
     <ScrollView
@@ -216,12 +218,12 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
         <View style={styles.actionRow}>
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.text }]}
+            style={[styles.primaryButton, { backgroundColor: primaryButtonBackground, borderColor: colors.border }]}
             onPress={handleImportDocument}
             disabled={isImporting}
             activeOpacity={0.85}
           >
-            <Text style={styles.primaryButtonText}>{isImporting ? 'Importing...' : 'Import TXT or PDF'}</Text>
+            <Text style={[styles.primaryButtonText, { color: primaryButtonTextColor }]}>{isImporting ? 'Importing...' : 'Import TXT or PDF'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -276,11 +278,11 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
         <View style={styles.actionRow}>
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: colors.text, opacity: isSpeaking ? 0.82 : 1 }]}
+            style={[styles.primaryButton, { backgroundColor: primaryButtonBackground, borderColor: colors.border, opacity: isSpeaking ? 0.82 : 1 }]}
             onPress={handleReadAloud}
             activeOpacity={0.85}
           >
-            <Text style={styles.primaryButtonText}>{isSpeaking ? 'Restart reading' : 'Read aloud'}</Text>
+            <Text style={[styles.primaryButtonText, { color: primaryButtonTextColor }]}>{isSpeaking ? 'Restart reading' : 'Read aloud'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -339,7 +341,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1
+    flex: 1,
+    borderWidth: 1
   },
   primaryButtonText: {
     color: '#ffffff',

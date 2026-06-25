@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Alert, View, Image, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
 import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
 import { getVoiceToken, uploadListenModeRecording } from './services/api.js';
@@ -31,6 +32,15 @@ import {
 import { AppThemeProvider, darkColors, lightColors } from './theme/appTheme.js';
 
 const APP_BOTTOM_RAIL_HEIGHT = 5;
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN || '';
+
+Sentry.init({
+  dsn: sentryDsn,
+  enabled: Boolean(sentryDsn),
+  sendDefaultPii: false,
+  enableNativeFramesTracking: true,
+  attachStacktrace: true
+});
 
 const AppContent = () => {
   const insets = useSafeAreaInsets();
@@ -122,20 +132,26 @@ const AppContent = () => {
     return () => clearTimeout(statusTimer);
   }, [callStatus]);
 
+  const stopLiveCall = async () => {
+    const endResponse = await endVoiceCall();
+
+    if (!endResponse.success) {
+      Alert.alert('End call failed', endResponse.error || 'Unable to end call.');
+      return false;
+    }
+
+    setIsCalling(false);
+    setCallStatus('ended');
+    return true;
+  };
+
   const startLiveCall = async () => {
     if (isCalling) {
       return;
     }
 
     if (getVoiceCallActive()) {
-      const endResponse = await endVoiceCall();
-      if (!endResponse.success) {
-        Alert.alert('End call failed', endResponse.error || 'Unable to end call.');
-        return;
-      }
-
-      setIsCalling(false);
-      setCallStatus('ended');
+      await stopLiveCall();
       return;
     }
 
@@ -201,6 +217,12 @@ const AppContent = () => {
           }
         },
         onError: (message) => {
+          Sentry.captureMessage(message || 'Unexpected VoIP call error.', {
+            level: 'error',
+            tags: {
+              area: 'voice_call'
+            }
+          });
           Alert.alert('Call error', message || 'Unexpected VoIP call error.');
         }
       });
@@ -216,6 +238,11 @@ const AppContent = () => {
         return;
       }
     } catch (error) {
+      Sentry.captureException(error, {
+        tags: {
+          area: 'voice_call_start'
+        }
+      });
       setIsCalling(false);
       setCallStatus('failed');
       Alert.alert('Call error', error.message || 'Unexpected error while starting the call.');
@@ -223,8 +250,8 @@ const AppContent = () => {
   };
 
   const handleInitiateCall = async () => {
-    if (getVoiceCallActive()) {
-      await startLiveCall();
+    if (getVoiceCallActive() || isCalling || ['connecting', 'ringing', 'live', 'reconnecting'].includes(callStatus)) {
+      await stopLiveCall();
       return;
     }
 
@@ -272,6 +299,11 @@ const AppContent = () => {
       setListenModeState('saved');
       Alert.alert('Listen Mode saved', 'Your recording was transcribed and added to Transcripts.');
     } catch (error) {
+      Sentry.captureException(error, {
+        tags: {
+          area: 'listen_mode_upload'
+        }
+      });
       setListenModeState('failed');
       Alert.alert('Listen Mode failed', error.message || 'Unable to finish Listen Mode right now.');
       return;
@@ -437,13 +469,15 @@ const AppContent = () => {
   );
 };
 
-export default function App() {
+function App() {
   return (
     <SafeAreaProvider>
       <AppContent />
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(App);
 
 const styles = StyleSheet.create({
   container: {

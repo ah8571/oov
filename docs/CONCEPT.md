@@ -1,8 +1,8 @@
-# Emmaline: AI Phone Call Buddy Concept
+# Emmaline Concept
 
 ## Overview
 
-Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Users can call a dedicated phone number and speak with an AI assistant in real-time while multitasking — cooking, commuting, shopping, or any daily activity. Conversations are automatically transcribed, summarized, and organized in a minimalistic note-taking interface for later review and reference.
+Emmaline is a hands-free, voice-first AI assistant for real-time conversations, instant answers, and note-friendly thinking out loud. The first version centers on the in-app voice experience, with future room to expand into calling and texting capabilities when those channels are ready to be productized.
 
 
 
@@ -30,6 +30,7 @@ Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Us
 - transcriptions
 - conversations with AI
 - read documents -> create summaries, perhaps even for discussion or flash cards of the material
+- study skill (ex. coconote production capabilities with take a source material (say a video but perhaps could be several types), creating a "transcript, summary, flashcards, quizzes" [yuma on medium])
 - language teacher 
 - receptionist set up (ie an AI voice assistant for small businesses - but how would we set up infrastructure for this if people are also texting... could receive messages like 2nd number)
 - document creator like with genspark
@@ -39,6 +40,24 @@ Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Us
 
 ## Phase 1: Publishable MVP with Cloud Infrastructure
 
+**before submitting to app store verify different users accounts only have access to their own in app notes
+
+The cleaner product framing:
+
+In the app: Live Call or Talk Live
+Also in the app or on the website: Call or text Emmaline at <number>
+
+## Privacy labeling
+
+Apple App Store (Privacy Nutrition Labels): You must declare "Purchase History" or "Financial Info" under your data collection list. If that event is tied to an advertiser ID (like IDFA) to tie the purchase back to an ad campaign, Apple explicitly defines this as "Data Used to Track You". This requires explicit user opt-in via the App Tracking Transparency (ATT) prompt."
+
+### Information tracked in a conversion
+Device and Network Identifiers (The "Who")To match the subscription event back to the user who clicked an ad on TikTok or Meta, the payload must include unique hardware or software fingerprints:Ad IDs: Apple’s IDFA (Identifier for Advertisers) or Google’s GAID (Google Advertising ID).Vendor ID (IDFV): An identifier unique to your app's developer account.IP Address: Used to approximate location and determine the cellular carrier.Customer User ID: The internal database ID you assigned to that user in your app.
+Contextual Device Metadata (The "How")Ad networks use these details for deep optimization, behavioral profiling, and fraud prevention:Device Model & OS: e.g., iPhone 15 Pro, iOS 17.4.App Version & SDK Version: Tracks the exact build of your app and the AppsFlyer SDK.Timestamp: Accurate down to the millisecond to match against ad click logs.Language & Locale: e.g., en_US.
+
+## Tracking implementation
+
+On iOS: You must show the App Tracking Transparency (ATT) prompt. If the user clicks "Ask App Not to Track," Apple blocks the IDFA, forcing AppsFlyer and Meta to rely on aggregated, less-accurate tracking methods (like Apple's SKAdNetwork).Privacy Policies: Your privacy policy must explicitly state that you share device identifiers and commercial data with third-party advertising and analytics networks for measurement purposes.
 
 ### Phase 1 Publish Blockers
 
@@ -133,10 +152,23 @@ Emmaline is a hands-free, voice-first AI assistant accessible via phone call. Us
 ---
 ## Later concepts
 
+multilingual versions depending on country
+
+Viral design (ex. Coconote) ie building interesting features that are interesting visibly in potential demonstrations
+
+For the emails to fully work after deploy, the backend still needs these env vars:
+
+RESEND_API_KEY
+RESEND_FROM_EMAIL
+SUPPORT_EMAIL_TO
+
+- API breakdowns (costs / experiences / api key listing)
+
 Potential outlets
 - A kind of flexible virtual assistant
 - real time interpretor: can be with headphones or speaker
 - a text reader
+- reading on what are the different gumloop skills available
 
 Learning about: Elsa Speak, Speak and babbel for speech learning; the quantity of talk based language learning apps
 

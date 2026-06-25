@@ -30,6 +30,10 @@ export const isSupportEmailConfigured = () => {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL && process.env.SUPPORT_EMAIL_TO);
 };
 
+export const isSupportConfirmationConfigured = () => {
+  return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL);
+};
+
 export const createSupportRequest = async ({
   userId = null,
   accountEmail = null,
@@ -146,6 +150,54 @@ export const sendSupportRequestEmail = async ({
   };
 };
 
+export const sendSupportConfirmationEmail = async ({
+  requestId,
+  name = '',
+  email,
+  subject
+}) => {
+  if (!isSupportConfirmationConfigured()) {
+    return { sent: false, reason: 'Support confirmation email not configured' };
+  }
+
+  const resend = getResendClient();
+  const from = process.env.RESEND_FROM_EMAIL;
+  const displayName = String(name || '').trim() || 'there';
+
+  const response = await resend.emails.send({
+    from,
+    to: email,
+    subject: 'Support request submitted for Emmaline',
+    text: [
+      `Hi ${displayName},`,
+      '',
+      'Your support request was submitted successfully.',
+      `Subject: ${subject}`,
+      `Request ID: ${requestId || 'n/a'}`,
+      '',
+      'We will reply by email with updates.',
+      '',
+      'Emmaline Support'
+    ].join('\n'),
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+        <h2 style="margin-bottom: 16px;">Support request submitted</h2>
+        <p>Hi ${displayName},</p>
+        <p>Your support request was submitted successfully.</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Request ID:</strong> ${requestId || 'n/a'}</p>
+        <p>We will reply by email with updates.</p>
+        <p style="margin-top: 24px;">Emmaline Support</p>
+      </div>
+    `
+  });
+
+  return {
+    sent: true,
+    id: response?.data?.id || null
+  };
+};
+
 export const logAccountDeletionRequest = async ({
   userId,
   email,
@@ -202,7 +254,9 @@ export const deleteUserAccount = async ({ userId }) => {
 export default {
   createSupportRequest,
   sendSupportRequestEmail,
+  sendSupportConfirmationEmail,
   logAccountDeletionRequest,
   deleteUserAccount,
-  isSupportEmailConfigured
+  isSupportEmailConfigured,
+  isSupportConfirmationConfigured
 };

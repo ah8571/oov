@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://emmaline.app'),
-  title: 'AI Phone Assistant For Real Conversations | Emmaline',
-  description: 'Emmaline is an AI phone assistant you can call to ask questions, practice conversations, and talk naturally by voice.',
+  title: 'Voice Assistant For Real Conversations | Emmaline',
+  description: 'Emmaline is a voice-first assistant for natural conversations, instant answers, and thoughtful note-taking.',
   alternates: {
     canonical: '/',
   },
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     shortcut: '/black outline favicon.png'
   },
   openGraph: {
-    title: 'AI Phone Assistant For Real Conversations | Emmaline',
-    description: 'Emmaline is an AI phone assistant you can call to ask questions, practice conversations, and talk naturally by voice.',
+    title: 'Voice Assistant For Real Conversations | Emmaline',
+    description: 'Emmaline is a voice-first assistant for natural conversations, instant answers, and thoughtful note-taking.',
     type: 'website',
     url: 'https://emmaline.app',
   },

@@ -3,6 +3,7 @@ import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
 
 import LoginScreen from '../screens/LoginScreen';
 import TranscriptScreen from '../screens/TranscriptScreen';
@@ -159,7 +160,7 @@ const AppHome = ({ onLogout }) => {
           styles.floatingMenuContainer,
           {
             bottom: floatingButtonBottom,
-            left: 0
+            left: 10
           }
         ]}
       >
@@ -206,7 +207,7 @@ const AppHome = ({ onLogout }) => {
               {
                 backgroundColor: colors.surface,
                 borderRightColor: colors.border,
-                left: 8,
+                left: 12,
                 top: topInset + 8,
                 bottom: floatingButtonBottom + floatingButtonSize + 8
               }
@@ -318,6 +319,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
         const authenticated = await hasAuthToken();
 
         if (!authenticated) {
+          Sentry.setUser(null);
           setIsAuthenticated(false);
           setUser(null);
           onAuthStateChange?.(false);
@@ -325,10 +327,24 @@ const AppNavigator = ({ onAuthStateChange }) => {
         }
 
         const storedUser = await getUser();
+        Sentry.setUser(
+          storedUser?.id
+            ? {
+                id: String(storedUser.id),
+                email: storedUser.email || undefined
+              }
+            : null
+        );
         setUser(storedUser);
         setIsAuthenticated(true);
         onAuthStateChange?.(true);
       } catch (error) {
+        Sentry.captureException(error, {
+          tags: {
+            area: 'auth_restore'
+          }
+        });
+        Sentry.setUser(null);
         setIsAuthenticated(false);
         setUser(null);
         onAuthStateChange?.(false);
@@ -339,6 +355,14 @@ const AppNavigator = ({ onAuthStateChange }) => {
   }, [onAuthStateChange]);
 
   const handleLoginSuccess = (userData) => {
+    Sentry.setUser(
+      userData?.id
+        ? {
+            id: String(userData.id),
+            email: userData.email || undefined
+          }
+        : null
+    );
     setUser(userData);
     setIsAuthenticated(true);
     onAuthStateChange?.(true);
@@ -352,6 +376,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
       return;
     }
 
+    Sentry.setUser(null);
     setUser(null);
     setIsAuthenticated(false);
     onAuthStateChange?.(false);

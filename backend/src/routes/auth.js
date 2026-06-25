@@ -20,13 +20,7 @@ router.post('/register', async (req, res) => {
       password,
       marketingOptIn = false,
       termsAccepted = false,
-      privacyAccepted = false,
-      termsVersion,
-      privacyVersion,
-      consentSource = 'mobile_signup',
-      requiredConsentText,
-      marketingConsentText,
-      marketingPolicyVersion
+      privacyAccepted = false
     } = req.body;
 
     if (!email || !password) {
@@ -40,14 +34,7 @@ router.post('/register', async (req, res) => {
     const result = await registerUser(email, password, {
       marketingOptIn,
       termsAccepted,
-      privacyAccepted,
-      termsVersion,
-      privacyVersion,
-      consentSource,
-      requiredConsentText,
-      marketingConsentText,
-      marketingPolicyVersion,
-      consentUserAgent: req.get('user-agent') || 'unknown'
+      privacyAccepted
     });
 
     return res.status(201).json({

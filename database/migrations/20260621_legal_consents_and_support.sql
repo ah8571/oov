@@ -1,35 +1,36 @@
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS consent_source VARCHAR(100);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'terms_accepted_at'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'term_and_privacy_accepted_at'
+  ) THEN
+    ALTER TABLE users RENAME COLUMN terms_accepted_at TO term_and_privacy_accepted_at;
+  END IF;
+END $$;
 
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS consent_user_agent TEXT;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP WITH TIME ZONE;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMP WITH TIME ZONE;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_consent_text TEXT;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_consent_text TEXT;
+  ADD COLUMN IF NOT EXISTS term_and_privacy_accepted_at TIMESTAMP WITH TIME ZONE;
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS marketing_consent_at TIMESTAMP WITH TIME ZONE;
 
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS marketing_policy_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS marketing_consent_text TEXT;
+ALTER TABLE users DROP COLUMN IF EXISTS terms_version;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_version;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_tier;
+ALTER TABLE users DROP COLUMN IF EXISTS consent_source;
+ALTER TABLE users DROP COLUMN IF EXISTS consent_user_agent;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_accepted_at;
+ALTER TABLE users DROP COLUMN IF EXISTS terms_consent_text;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_consent_text;
+ALTER TABLE users DROP COLUMN IF EXISTS marketing_policy_version;
+ALTER TABLE users DROP COLUMN IF EXISTS marketing_consent_text;
 
 CREATE TABLE IF NOT EXISTS support_requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

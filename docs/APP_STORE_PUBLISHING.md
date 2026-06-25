@@ -59,14 +59,6 @@
 - [x] Confirm third-party api sdks and infrastructure answers include real behavior from services such as Twilio, OpenAI, Supabase
 - [ ] "All third-party SDKs approved versions" or "latest versions" @Hartdrawss
 
-## Implementation Status Notes
-
-- Privacy Policy and Terms of Use exist in the mobile app and website codebase.
-- Public website routes now exist for `/privacy`, `/terms`, and `/support`, but they still need deployment verification before the publishing checklist can treat them as live URLs.
-- Signup now records required consent and optional marketing consent on `public.users`, not Supabase Auth.
-- In-app account deletion and support-request submission are implemented in code, but production validation still depends on applying the latest Supabase migration and confirming support-email environment variables.
-- Subscription copy is aligned to the current product state, but RevenueCat integration, restore purchases, and store-product setup are still pending.
-- Crash reporting and release telemetry are still pending vendor setup and code integration.
 
 ## Reviewer
 

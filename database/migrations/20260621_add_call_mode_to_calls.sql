@@ -1,0 +1,2 @@
+ALTER TABLE calls
+  ADD COLUMN IF NOT EXISTS call_mode VARCHAR(30) NOT NULL DEFAULT 'live_call';

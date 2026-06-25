@@ -12,58 +12,49 @@ CREATE TABLE users (
   username VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   marketing_opt_in BOOLEAN DEFAULT FALSE,
-  consent_source VARCHAR(100),
-  consent_user_agent TEXT,
-  terms_accepted_at TIMESTAMP WITH TIME ZONE,
-  privacy_accepted_at TIMESTAMP WITH TIME ZONE,
-  terms_version VARCHAR(50),
-  privacy_version VARCHAR(50),
-  terms_consent_text TEXT,
-  privacy_consent_text TEXT,
+  term_and_privacy_accepted_at TIMESTAMP WITH TIME ZONE,
   marketing_consent_at TIMESTAMP WITH TIME ZONE,
-  marketing_policy_version VARCHAR(50),
-  marketing_consent_text TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  is_active BOOLEAN DEFAULT TRUE,
-  privacy_tier VARCHAR(50) DEFAULT 'tier1'
+  is_active BOOLEAN DEFAULT TRUE
 );
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN DEFAULT FALSE;
 
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS consent_source VARCHAR(100);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'terms_accepted_at'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = 'term_and_privacy_accepted_at'
+  ) THEN
+    ALTER TABLE users RENAME COLUMN terms_accepted_at TO term_and_privacy_accepted_at;
+  END IF;
+END $$;
 
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS consent_user_agent TEXT;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP WITH TIME ZONE;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMP WITH TIME ZONE;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS terms_consent_text TEXT;
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS privacy_consent_text TEXT;
+  ADD COLUMN IF NOT EXISTS term_and_privacy_accepted_at TIMESTAMP WITH TIME ZONE;
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS marketing_consent_at TIMESTAMP WITH TIME ZONE;
 
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS marketing_policy_version VARCHAR(50);
-
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS marketing_consent_text TEXT;
+ALTER TABLE users DROP COLUMN IF EXISTS terms_version;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_version;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_tier;
+ALTER TABLE users DROP COLUMN IF EXISTS consent_source;
+ALTER TABLE users DROP COLUMN IF EXISTS consent_user_agent;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_accepted_at;
+ALTER TABLE users DROP COLUMN IF EXISTS terms_consent_text;
+ALTER TABLE users DROP COLUMN IF EXISTS privacy_consent_text;
+ALTER TABLE users DROP COLUMN IF EXISTS marketing_policy_version;
+ALTER TABLE users DROP COLUMN IF EXISTS marketing_consent_text;
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS free_trial_seconds_granted INTEGER NOT NULL DEFAULT 300;

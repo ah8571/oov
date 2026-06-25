@@ -23,7 +23,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: backendPayload?.error || 'Failed to submit support request' }, { status: response.status });
     }
 
-    return NextResponse.json({ message: 'Support request submitted' }, { status: 201 });
+    return NextResponse.json(
+      {
+        message: backendPayload?.message || 'Support request submitted',
+        supportRequest: backendPayload?.supportRequest || null,
+        emailDelivery: backendPayload?.emailDelivery || null
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Support route error:', error);
     return NextResponse.json({ error: 'Failed to submit support request' }, { status: 500 });

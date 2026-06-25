@@ -47,14 +47,7 @@ export const registerUser = async (email, password, consentOptions = {}) => {
   const {
     marketingOptIn = false,
     termsAccepted = false,
-    privacyAccepted = false,
-    termsVersion = null,
-    privacyVersion = null,
-    consentSource = 'mobile_signup',
-    requiredConsentText = null,
-    marketingConsentText = null,
-    marketingPolicyVersion = null,
-    consentUserAgent = 'unknown'
+    privacyAccepted = false
   } = consentOptions;
 
   // Validate input
@@ -129,17 +122,8 @@ export const registerUser = async (email, password, consentOptions = {}) => {
       password_hash: passwordHash,
       marketing_opt_in: Boolean(marketingOptIn),
       created_at: nowIso,
-      consent_source: consentSource,
-      consent_user_agent: consentUserAgent,
-      terms_accepted_at: nowIso,
-      privacy_accepted_at: nowIso,
-      terms_version: termsVersion,
-      privacy_version: privacyVersion,
-      terms_consent_text: requiredConsentText,
-      privacy_consent_text: requiredConsentText,
-      marketing_consent_at: marketingOptIn ? nowIso : null,
-      marketing_policy_version: marketingPolicyVersion,
-      marketing_consent_text: marketingOptIn ? marketingConsentText : null
+      term_and_privacy_accepted_at: nowIso,
+      marketing_consent_at: marketingOptIn ? nowIso : null
     })
     .select()
     .single();
@@ -157,7 +141,7 @@ export const registerUser = async (email, password, consentOptions = {}) => {
       id: newUser.id,
       email: newUser.email,
       marketingOptIn: Boolean(newUser.marketing_opt_in),
-      pricingTier: newUser.privacy_tier || 'tier1'
+      pricingTier: 'tier1'
     },
     token
   };
@@ -200,7 +184,7 @@ export const loginUser = async (email, password) => {
       id: user.id,
       email: user.email,
       marketingOptIn: Boolean(user.marketing_opt_in),
-      pricingTier: user.privacy_tier || 'tier1'
+      pricingTier: 'tier1'
     },
     token
   };
@@ -214,7 +198,7 @@ export const getUserById = async (userId) => {
 
   const { data: user, error } = await supabase
     .from('users')
-    .select('id, email, created_at, marketing_opt_in, privacy_tier')
+    .select('id, email, created_at, marketing_opt_in')
     .eq('id', userId)
     .single();
 
@@ -227,7 +211,7 @@ export const getUserById = async (userId) => {
     email: user.email,
     created_at: user.created_at,
     marketingOptIn: Boolean(user.marketing_opt_in),
-    pricingTier: user.privacy_tier || 'tier1'
+    pricingTier: 'tier1'
   };
 };
 

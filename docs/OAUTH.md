@@ -54,6 +54,24 @@ Find it in: Supabase Dashboard → Authentication → Providers → (any provide
 - Paste **Client ID** and **Client Secret**
 - Save
 
+What To Do In Google
+Go to Google Cloud Console and open Google Auth Platform or the older APIs & Services -> OAuth consent screen.
+
+Set up these fields on the consent screen:
+
+App name: Emmaline
+User support email: your support email
+App logo: optional but useful
+App home page: your real Emmaline website
+Privacy policy URL: your real privacy page
+Terms of service URL: your real terms page
+Authorized domains: add your real site domain
+Then configure scopes:
+
+email
+profile
+openid
+
 ---
 
 ## 2. Apple
