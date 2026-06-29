@@ -130,6 +130,18 @@ const AppContent = () => {
     return () => clearTimeout(statusTimer);
   }, [callStatus]);
 
+  useEffect(() => {
+    if (listenModeState !== 'saved' && listenModeState !== 'failed') {
+      return undefined;
+    }
+
+    const statusTimer = setTimeout(() => {
+      setListenModeState('idle');
+    }, 2200);
+
+    return () => clearTimeout(statusTimer);
+  }, [listenModeState]);
+
   const stopLiveCall = async () => {
     const endResponse = await endVoiceCall();
 
@@ -263,13 +275,40 @@ const AppContent = () => {
       return;
     }
 
-    await handleStartListenMode();
+    Alert.alert(
+      'Choose audio mode',
+      'Start a live call or record in Listen Mode.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Listen Mode',
+          onPress: () => {
+            handleStartListenMode().catch(() => {
+              // Errors are surfaced inside the handler.
+            });
+          }
+        },
+        {
+          text: 'Live Call',
+          onPress: () => {
+            startLiveCall().catch(() => {
+              // Errors are surfaced inside the handler.
+            });
+          }
+        }
+      ]
+    );
   };
 
   const handleStartListenMode = async () => {
+    setListenModeState('idle');
     const response = await startListenModeRecording();
 
     if (!response.success) {
+      setListenModeState('failed');
       Alert.alert('Listen Mode unavailable', response.error || 'Unable to start Listen Mode recording.');
       return;
     }
@@ -304,12 +343,7 @@ const AppContent = () => {
       });
       setListenModeState('failed');
       Alert.alert('Listen Mode failed', error.message || 'Unable to finish Listen Mode right now.');
-      return;
     }
-
-    setTimeout(() => {
-      setListenModeState('idle');
-    }, 2200);
   };
 
   const handleSelectAudioRoute = async (deviceUuid) => {

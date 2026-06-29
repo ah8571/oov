@@ -1,3 +1,4 @@
+import { AppState } from 'react-native';
 import { Audio } from 'expo-av';
 
 let activeRecording = null;
@@ -54,6 +55,13 @@ export const startListenModeRecording = async () => {
 
   if (!permissionResponse.success) {
     return permissionResponse;
+  }
+
+  if (AppState.currentState !== 'active') {
+    return {
+      success: false,
+      error: 'Listen Mode is only available while the app is open in the foreground.'
+    };
   }
 
   try {

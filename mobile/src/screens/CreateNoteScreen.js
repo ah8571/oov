@@ -573,6 +573,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     ? toolbarVisualHeight + toolbarBottomOffset + 28
     : safeBottomInset + 36;
   const floatingBackInset = Math.max(insets.top - 12, 0) + 30;
+  const editorWrapperPointerEvents = Platform.OS === 'android'
+    ? 'box-none'
+    : (editorFocused ? 'box-none' : 'auto');
 
   return (
     <KeyboardAvoidingView
@@ -623,8 +626,12 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
 
         <Pressable
           style={[styles.editorShell, { borderTopColor: colors.border }]}
-          pointerEvents={editorFocused ? 'box-none' : 'auto'}
+          pointerEvents={editorWrapperPointerEvents}
           onPress={() => {
+            if (Platform.OS === 'android') {
+              return;
+            }
+
             if (editorFocused) {
               return;
             }
@@ -635,6 +642,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             });
           }}
           onPressIn={() => {
+            if (Platform.OS === 'android') {
+              return;
+            }
+
             if (editorFocused) {
               return;
             }
@@ -674,7 +685,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               setContent(nextContent || '');
             }}
             style={styles.richEditor}
-            useContainer
+            useContainer={Platform.OS !== 'android'}
             initialHeight={320}
             disabled={false}
             editorStyle={{

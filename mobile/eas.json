@@ -25,6 +25,9 @@
       }
     },
     "production": {
+      "ios": {
+        "autoIncrement": "buildNumber"
+      },
       "env": {
         "APP_VARIANT": "production",
         "EXPO_PUBLIC_API_URL": "https://api.emmaline.app/api"
