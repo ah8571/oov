@@ -6,9 +6,11 @@
 import axios from 'axios';
 import * as SecureStorage from '../utils/secureStorage.js';
 import {
+  exchangeCodeForSession as exchangeSupabaseOAuthCode,
   getAccessToken,
   getSession,
   refreshSession as refreshSupabaseSession,
+  startOAuthSignIn as startSupabaseOAuthSignIn,
   signInWithIdToken as signInWithSupabaseIdToken,
   signInWithPassword as signInWithSupabasePassword,
   signOut as signOutFromSupabase,
@@ -20,12 +22,20 @@ const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   process.env.REACT_NATIVE_BACKEND_URL ||
   process.env.REACT_APP_API_URL ||
-  'http://localhost:3000/api';
+  'https://api.emmaline.app/api';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 const formatApiError = (error, fallbackMessage) => {
   if (error.response?.data?.error) {
+    if (String(error.response.data.error).includes('Unacceptable audience in id_token')) {
+      return 'Apple Sign In is misconfigured on the backend. Supabase Apple provider should use your Apple Services ID as the client ID, not the app bundle identifier.';
+    }
+
     return error.response.data.error;
+  }
+
+  if (String(error.message || '').includes('Unacceptable audience in id_token')) {
+    return 'Apple Sign In is misconfigured on the backend. Supabase Apple provider should use your Apple Services ID as the client ID, not the app bundle identifier.';
   }
 
   if (error.message === 'Network Error') {
@@ -49,6 +59,24 @@ const logApiFailure = (method, path, error) => {
 
 const isMissingProfileError = (error) => {
   return error?.response?.status === 404 && error?.response?.data?.error === 'User not found';
+};
+
+const isProfileConsentRequiredError = (error) => {
+  return error?.response?.status === 400
+    && error?.response?.data?.error === 'Terms of Use and Privacy Policy acceptance are required';
+};
+
+const getPendingProfileSetup = async ({ provider = null, email = null, fullName = null } = {}) => {
+  const session = await getSession();
+  const authUser = session?.user || null;
+  const authMetadata = authUser?.user_metadata || {};
+  const providers = Array.isArray(authUser?.app_metadata?.providers) ? authUser.app_metadata.providers : [];
+
+  return {
+    provider: provider || providers[0] || null,
+    email: authUser?.email || authMetadata.email || email || null,
+    fullName: authMetadata.full_name || authMetadata.name || fullName || null
+  };
 };
 
 const syncUserProfile = async ({
@@ -134,31 +162,21 @@ const removeTokenFromHeaders = () => {
 export const registerUser = async (email, password, options = {}) => {
   try {
     const {
-      marketingOptIn = false,
-      termsAccepted = false,
-      privacyAccepted = false
+      marketingOptIn = false
     } = options;
 
     await signUpWithSupabasePassword({
       email,
       marketingOptIn,
-      password,
-      termsAccepted,
-      privacyAccepted
+      password
     });
 
     await addTokenToHeaders();
-    const user = await syncUserProfile({
-      marketingOptIn,
-      termsAccepted,
-      privacyAccepted,
-      email
-    });
 
     return {
       success: true,
-      user,
-      token: await getAccessToken()
+      requiresProfileCompletion: true,
+      profileSetup: await getPendingProfileSetup({ email })
     };
   } catch (error) {
     logApiFailure('post', '/auth/profile/sync', error);
@@ -180,12 +198,24 @@ export const loginUser = async (email, password) => {
 
     try {
       user = await fetchCurrentUserProfile();
+
+      if (user && user.hasAcceptedLegalConsent === false) {
+        return {
+          success: false,
+          requiresProfileCompletion: true,
+          profileSetup: await getPendingProfileSetup({ email })
+        };
+      }
     } catch (error) {
       if (!isMissingProfileError(error)) {
         throw error;
       }
 
-      user = await syncUserProfile({ email });
+      return {
+        success: false,
+        requiresProfileCompletion: true,
+        profileSetup: await getPendingProfileSetup({ email })
+      };
     }
 
     return {
@@ -203,8 +233,10 @@ export const loginUser = async (email, password) => {
 };
 
 export const loginWithSocialProvider = async ({
+  mode = 'login',
   provider,
   idToken,
+  redirectUrl = null,
   email = null,
   fullName = null,
   marketingOptIn = false,
@@ -212,26 +244,58 @@ export const loginWithSocialProvider = async ({
   privacyAccepted = false
 }) => {
   try {
-    await signInWithSupabaseIdToken({
-      provider,
-      idToken
-    });
+    if (redirectUrl) {
+      await exchangeSupabaseOAuthCode(redirectUrl);
+    } else {
+      await signInWithSupabaseIdToken({
+        provider,
+        idToken
+      });
+    }
 
     await addTokenToHeaders();
-    logApiRequest('post', '/auth/profile/sync', { provider, email });
-    const response = await apiClient.post('/auth/profile/sync', {
-      marketingOptIn,
-      termsAccepted,
-      privacyAccepted,
-      email,
-      fullName
-    });
+    let user;
 
-    await SecureStorage.saveUser(response.data.user);
+    if (mode === 'create') {
+      logApiRequest('post', '/auth/profile/sync', { provider, email, mode });
+      const response = await apiClient.post('/auth/profile/sync', {
+        marketingOptIn,
+        termsAccepted,
+        privacyAccepted,
+        email,
+        fullName
+      });
+
+      user = response.data.user;
+      await SecureStorage.saveUser(user);
+    } else {
+      try {
+        user = await fetchCurrentUserProfile();
+
+        if (user && user.hasAcceptedLegalConsent === false) {
+          return {
+            success: false,
+            requiresProfileCompletion: true,
+            profileSetup: await getPendingProfileSetup({ provider, email, fullName })
+          };
+        }
+      } catch (error) {
+        if (!isMissingProfileError(error)) {
+          throw error;
+        }
+
+        return {
+          success: false,
+          requiresProfileCompletion: true,
+          profileSetup: await getPendingProfileSetup({ provider, email, fullName }),
+          error: 'Finish creating your Emmaline account to continue.'
+        };
+      }
+    }
 
     return {
       success: true,
-      user: response.data.user,
+      user,
       token: await getAccessToken()
     };
   } catch (error) {
@@ -239,6 +303,51 @@ export const loginWithSocialProvider = async ({
     return {
       success: false,
       error: formatApiError(error, `Unable to sign in with ${provider || 'social login'}`)
+    };
+  }
+};
+
+export const beginSocialOAuth = async ({ provider, scopes, queryParams } = {}) => {
+  try {
+    const result = await startSupabaseOAuthSignIn({ provider, scopes, queryParams });
+
+    return {
+      success: true,
+      url: result.url
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatApiError(error, `Unable to start ${provider || 'social login'}`)
+    };
+  }
+};
+
+export const completeAuthenticatedUserProfile = async ({
+  marketingOptIn = false,
+  termsAccepted = false,
+  privacyAccepted = false,
+  email = null,
+  fullName = null
+} = {}) => {
+  try {
+    await addTokenToHeaders();
+    const user = await syncUserProfile({
+      marketingOptIn,
+      termsAccepted,
+      privacyAccepted,
+      email,
+      fullName
+    });
+
+    return {
+      success: true,
+      user
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatApiError(error, 'Unable to finish account setup')
     };
   }
 };
@@ -262,12 +371,32 @@ export const getCurrentUser = async () => {
 
     try {
       user = await fetchCurrentUserProfile();
+
+      if (user && user.hasAcceptedLegalConsent === false) {
+        return {
+          success: false,
+          requiresProfileCompletion: true,
+          profileSetup: await getPendingProfileSetup({ email: session.user?.email || null })
+        };
+      }
     } catch (error) {
       if (!isMissingProfileError(error)) {
         throw error;
       }
 
-      user = await syncUserProfile({ email: session.user?.email || null });
+      try {
+        user = await syncUserProfile({ email: session.user?.email || null });
+      } catch (syncError) {
+        if (!isProfileConsentRequiredError(syncError)) {
+          throw syncError;
+        }
+
+        return {
+          success: false,
+          requiresProfileCompletion: true,
+          profileSetup: await getPendingProfileSetup({ email: session.user?.email || null })
+        };
+      }
     }
 
     return {
@@ -388,6 +517,23 @@ export const getCalls = async (limit = 50, offset = 0) => {
     return {
       success: false,
       error: formatApiError(error, 'Failed to load calls')
+    };
+  }
+};
+
+export const deleteCall = async (callId) => {
+  try {
+    await addTokenToHeaders();
+    await apiClient.delete(`/calls/${callId}`);
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    logApiFailure('delete', `/calls/${callId}`, error);
+    return {
+      success: false,
+      error: formatApiError(error, 'Failed to delete transcript')
     };
   }
 };
@@ -804,12 +950,15 @@ export default {
   // Auth
   registerUser,
   loginUser,
+  beginSocialOAuth,
+  completeAuthenticatedUserProfile,
   getCurrentUser,
   refreshAuthToken,
   logoutUser,
 
   // Calls
   getCalls,
+  deleteCall,
   getCallDetail,
   getVoiceToken,
   endCall,

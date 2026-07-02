@@ -299,6 +299,7 @@ const AppHome = ({ onLogout }) => {
 
 const AppNavigator = ({ onAuthStateChange }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pendingProfileSetup, setPendingProfileSetup] = useState(null);
   const [user, setUser] = useState(null);
   const { colors, isDarkMode } = useAppTheme();
 
@@ -332,6 +333,14 @@ const AppNavigator = ({ onAuthStateChange }) => {
 
         const currentUserResponse = await getCurrentUser();
 
+        if (currentUserResponse?.requiresProfileCompletion) {
+          setPendingProfileSetup(currentUserResponse.profileSetup || null);
+          setIsAuthenticated(false);
+          setUser(null);
+          onAuthStateChange?.(false);
+          return;
+        }
+
         if (!currentUserResponse.success || !currentUserResponse.user) {
           await clearStoredAuth();
           await syncRevenueCatUser(null);
@@ -352,6 +361,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
             : null
         );
         await syncRevenueCatUser(storedUser?.id ? String(storedUser.id) : null);
+        setPendingProfileSetup(null);
         setUser(storedUser);
         setIsAuthenticated(true);
         onAuthStateChange?.(true);
@@ -383,6 +393,14 @@ const AppNavigator = ({ onAuthStateChange }) => {
       }
 
       const currentUserResponse = await getCurrentUser();
+      if (currentUserResponse?.requiresProfileCompletion) {
+        setPendingProfileSetup(currentUserResponse.profileSetup || null);
+        setIsAuthenticated(false);
+        setUser(null);
+        onAuthStateChange?.(false);
+        return;
+      }
+
       if (!currentUserResponse.success || !currentUserResponse.user) {
         await clearStoredAuth();
         Sentry.setUser(null);
@@ -403,6 +421,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
           : null
       );
       await syncRevenueCatUser(nextUser?.id ? String(nextUser.id) : null);
+      setPendingProfileSetup(null);
       setUser(nextUser);
       setIsAuthenticated(true);
       onAuthStateChange?.(true);
@@ -426,6 +445,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
     syncRevenueCatUser(userData?.id ? String(userData.id) : null).catch(() => {
       // RevenueCat setup is best-effort here; the Upgrade screen surfaces setup issues.
     });
+    setPendingProfileSetup(null);
     setUser(userData);
     setIsAuthenticated(true);
     onAuthStateChange?.(true);
@@ -441,6 +461,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
 
     Sentry.setUser(null);
     await syncRevenueCatUser(null);
+    setPendingProfileSetup(null);
     setUser(null);
     setIsAuthenticated(false);
     onAuthStateChange?.(false);
@@ -456,7 +477,13 @@ const AppNavigator = ({ onAuthStateChange }) => {
               animationEnabled: false
             }}
           >
-            {(screenProps) => <LoginScreen {...screenProps} onLoginSuccess={handleLoginSuccess} />}
+            {(screenProps) => (
+              <LoginScreen
+                {...screenProps}
+                onLoginSuccess={handleLoginSuccess}
+                pendingProfileSetup={pendingProfileSetup}
+              />
+            )}
           </Stack.Screen>
           <Stack.Screen name="PrivacyPolicy" options={{ headerShown: false }}>
             {() => <LegalDocumentScreen documentKey="privacyPolicy" />}

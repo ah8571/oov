@@ -1,188 +1,50 @@
-# RevenueCat Setup
+Phase 1: Build The Shell
+Do this before any store submission.
 
-## Recommended Order
+In RevenueCat, create the app entries for iOS and Android.
+Copy the RevenueCat public SDK keys into your app env.
+In RevenueCat, create:
+entitlement: pro
+offering: default
+In Apple and Google, create the subscription products with the exact product IDs you want.
+In RevenueCat, add those store products and attach them to the default offering and pro entitlement.
+In the app, make sure these flows exist:
+fetch offerings
+show package/product
+purchase
+restore purchases
+check entitlement state
+Treat the paywall as “shell architecture” until the store products are usable. That means the app code is real, but the product catalog and store verification are still being proven.
+At that point, RevenueCat is structurally set up even if nothing has been reviewed by Apple yet.
 
-1. Create store-side products in App Store Connect and Google Play Console.
-2. Create the RevenueCat project and mirror those products there.
-3. Add the RevenueCat mobile SDK.
-4. Gate entitlements in the app.
-5. Add webhook handling on the backend if you want server-side subscription awareness.
+Phase 2: Unblock Android First
+This is the fastest practical verification path.
 
-## Store Products
+Build a Play-compatible Android AAB, not the preview APK.
+Upload that AAB to a closed testing track in Google Play.
+Add test users in Play Console license testing / closed test.
+Activate the subscription product in Google Play.
+Wait for Play product propagation.
+Install the closed-test build from Play, not by sideloading.
+Test:
+offerings load from RevenueCat
+purchase sheet appears
+test purchase succeeds
+pro entitlement becomes active
+restore works
+Important point: the closed test does not generate a new “entitlement key.” What it gives you is a real Play Billing environment where RevenueCat can finally verify the subscription end to end.
 
-Create at least:
+Phase 3: Stabilize Before Apple Review
+Do not submit to Apple review yet if login is still questionable.
 
-- Monthly subscription
-- Optional annual subscription
-- Optional intro trial / promo variant
+Finish auth/login fixes in TestFlight or local device testing.
+Keep RevenueCat wired to the real iOS product IDs.
+Make sure the paywall and restore flow work at the app level.
+Confirm the app is stable enough that a reviewer can create/sign in and reach subscription screens without getting stuck.
+Phase 4: Apple First Subscription Submission
+Apple is the annoying one.
 
-Keep product IDs aligned across iOS and Android if possible.
-
-## RevenueCat Project Setup
-
-In RevenueCat:
-
-1. Create a project for Emmaline.
-2. Add both mobile apps:
-	- iOS bundle ID
-	- Android package name
-3. Create products.
-4. Create an entitlement, for example `pro`.
-5. Create an offering, for example `default`.
-
-## Mobile SDK Work
-
-The mobile app does not have RevenueCat installed yet. The expected package is:
-
-```bash
-npm --prefix mobile install react-native-purchases
-```
-
-Initialize RevenueCat near app startup, likely from [mobile/src/App.js](../mobile/src/App.js).
-
-Typical app flow:
-
-1. Configure with iOS or Android public SDK key.
-2. Log in with the app user ID after authentication.
-3. Fetch customer info.
-4. Check whether entitlement `pro` is active.
-
-## App Surfaces To Update
-
-- Replace placeholder billing UI in [mobile/src/screens/UpgradeScreen.js](../mobile/src/screens/UpgradeScreen.js)
-- Add purchase button(s)
-- Add restore purchases
-- Add entitlement-aware gating
-
-## Source Of Truth
-
-Recommended setup for Emmaline:
-
-1. RevenueCat is the source of truth for subscription status.
-2. The mobile app checks entitlements locally for UX.
-3. The backend optionally syncs billing state for usage limits or server-side gating.
-
-## Webhook Events To Handle
-
-If you sync subscription state to the backend, subscribe to:
-
-- `initial_purchase`
-- `renewal`
-- `cancellation`
-- `expiration`
-- `uncancellation`
-- `billing_issue`
-
-These can update billing state in the backend user model.
-
-## Secrets Needed
-
-- RevenueCat iOS public SDK key
-- RevenueCat Android public SDK key
-- Optional RevenueCat webhook secret on backend
-
-## Minimal First Milestone
-
-1. Install SDK
-2. Configure SDK
-3. Show offerings on Upgrade screen
-4. Purchase and restore
-5. Gate premium UI off `pro` entitlement
-
-## Another version
-
-For this repo, the store app identifiers are:
-
-iOS bundle ID: com.emmaline.app
-Android package name: com.emmaline.app
-That lets you keep the setup aligned across stores and RevenueCat.
-
-Fastest viable rollout
-Use this minimal plan:
-
-Create one monthly subscription in App Store Connect.
-Create the same monthly subscription in Google Play Console.
-Create one RevenueCat project with both apps attached.
-Mirror that one product into RevenueCat.
-Create one entitlement: pro.
-Create one offering: default.
-Then I can wire the SDK and paywall in the app.
-Recommended first product ID:
-
-emmaline_pro_monthly
-Optional later:
-
-emmaline_pro_annual
-free trial or intro offer inside the store product config, not as a separate core product unless you need a separate promo structure
-App Store Connect
-Do this first because Apple tends to be the more procedural one.
-
-Open App Store Connect and make sure the Emmaline app record already exists.
-Go to Apps -> Emmaline -> Subscriptions.
-Create a subscription group, for example Emmaline Pro.
-Create a new auto-renewable subscription.
-Product ID: emmaline_pro_monthly
-Reference name: Emmaline Pro Monthly
-Duration: 1 month
-Set the price tier.
-Add the display name and description.
-Fill in the review screenshot / metadata Apple asks for.
-Important App Store details:
-
-Make sure Agreements, Tax, and Banking is complete or Apple will block subscription readiness.
-If you want to submit quickly, skip annual and skip intro offer for now unless you already know the pricing.
-Apple often wants the subscription to be attached and metadata complete before review.
-
-
-Google Play Console
-Then create the matching Android subscription.
-
-Open Play Console and select the Emmaline app.
-Go to Monetize -> Products -> Subscriptions.
-Create a subscription.
-Product ID: emmaline_pro_monthly
-Name: Emmaline Pro Monthly
-Billing period: monthly
-Set base plan and price.
-Activate it.
-Important Play details:
-
-You need a payments profile set up.
-The app record should already exist in Play Console.
-Keep the same product ID as iOS to reduce confusion in RevenueCat.
-
-RevenueCat
-Once both store products exist, do the RevenueCat pass.
-
-Create a RevenueCat project for Emmaline.
-Add the iOS app with bundle ID com.emmaline.app.
-Add the Android app with package name com.emmaline.app.
-Connect App Store Connect.
-Connect Google Play.
-Import or add product emmaline_pro_monthly.
-Create entitlement pro.
-Attach emmaline_pro_monthly to pro.
-Create offering default.
-Add the monthly package to default.
-If you see both stores connected and one entitlement/offering created, the dashboard side is effectively in place.
-
-What matters for submission
-
-both store apps exist
-one monthly subscription exists in both stores
-RevenueCat project exists
-entitlement pro exists
-offering default exists
-That is enough to unblock app-side integration next.
-
-Current app status
-The mobile app still has placeholder billing UI in mobile/src/screens/UpgradeScreen.js, and RevenueCat is not installed yet in mobile/package.json. So after you finish the console setup, the next concrete engineering step is to install react-native-purchases and replace that placeholder screen.
-
-Strong recommendation
-For speed, choose these decisions now and stick to them:
-
-entitlement name: pro
-offering name: default
-first product ID: emmaline_pro_monthly
-no annual plan tonight
-no trial tonight unless you already want one and know the exact terms
+Create the iOS subscription in App Store Connect.
+Attach that subscription to the app version you plan to submit.
+Submit the app build and first subscription together.
+After approval, test again through TestFlight / sandbox as needed.

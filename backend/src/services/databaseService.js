@@ -353,6 +353,21 @@ export const getCallById = async (userId, callId) => {
   return call;
 };
 
+export const deleteCallForUser = async (userId, callId) => {
+  const { error, count } = await supabase
+    .from('calls')
+    .delete({ count: 'exact' })
+    .eq('user_id', userId)
+    .eq('id', callId);
+
+  if (error) {
+    console.error('Error deleting call:', error);
+    throw error;
+  }
+
+  return Number(count || 0) > 0;
+};
+
 const persistNoteRevision = async (noteId, userId, revisionData = {}) => {
   if (!noteId || !userId) {
     return null;
@@ -729,6 +744,7 @@ export default {
   saveSummary,
   getCallsForUser,
   getCallById,
+  deleteCallForUser,
   getNotesForUser,
   getTopicsForUser,
   getNoteById,

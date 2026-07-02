@@ -24,6 +24,7 @@ const normalizeAppUser = (user) => ({
   id: user.id,
   email: user.email,
   marketingOptIn: Boolean(user.marketing_opt_in),
+  hasAcceptedLegalConsent: Boolean(user.term_and_privacy_accepted_at),
   pricingTier: 'tier1'
 });
 
@@ -200,6 +201,7 @@ export const getUserById = async (userId) => {
     email: user.email,
     created_at: user.created_at,
     marketingOptIn: Boolean(user.marketing_opt_in),
+    hasAcceptedLegalConsent: Boolean(user.term_and_privacy_accepted_at),
     pricingTier: 'tier1'
   };
 };

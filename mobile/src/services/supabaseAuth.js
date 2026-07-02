@@ -1,4 +1,5 @@
 import { AppState } from 'react-native';
+import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import { createClient } from '@supabase/supabase-js';
 
@@ -148,6 +149,78 @@ export const signInWithIdToken = async ({ provider, idToken }) => {
   }
 
   return data;
+};
+
+export const getOAuthRedirectUrl = () => AuthSession.makeRedirectUri({
+  scheme: 'emmaline',
+  path: 'auth/callback'
+});
+
+export const startOAuthSignIn = async ({ provider, scopes, queryParams } = {}) => {
+  const { data, error } = await getClient().auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: getOAuthRedirectUrl(),
+      scopes,
+      skipBrowserRedirect: true,
+      queryParams
+    }
+  });
+
+  if (error || !data?.url) {
+    throw error || new Error(`Unable to start ${provider} sign-in`);
+  }
+
+  return data;
+};
+
+const parseOAuthCallbackParams = (redirectUrl) => {
+  const urlString = String(redirectUrl || '');
+  const [beforeHash = '', fragmentPart = ''] = urlString.split('#', 2);
+  const [, queryPart = ''] = beforeHash.split('?', 2);
+  const queryParams = new URLSearchParams(queryPart || '');
+  const fragmentParams = new URLSearchParams(fragmentPart || '');
+
+  return {
+    code: queryParams.get('code') || fragmentParams.get('code') || null,
+    accessToken: queryParams.get('access_token') || fragmentParams.get('access_token') || null,
+    refreshToken: queryParams.get('refresh_token') || fragmentParams.get('refresh_token') || null
+  };
+};
+
+export const exchangeCodeForSession = async (redirectUrl) => {
+  const { code, accessToken, refreshToken } = parseOAuthCallbackParams(redirectUrl);
+
+  if (code) {
+    const { data, error } = await getClient().auth.exchangeCodeForSession(code);
+
+    if (error || !data?.session) {
+      throw error || new Error('Unable to complete social sign-in');
+    }
+
+    return data;
+  }
+
+  if (accessToken && refreshToken) {
+    const { data, error } = await getClient().auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+
+    if (error || !data?.session) {
+      throw error || new Error('Unable to complete social sign-in');
+    }
+
+    return data;
+  }
+
+  const { data: existingSessionData, error: existingSessionError } = await getClient().auth.getSession();
+
+  if (!existingSessionError && existingSessionData?.session) {
+    return existingSessionData;
+  }
+
+  throw new Error('OAuth callback did not include an auth code or session tokens.');
 };
 
 export const refreshSession = async () => {

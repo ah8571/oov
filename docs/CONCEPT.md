@@ -47,6 +47,10 @@ Emmaline is a hands-free, voice-first AI assistant for real-time conversations, 
 
 **before submitting to app store verify different users accounts only have access to their own in app notes
 
+
+- Teach you flow, perhaps first screens for new users teach them some of the benefits of the app
+- add education as an app category for the app
+
 The cleaner product framing:
 
 In the app: Live Call or Talk Live

@@ -1,6 +1,6 @@
 import express from 'express';
 import authMiddleware from '../middleware/auth.js';
-import { getCallById, getCallsForUser } from '../services/databaseService.js';
+import { deleteCallForUser, getCallById, getCallsForUser } from '../services/databaseService.js';
 import { summarizeEstimatedCallCosts } from '../services/costTrackingService.js';
 
 const router = express.Router();
@@ -95,8 +95,19 @@ router.get('/:callId', authMiddleware, async (req, res) => {
   }
 });
 
-router.delete('/:callId', authMiddleware, (req, res) => {
-  return res.status(501).json({ error: 'Call deletion is not implemented yet' });
+router.delete('/:callId', authMiddleware, async (req, res) => {
+  try {
+    const deleted = await deleteCallForUser(req.user.userId, req.params.callId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Call not found' });
+    }
+
+    return res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting call:', error.message);
+    return res.status(500).json({ error: 'Failed to delete call' });
+  }
 });
 
 export default router;

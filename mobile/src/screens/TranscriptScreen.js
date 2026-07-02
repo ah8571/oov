@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   View,
   StyleSheet,
   Text,
@@ -7,8 +8,9 @@ import {
   ActivityIndicator,
   SectionList
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getCalls } from '../services/api.js';
+import { deleteCall, getCalls } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
@@ -33,6 +35,7 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
   const insets = useSafeAreaInsets();
   const [transcripts, setTranscripts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTranscriptIds, setSelectedTranscriptIds] = useState([]);
 
   const loadTranscripts = useCallback(async (options = {}) => {
     if (!options.silent) {
@@ -81,6 +84,10 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
     };
   }, [onAppHeaderScroll]);
 
+  useEffect(() => {
+    setSelectedTranscriptIds((currentSelection) => currentSelection.filter((callId) => transcripts.some((transcript) => transcript.id === callId)));
+  }, [transcripts]);
+
   const handleListScroll = (event) => {
     const nextOffsetY = Math.max(0, event.nativeEvent.contentOffset.y || 0);
     onAppHeaderScroll?.(nextOffsetY);
@@ -121,10 +128,69 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
     return groups;
   }, []);
 
+  const handleSelectTranscript = (callId) => {
+    setSelectedTranscriptIds((currentSelection) => {
+      if (currentSelection.includes(callId)) {
+        return currentSelection.filter((currentCallId) => currentCallId !== callId);
+      }
+
+      return [...currentSelection, callId];
+    });
+  };
+
+  const handleTranscriptPress = (transcript) => {
+    if (selectedTranscriptIds.length > 0) {
+      handleSelectTranscript(transcript.id);
+      return;
+    }
+
+    navigation.navigate('CallDetail', { callId: transcript.id });
+  };
+
+  const handleDeleteSelectedTranscripts = () => {
+    if (selectedTranscriptIds.length === 0) {
+      return;
+    }
+
+    Alert.alert(
+      'Delete transcripts',
+      `Delete ${selectedTranscriptIds.length} selected ${selectedTranscriptIds.length === 1 ? 'transcript' : 'transcripts'}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const deletionResults = await Promise.all(selectedTranscriptIds.map((callId) => deleteCall(callId)));
+            const hasFailure = deletionResults.some((result) => !result.success);
+
+            if (hasFailure) {
+              Alert.alert('Delete failed', 'One or more selected transcripts could not be deleted.');
+            }
+
+            setSelectedTranscriptIds([]);
+            loadTranscripts({ silent: true });
+          }
+        }
+      ]
+    );
+  };
+
   const renderTranscript = ({ item }) => (
     <TouchableOpacity
-      style={[styles.transcriptCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      onPress={() => navigation.navigate('CallDetail', { callId: item.id })}
+      style={[
+        styles.transcriptCard,
+        {
+          backgroundColor: selectedTranscriptIds.includes(item.id) ? colors.chipSelectedBg : colors.surface,
+          borderColor: selectedTranscriptIds.includes(item.id) ? colors.accent : colors.border
+        }
+      ]}
+      onPress={() => handleTranscriptPress(item)}
+      onLongPress={() => handleSelectTranscript(item.id)}
+      delayLongPress={220}
     >
       <View style={styles.transcriptHeader}>
         <View style={styles.transcriptMetaColumn}>
@@ -138,6 +204,11 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
         </View>
         <Text style={[styles.duration, { color: colors.mutedText }]}>{item.callDurationSeconds}s</Text>
       </View>
+      {selectedTranscriptIds.length > 0 ? (
+        <Text style={[styles.selectionLabel, { color: selectedTranscriptIds.includes(item.id) ? colors.text : colors.mutedText }]}>
+          {selectedTranscriptIds.includes(item.id) ? 'Selected' : 'Tap to select'}
+        </Text>
+      ) : null}
       <Text style={[styles.preview, { color: colors.mutedText }]} numberOfLines={2}>
         {item.summary || item.fullTranscript?.substring(0, 100) || 'No transcript'}
       </Text>
@@ -152,7 +223,19 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
 
   const renderListHeader = () => (
     <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <Text style={[styles.pageTitle, { color: colors.text }]}>Transcripts</Text>
+      <Text style={[styles.pageTitle, { color: colors.text }]}>{selectedTranscriptIds.length > 0 ? `${selectedTranscriptIds.length} selected` : 'Transcripts'}</Text>
+      <View style={styles.headerActions}>
+        {selectedTranscriptIds.length > 0 ? (
+          <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedTranscripts}>
+            <Feather name="trash-2" size={20} color={colors.text} />
+          </TouchableOpacity>
+        ) : null}
+        {selectedTranscriptIds.length > 0 ? (
+          <TouchableOpacity style={styles.doneButton} onPress={() => setSelectedTranscriptIds([])}>
+            <Text style={[styles.doneButtonText, { color: colors.text }]}>Done</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 
@@ -195,8 +278,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: designTokens.chrome.listHeaderHorizontalPadding,
     paddingTop: designTokens.chrome.listHeaderVerticalPadding,
     paddingBottom: designTokens.chrome.listHeaderVerticalPadding,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef'
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: designTokens.spacing.sm
+  },
+  iconButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 6
+  },
+  doneButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 4
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: '600'
   },
   pageTitle: {
     fontSize: designTokens.typography.pageTitle,
@@ -260,6 +363,13 @@ const styles = StyleSheet.create({
     fontSize: designTokens.typography.bodySmall,
     color: '#495057',
     lineHeight: 18
+  },
+  selectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3
   },
   emptyState: {
     flex: 1,

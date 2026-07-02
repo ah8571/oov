@@ -15,11 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 
-import { loginUser, loginWithSocialProvider, registerUser } from '../services/api.js';
+import { beginSocialOAuth, completeAuthenticatedUserProfile, loginUser, loginWithSocialProvider, registerUser } from '../services/api.js';
+import { getOAuthRedirectUrl } from '../services/supabaseAuth.js';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen = ({ navigation, onLoginSuccess }) => {
+const LoginScreen = ({ navigation, onLoginSuccess, pendingProfileSetup = null }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
@@ -29,6 +30,7 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
   const [acceptedRequiredTerms, setAcceptedRequiredTerms] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
+  const [localPendingProfileSetup, setLocalPendingProfileSetup] = useState(null);
 
   useEffect(() => {
     const loadAppleAvailability = async () => {
@@ -44,19 +46,38 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
     loadAppleAvailability();
   }, []);
 
-  const completeSocialLogin = async ({ provider, idToken, socialEmail = null, socialFullName = null }) => {
-    if (!acceptedRequiredTerms) {
-      setError('You must agree to the Terms of Use and Privacy Policy to continue.');
+  const socialMode = isLogin ? 'login' : 'create';
+  const activePendingProfileSetup = pendingProfileSetup || localPendingProfileSetup;
+  const showingPendingProfileSetup = Boolean(activePendingProfileSetup?.email);
+
+  useEffect(() => {
+    if (pendingProfileSetup?.email) {
+      setLocalPendingProfileSetup(pendingProfileSetup);
       return;
     }
 
+    setLocalPendingProfileSetup(null);
+  }, [pendingProfileSetup]);
+
+  useEffect(() => {
+    if (!showingPendingProfileSetup) {
+      return;
+    }
+
+    setIsLogin(false);
+    setError('');
+  }, [showingPendingProfileSetup]);
+
+  const completeSocialLogin = async ({ provider, idToken = null, redirectUrl = null, socialEmail = null, socialFullName = null }) => {
     setLoading(true);
     setError('');
 
     try {
       const response = await loginWithSocialProvider({
+        mode: socialMode,
         provider,
         idToken,
+        redirectUrl,
         email: socialEmail,
         fullName: socialFullName,
         marketingOptIn,
@@ -65,6 +86,11 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
       });
 
       if (!response.success) {
+        if (response.requiresProfileCompletion) {
+          setLocalPendingProfileSetup(response.profileSetup || null);
+          return;
+        }
+
         setError(response.error || `${provider} sign-in failed`);
         return;
       }
@@ -72,6 +98,42 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
       onLoginSuccess(response.user);
     } catch (err) {
       setError(err.message || `${provider} sign-in failed`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSocialOAuth = async ({ provider, scopes, queryParams, unavailableMessage }) => {
+    setError('');
+
+    setLoading(true);
+
+    try {
+      const oauthStart = await beginSocialOAuth({ provider, scopes, queryParams });
+
+      if (!oauthStart.success || !oauthStart.url) {
+        setError(oauthStart.error || unavailableMessage || `${provider} sign-in failed`);
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(
+        oauthStart.url,
+        getOAuthRedirectUrl()
+      );
+
+      if (result.type !== 'success' || !result.url) {
+        if (result.type !== 'cancel') {
+          setError(unavailableMessage || `${provider} sign-in failed`);
+        }
+        return;
+      }
+
+      await completeSocialLogin({
+        provider,
+        redirectUrl: result.url
+      });
+    } catch (err) {
+      setError(err.message || unavailableMessage || `${provider} sign-in failed`);
     } finally {
       setLoading(false);
     }
@@ -88,19 +150,16 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
         return;
       }
 
-      if (!isLogin && !acceptedRequiredTerms) {
-        setError('You must agree to the Terms of Use and Privacy Policy to create an account.');
-        setLoading(false);
-        return;
-      }
-
       const response = isLogin
         ? await loginUser(email.trim().toLowerCase(), password)
         : await registerUser(email.trim().toLowerCase(), password, {
-            marketingOptIn,
-            termsAccepted: acceptedRequiredTerms,
-            privacyAccepted: acceptedRequiredTerms
+            marketingOptIn
           });
+
+      if (response.requiresProfileCompletion) {
+        setLocalPendingProfileSetup(response.profileSetup || null);
+        return;
+      }
 
       if (!response.success) {
         setError(response.error || 'Authentication failed');
@@ -122,27 +181,10 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
     }
 
     try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL
-        ]
-      });
-
-      if (!credential.identityToken) {
-        setError('Apple did not return an identity token.');
-        return;
-      }
-
-      const fullName = [credential.fullName?.givenName, credential.fullName?.familyName]
-        .filter(Boolean)
-        .join(' ') || null;
-
-      await completeSocialLogin({
+      await handleSocialOAuth({
         provider: 'apple',
-        idToken: credential.identityToken,
-        socialEmail: credential.email || null,
-        socialFullName: fullName
+        scopes: 'name email',
+        unavailableMessage: 'Apple sign-in failed'
       });
     } catch (err) {
       if (err?.code === 'ERR_REQUEST_CANCELED') {
@@ -150,6 +192,50 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
       }
 
       setError(err.message || 'Apple sign-in failed');
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    await handleSocialOAuth({
+      provider: 'google',
+      scopes: 'email profile',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'select_account'
+      },
+      unavailableMessage: 'Google sign-in failed'
+    });
+  };
+
+  const handleCompletePendingProfileSetup = async () => {
+    if (!acceptedRequiredTerms) {
+      setError('You must agree to the Terms of Use and Privacy Policy to create an account.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await completeAuthenticatedUserProfile({
+        marketingOptIn,
+        termsAccepted: acceptedRequiredTerms,
+        privacyAccepted: acceptedRequiredTerms,
+        email: activePendingProfileSetup?.email || null,
+        fullName: activePendingProfileSetup?.fullName || null
+      });
+
+      if (!response.success) {
+        setError(response.error || 'Unable to finish creating your account.');
+        return;
+      }
+
+      setLocalPendingProfileSetup(null);
+      onLoginSuccess(response.user);
+    } catch (err) {
+      setError(err.message || 'Unable to finish creating your account.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -172,77 +258,102 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
         </View>
 
         <View style={styles.form}>
-          <View style={styles.socialGroup}>
-            {appleAuthAvailable ? (
+          {showingPendingProfileSetup ? (
+            <View style={styles.pendingSetupCard}>
+              <Text style={styles.pendingSetupTitle}>Finish creating your account</Text>
+              <Text style={styles.pendingSetupText}>
+                You signed in with {activePendingProfileSetup?.provider === 'google' ? 'Google' : activePendingProfileSetup?.provider === 'apple' ? 'Apple' : 'your provider'}, but your Emmaline account is not set up yet.
+              </Text>
+              {activePendingProfileSetup?.email ? (
+                <Text style={styles.pendingSetupEmail}>{activePendingProfileSetup.email}</Text>
+              ) : null}
+              <Text style={styles.pendingSetupText}>
+                Confirm the required terms below, then we will finish creating your Emmaline account.
+              </Text>
+            </View>
+          ) : null}
+
+          {showingPendingProfileSetup ? null : (
+            <View style={styles.socialGroup}>
+              {appleAuthAvailable ? (
+                <TouchableOpacity
+                  style={[styles.socialButton, styles.appleButton, loading && styles.buttonDisabled]}
+                  onPress={handleAppleAuth}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="logo-apple" size={18} color="#050607" />
+                  <Text style={styles.socialButtonText}>Continue with Apple</Text>
+                </TouchableOpacity>
+              ) : null}
+
               <TouchableOpacity
-                style={[styles.socialButton, styles.appleButton, loading && styles.buttonDisabled]}
-                onPress={handleAppleAuth}
+                style={[styles.socialButton, loading && styles.buttonDisabled]}
+                onPress={handleGoogleAuth}
                 disabled={loading}
                 activeOpacity={0.85}
               >
-                <Ionicons name="logo-apple" size={18} color="#050607" />
-                <Text style={styles.socialButtonText}>Continue with Apple</Text>
+                <Ionicons name="logo-google" size={18} color="#050607" />
+                <Text style={styles.socialButtonText}>Continue with Google</Text>
               </TouchableOpacity>
-            ) : null}
-
-            <TouchableOpacity
-              style={[styles.socialButton, styles.buttonDisabled]}
-              onPress={() => Alert.alert('Google Sign In unavailable', 'Google sign-in is temporarily disabled in this local test build until the Android client ID is configured.')}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="logo-google" size={18} color="#050607" />
-              <Text style={styles.socialButtonText}>Continue with Google</Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
 
           <View style={styles.separatorRow}>
             <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>or use email</Text>
+            <Text style={styles.separatorText}>{showingPendingProfileSetup ? 'finish setup' : 'or use email'}</Text>
             <View style={styles.separatorLine} />
           </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#8f98a3"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!loading}
-          />
-
-          <View style={styles.passwordField}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Password"
-              placeholderTextColor="#8f98a3"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              editable={!loading}
-            />
-            <TouchableOpacity
-              style={styles.passwordToggle}
-              onPress={() => setShowPassword((current) => !current)}
-              disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color="#b0b7c0"
+          {showingPendingProfileSetup ? null : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#8f98a3"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                editable={!loading}
               />
-            </TouchableOpacity>
-          </View>
 
-          {!isLogin ? (
+              <View style={styles.passwordField}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Password"
+                  placeholderTextColor="#8f98a3"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!loading}
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowPassword((current) => !current)}
+                  disabled={loading}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#b0b7c0"
+                  />
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          {showingPendingProfileSetup ? (
             <View style={styles.consentGroup}>
               <View style={styles.consentItem}>
                 <TouchableOpacity
                   style={styles.checkboxRow}
-                  onPress={() => setAcceptedRequiredTerms((current) => !current)}
+                  onPress={() => {
+                    setAcceptedRequiredTerms((current) => !current);
+                    setError('');
+                  }}
                   activeOpacity={0.85}
                   disabled={loading}
                   hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
@@ -282,7 +393,7 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
                 <View style={[styles.checkbox, marketingOptIn && styles.checkboxChecked]}>
                   {marketingOptIn ? <Ionicons name="checkmark" size={16} color="#050607" /> : null}
                 </View>
-                <Text style={styles.checkboxText}>[optional] I would like to receive an educational newsletter and product updates from Emmaline.</Text>
+                <Text style={styles.checkboxText}>Optional: email me the educational newsletter and product updates from Emmaline.</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -291,33 +402,35 @@ const LoginScreen = ({ navigation, onLoginSuccess }) => {
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleAuth}
+            onPress={showingPendingProfileSetup ? handleCompletePendingProfileSetup : handleAuth}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#050607" />
             ) : (
               <Text style={styles.buttonText}>
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {showingPendingProfileSetup ? 'Finish Creating Account' : isLogin ? 'Sign In' : 'Create Account with Email'}
               </Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setAcceptedRequiredTerms(false);
-              setMarketingOptIn(false);
-            }}
-            disabled={loading}
-          >
-            <Text style={styles.toggleText}>
-              {isLogin
-                ? "Don't have an account? Create one"
-                : 'Already have an account? Sign in'}
-            </Text>
-          </TouchableOpacity>
+          {showingPendingProfileSetup ? null : (
+            <TouchableOpacity
+              onPress={() => {
+                setIsLogin(!isLogin);
+                setError('');
+                setAcceptedRequiredTerms(false);
+                setMarketingOptIn(false);
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.toggleText}>
+                {isLogin
+                  ? "Don't have an account? Create one"
+                  : 'Already have an account? Sign in'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -360,6 +473,31 @@ const styles = StyleSheet.create({
   },
   form: {
     marginVertical: 32
+  },
+  pendingSetupCard: {
+    borderWidth: 1,
+    borderColor: 'rgba(245, 247, 250, 0.18)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 247, 250, 0.06)',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 18,
+    gap: 8
+  },
+  pendingSetupTitle: {
+    color: '#f5f7fa',
+    fontSize: 16,
+    fontWeight: '700'
+  },
+  pendingSetupText: {
+    color: '#d6dbe1',
+    fontSize: 12,
+    lineHeight: 18
+  },
+  pendingSetupEmail: {
+    color: '#f5f7fa',
+    fontSize: 13,
+    fontWeight: '600'
   },
   socialGroup: {
     gap: 12,
