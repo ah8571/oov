@@ -266,7 +266,7 @@ export const selectAudioDevice = async (deviceIdentifier) => {
   }
 };
 
-export const startVoiceCall = async ({ token, params = {}, onStatusChange, onError }) => {
+export const startVoiceCall = async ({ token, params = {}, onStatusChange, onError, onTrace }) => {
   if (!token) {
     return {
       success: false,
@@ -300,6 +300,7 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
       clearConnectTimeout();
     };
 
+    onTrace?.('voice_connect_started');
     onStatusChange?.('connecting');
 
     const call = await voice.connect(token, {
@@ -307,6 +308,8 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
       notificationDisplayName: 'Emmaline AI',
       params
     });
+
+    onTrace?.('voice_connect_returned');
 
     activeCall = call;
     updateMuteState(Boolean(call.isMuted?.() || false));
@@ -322,6 +325,7 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
       activeCall = null;
       updateAudioDeviceState({ audioDevices: [], selectedDevice: null });
       updateMuteState(false);
+      onTrace?.('voice_connect_timeout');
       onStatusChange?.('failed');
 
       try {
@@ -339,11 +343,13 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
 
     call.on(Call.Event.Ringing, () => {
       markConnectionResolved();
+      onTrace?.('voice_event_ringing');
       onStatusChange?.('ringing');
     });
 
     call.on(Call.Event.Connected, () => {
       markConnectionResolved();
+      onTrace?.('voice_event_connected');
       onStatusChange?.('live');
       refreshAudioDevices().catch(() => {
         // Best-effort sync for audio routes.
@@ -351,11 +357,13 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
     });
 
     call.on(Call.Event.Reconnecting, () => {
+      onTrace?.('voice_event_reconnecting');
       onStatusChange?.('reconnecting');
     });
 
     call.on(Call.Event.Reconnected, () => {
       markConnectionResolved();
+      onTrace?.('voice_event_reconnected');
       onStatusChange?.('live');
     });
 
@@ -364,6 +372,10 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
       activeCall = null;
       updateAudioDeviceState({ audioDevices: [], selectedDevice: null });
       updateMuteState(false);
+      onTrace?.('voice_event_connect_failure', {
+        code: error?.code,
+        message: error?.message
+      });
       onStatusChange?.('failed');
 
       const failureMessage = [
@@ -380,6 +392,7 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
       activeCall = null;
       updateAudioDeviceState({ audioDevices: [], selectedDevice: null });
       updateMuteState(false);
+      onTrace?.('voice_event_disconnected');
       onStatusChange?.('ended');
     });
 
@@ -391,6 +404,9 @@ export const startVoiceCall = async ({ token, params = {}, onStatusChange, onErr
     activeCall = null;
     updateAudioDeviceState({ audioDevices: [], selectedDevice: null });
     updateMuteState(false);
+    onTrace?.('voice_connect_threw', {
+      message: error?.message
+    });
     onStatusChange?.('failed');
 
     return {

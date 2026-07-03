@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Alert, View, Image, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
@@ -55,9 +55,52 @@ const AppContent = () => {
   const [listenModeState, setListenModeState] = useState('idle');
   const [showModePicker, setShowModePicker] = useState(false);
   const [shouldPreferSpeaker, setShouldPreferSpeaker] = useState(false);
+  const liveCallTraceRef = useRef({
+    attemptId: null,
+    startedAtMs: null
+  });
 
   const colors = isDarkMode ? darkColors : lightColors;
   const appBottomRailHeight = Math.max(insets.bottom, 12) + APP_BOTTOM_RAIL_HEIGHT;
+
+  const resetLiveCallTrace = () => {
+    liveCallTraceRef.current = {
+      attemptId: null,
+      startedAtMs: null
+    };
+  };
+
+  const ensureLiveCallTrace = (stage) => {
+    if (liveCallTraceRef.current.startedAtMs) {
+      return liveCallTraceRef.current;
+    }
+
+    const startedAtMs = Date.now();
+    const attemptId = String(startedAtMs);
+
+    liveCallTraceRef.current = {
+      attemptId,
+      startedAtMs
+    };
+
+    console.log(`[VoiceCallTiming] attempt=${attemptId} stage=${stage} elapsedMs=0`);
+    return liveCallTraceRef.current;
+  };
+
+  const traceLiveCallStage = (stage, details = {}) => {
+    const trace = ensureLiveCallTrace(stage);
+    const elapsedMs = Math.max(0, Date.now() - trace.startedAtMs);
+    const payload = Object.entries(details).reduce((result, [key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        result[key] = value;
+      }
+
+      return result;
+    }, {});
+    const suffix = Object.keys(payload).length > 0 ? ` details=${JSON.stringify(payload)}` : '';
+
+    console.log(`[VoiceCallTiming] attempt=${trace.attemptId} stage=${stage} elapsedMs=${elapsedMs}${suffix}`);
+  };
 
   useEffect(() => {
     const loadThemeMode = async () => {
@@ -166,10 +209,15 @@ const AppContent = () => {
       return;
     }
 
-    setShouldPreferSpeaker(false);
-    selectAudioDevice(speakerDevice.uuid).catch(() => {
-      // Best-effort default audio route for new calls.
-    });
+    selectAudioDevice(speakerDevice.uuid)
+      .then((response) => {
+        if (response?.success) {
+          setShouldPreferSpeaker(false);
+        }
+      })
+      .catch(() => {
+        // Keep the preference flag set so the next audio-device refresh can retry speaker routing.
+      });
   }, [audioDevices, isCalling, selectedAudioDevice, shouldPreferSpeaker]);
 
   const stopLiveCall = async () => {
@@ -183,6 +231,8 @@ const AppContent = () => {
     setIsCalling(false);
     setCallStatus('ended');
     setShouldPreferSpeaker(false);
+    traceLiveCallStage('call_stopped');
+    resetLiveCallTrace();
     return true;
   };
 
@@ -199,14 +249,22 @@ const AppContent = () => {
     setIsCalling(true);
     setCallStatus('connecting');
     setShouldPreferSpeaker(true);
+    traceLiveCallStage('start_live_call_entered');
 
     try {
+      traceLiveCallStage('microphone_permission_requested');
       const permissionResponse = await ensureMicrophonePermission();
+
+      traceLiveCallStage('microphone_permission_resolved', {
+        success: permissionResponse.success,
+        error: permissionResponse.success ? null : permissionResponse.error
+      });
 
       if (!permissionResponse.success) {
         setIsCalling(false);
         setCallStatus('failed');
         setShouldPreferSpeaker(false);
+        traceLiveCallStage('microphone_permission_failed');
         Alert.alert(
           'Microphone permission required',
           permissionResponse.error || 'Please allow microphone access to start an in-app call.'
@@ -214,17 +272,34 @@ const AppContent = () => {
         return;
       }
 
+      traceLiveCallStage('voice_token_request_started');
       const tokenResponse = await getVoiceToken();
+      traceLiveCallStage('voice_token_request_finished', {
+        success: tokenResponse.success,
+        code: tokenResponse.code,
+        statusCode: tokenResponse.statusCode
+      });
+
       const [callLanguage, speechRate, callResponseDelayMs] = await Promise.all([
         getCallLanguagePreference(),
         getSpeechRatePreference(),
         getCallResponseDelayPreference()
       ]);
 
+      traceLiveCallStage('voice_preferences_loaded', {
+        callLanguage: callLanguage || 'en',
+        speechRate: speechRate || 1,
+        responseDelayMs: callResponseDelayMs || 1600
+      });
+
       if (!tokenResponse.success || !tokenResponse.token) {
         setIsCalling(false);
         setCallStatus('failed');
         setShouldPreferSpeaker(false);
+        traceLiveCallStage('voice_token_request_failed', {
+          code: tokenResponse.code,
+          statusCode: tokenResponse.statusCode
+        });
 
         let errorMessage = tokenResponse.error || 'Unable to get a voice token.';
 
@@ -254,14 +329,19 @@ const AppContent = () => {
           responseDelayMs: String(callResponseDelayMs || 1600)
         },
         onStatusChange: (status) => {
+          traceLiveCallStage(`twilio_status_${status}`);
           setCallStatus(status);
 
           if (status === 'ended' || status === 'failed') {
             setIsCalling(false);
             setShouldPreferSpeaker(false);
+            resetLiveCallTrace();
           }
         },
         onError: (message) => {
+          traceLiveCallStage('twilio_error', {
+            message
+          });
           Sentry.captureMessage(message || 'Unexpected VoIP call error.', {
             level: 'error',
             tags: {
@@ -269,6 +349,9 @@ const AppContent = () => {
             }
           });
           Alert.alert('Call error', message || 'Unexpected VoIP call error.');
+        },
+        onTrace: (stage, details) => {
+          traceLiveCallStage(stage, details);
         }
       });
 
@@ -276,6 +359,10 @@ const AppContent = () => {
         setIsCalling(false);
         setCallStatus('failed');
         setShouldPreferSpeaker(false);
+        traceLiveCallStage('start_voice_call_failed', {
+          error: response.error
+        });
+        resetLiveCallTrace();
 
         Alert.alert(
           'In-app call failed',
@@ -289,9 +376,13 @@ const AppContent = () => {
           area: 'voice_call_start'
         }
       });
+      traceLiveCallStage('start_live_call_exception', {
+        message: error.message
+      });
       setIsCalling(false);
       setCallStatus('failed');
       setShouldPreferSpeaker(false);
+      resetLiveCallTrace();
       Alert.alert('Call error', error.message || 'Unexpected error while starting the call.');
     }
   };
@@ -328,6 +419,11 @@ const AppContent = () => {
 
   const handleChooseLiveCall = () => {
     setShowModePicker(false);
+    liveCallTraceRef.current = {
+      attemptId: String(Date.now()),
+      startedAtMs: Date.now()
+    };
+    traceLiveCallStage('live_call_option_tapped');
     startLiveCall().catch(() => {
       // Errors are surfaced inside the handler.
     });
