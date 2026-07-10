@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getBillingStatus } from '../services/api.js';
 import {
   getRevenueCatCustomerInfo,
@@ -16,9 +16,11 @@ import { getUser } from '../utils/secureStorage.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
+const LIVE_CALLS_ENABLED = false;
+
 const UpgradeScreen = () => {
   const { colors } = useAppTheme();
-  const isLiveCallAvailable = Platform.OS !== 'ios';
+  const isLiveCallAvailable = LIVE_CALLS_ENABLED;
   const [billing, setBilling] = useState(null);
   const [loading, setLoading] = useState(true);
   const [offeringPackage, setOfferingPackage] = useState(null);

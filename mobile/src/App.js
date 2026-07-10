@@ -41,8 +41,25 @@ const appConfigExtra =
   Constants.manifest2?.extra?.expoClient?.extra ||
   Constants.manifest?.extra ||
   {};
-const appsFlyerDevKey = appConfigExtra.appsflyerDevKey || '';
-const appsFlyerIosAppId = appConfigExtra.appsflyerIosAppId || '';
+
+const normalizeOptionalConfigValue = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  const normalizedValue = String(value).trim();
+
+  if (!normalizedValue || normalizedValue.toLowerCase() === 'null' || normalizedValue.toLowerCase() === 'undefined') {
+    return '';
+  }
+
+  return normalizedValue;
+};
+
+const appsFlyerDevKey = normalizeOptionalConfigValue(appConfigExtra.appsflyerDevKey);
+const appsFlyerIosAppId = normalizeOptionalConfigValue(appConfigExtra.appsflyerIosAppId);
+const appVariant = normalizeOptionalConfigValue(appConfigExtra.appVariant);
+const isDevelopmentVariant = appVariant === 'development';
 
 Sentry.init({
   dsn: sentryDsn,
@@ -52,8 +69,10 @@ Sentry.init({
   attachStacktrace: true
 });
 
+const LIVE_CALLS_ENABLED = false;
+
 const AppContent = () => {
-  const isLiveCallAvailable = Platform.OS !== 'ios';
+  const isLiveCallAvailable = Platform.OS !== 'ios' && LIVE_CALLS_ENABLED;
   const insets = useSafeAreaInsets();
   const [isCalling, setIsCalling] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -124,7 +143,7 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
-    if (hasInitializedAppsFlyerRef.current || !appsFlyerDevKey) {
+    if (hasInitializedAppsFlyerRef.current || isDevelopmentVariant || !appsFlyerDevKey) {
       return;
     }
 
