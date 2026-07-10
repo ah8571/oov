@@ -18,12 +18,13 @@ import * as Sentry from '@sentry/react-native';
 import * as WebBrowser from 'expo-web-browser';
 
 import { beginSocialOAuth, completeAuthenticatedUserProfile, loginUser, loginWithSocialProvider, registerUser } from '../services/api.js';
-import { getOAuthRedirectUrl } from '../services/supabaseAuth.js';
+import { getOAuthBrowserRedirectUrl, getOAuthRedirectUrl } from '../services/supabaseAuth.js';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const OAUTH_REDIRECT_TIMEOUT_MS = 120000;
 const SOCIAL_LOGIN_TIMEOUT_MS = 20000;
+const OAUTH_REDIRECT_DISMISS_GRACE_MS = 2500;
 
 const withTimeout = (promise, timeoutMs, timeoutMessage) => {
   return new Promise((resolve, reject) => {
@@ -78,6 +79,17 @@ const waitForOAuthRedirect = (redirectUrl, timeoutMs = OAUTH_REDIRECT_TIMEOUT_MS
       finish({ type: 'timeout', url: null, source: 'linking' });
     }, timeoutMs);
   });
+};
+
+const waitForOAuthRedirectAfterDismiss = (redirectResultPromise) => {
+  return Promise.race([
+    redirectResultPromise,
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ type: 'dismiss', url: null, source: 'browser' });
+      }, OAUTH_REDIRECT_DISMISS_GRACE_MS);
+    })
+  ]);
 };
 
 const logAuthFlow = (step, details = null) => {
@@ -255,7 +267,7 @@ const LoginScreen = ({ navigation, onLoginSuccess, pendingProfileSetup = null })
           if (provider === 'apple') {
             updateAppleAuthDebug('Apple Sign In worked, but this account still needs consent/profile completion before the app can continue.', 'info');
           }
-          setError(response.error || `${formatProviderLabel(provider)} sign-in worked. Finish creating your Emmaline account to continue.`);
+          setError('');
           return;
         }
 
@@ -336,7 +348,9 @@ const LoginScreen = ({ navigation, onLoginSuccess, pendingProfileSetup = null })
     logAuthFlow('handleSocialOAuth:start', { provider, mode: socialMode });
 
     try {
-      const redirectUrl = getOAuthRedirectUrl();
+      const redirectUrl = Platform.OS === 'android'
+        ? getOAuthBrowserRedirectUrl()
+        : getOAuthRedirectUrl();
       const oauthStart = await beginSocialOAuth({ provider, scopes, queryParams });
       logAuthFlow('handleSocialOAuth:oauthStart', {
         provider,
@@ -349,13 +363,27 @@ const LoginScreen = ({ navigation, onLoginSuccess, pendingProfileSetup = null })
         return;
       }
 
-      const result = await Promise.race([
+      const redirectResultPromise = waitForOAuthRedirect(redirectUrl);
+      let result = await Promise.race([
         WebBrowser.openAuthSessionAsync(oauthStart.url, redirectUrl),
-        waitForOAuthRedirect(redirectUrl)
+        redirectResultPromise
       ]);
+
+      if (result.type === 'dismiss') {
+        result = await waitForOAuthRedirectAfterDismiss(redirectResultPromise);
+      }
+
       logAuthFlow('handleSocialOAuth:result', result);
 
       if (result.type !== 'success' || !result.url) {
+        if (Platform.OS === 'android' && result.type === 'dismiss') {
+          logAuthFlow('handleSocialOAuth:awaitingAuthStateAfterDismiss', {
+            provider,
+            mode: socialMode
+          });
+          return;
+        }
+
         if (result.type !== 'cancel') {
           setError(unavailableMessage || `${provider} sign-in failed`);
         }
