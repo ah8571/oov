@@ -3,7 +3,7 @@
     "name": "Emmaline",
     "slug": "emmaline",
     "version": "0.1.0",
-    "icon": "./assets/app-icon.png",
+    "icon": "./assets/white-outline-favicon.png",
     "newArchEnabled": false,
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -14,7 +14,7 @@
       "**/*"
     ],
     "ios": {
-      "icon": "./assets/app-icon.png",
+      "icon": "./assets/white-outline-favicon.png",
       "bundleIdentifier": "com.emmaline.app",
       "supportsTablet": true,
       "infoPlist": {
@@ -22,10 +22,15 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
+    "splash": {
+      "image": "./assets/white-outline-favicon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icon-padded.png",
-        "backgroundColor": "#050607"
+        "foregroundImage": "./assets/white-outline-favicon.png",
+        "backgroundColor": "#000000"
       },
       "permissions": [
         "RECORD_AUDIO",
