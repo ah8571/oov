@@ -11,9 +11,79 @@ const liveCallsEnabled = String(process.env.EXPO_PUBLIC_ENABLE_LIVE_CALLS || 'fa
 const productionBundleId = 'com.emmaline.app';
 const developmentBundleId = 'com.emmaline.app.dev';
 
+function normalizeOptionalConfigValue(value) {
+  if (value === null || value === undefined || typeof value === 'object') {
+    return '';
+  }
+
+  const normalizedValue = String(value).trim();
+
+  if (!normalizedValue || normalizedValue.toLowerCase() === 'null' || normalizedValue.toLowerCase() === 'undefined' || normalizedValue === '[object Object]') {
+    return '';
+  }
+
+  return normalizedValue;
+}
+
+function parseDelimitedConfigValues(value) {
+  return normalizeOptionalConfigValue(value)
+    .split(/[\n,]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function buildSkAdNetworkItems(existingItems = [], networkIds = []) {
+  const seen = new Set();
+  const items = [];
+
+  const addItem = (networkId) => {
+    const normalizedId = normalizeOptionalConfigValue(networkId);
+    const dedupeKey = normalizedId.toLowerCase();
+
+    if (!normalizedId || seen.has(dedupeKey)) {
+      return;
+    }
+
+    seen.add(dedupeKey);
+    items.push({
+      SKAdNetworkIdentifier: normalizedId
+    });
+  };
+
+  existingItems.forEach((item) => {
+    if (typeof item === 'string') {
+      addItem(item);
+      return;
+    }
+
+    addItem(item && item.SKAdNetworkIdentifier);
+  });
+
+  networkIds.forEach(addItem);
+
+  return items;
+}
+
+function getAppDisplayName(baseName, variant) {
+  if (variant === 'production') {
+    return baseName;
+  }
+
+  if (variant === 'preview') {
+    return `${baseName} Preview`;
+  }
+
+  return `${baseName} Dev`;
+}
+
 module.exports = () => {
   const sentryOrganization = process.env.SENTRY_ORG;
   const sentryProject = process.env.SENTRY_PROJECT;
+  const iosInfoPlist = (baseConfig.ios && baseConfig.ios.infoPlist) || {};
+  const skAdNetworkItems = buildSkAdNetworkItems(
+    Array.isArray(iosInfoPlist.SKAdNetworkItems) ? iosInfoPlist.SKAdNetworkItems : [],
+    parseDelimitedConfigValues(process.env.EXPO_PUBLIC_IOS_SKADNETWORK_IDS || process.env.IOS_SKADNETWORK_IDS)
+  );
   const plugins = Array.isArray(baseConfig.plugins)
     ? baseConfig.plugins.filter((plugin) => plugin !== 'expo-dev-client')
     : [];
@@ -61,10 +131,19 @@ module.exports = () => {
 
   const config = {
     ...baseConfig,
+    name: getAppDisplayName(baseConfig.name || 'Emmaline', appVariant),
     scheme: baseConfig.scheme || 'emmaline',
     plugins: filteredPlugins,
     ios: {
       ...(baseConfig.ios || {}),
+      infoPlist: {
+        ...iosInfoPlist,
+        ...(skAdNetworkItems.length > 0
+          ? {
+            SKAdNetworkItems: skAdNetworkItems
+          }
+          : {})
+      },
       bundleIdentifier: isProduction ? productionBundleId : developmentBundleId
     },
     android: {

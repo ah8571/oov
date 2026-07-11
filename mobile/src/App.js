@@ -3,10 +3,10 @@ import { StyleSheet, Alert, View, Image, Text, TouchableOpacity, Platform } from
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
-import appsFlyer from 'react-native-appsflyer';
 import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
-import { getVoiceToken, uploadListenModeRecording } from './services/api.js';
+import { getVoiceSession, uploadListenModeRecording } from './services/api.js';
+import { initializeAttribution } from './services/attributionService.js';
 import { syncRevenueCatAttribution } from './services/revenueCatService.js';
 import {
   isListenModeRecordingActive,
@@ -43,13 +43,13 @@ const appConfigExtra =
   {};
 
 const normalizeOptionalConfigValue = (value) => {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || typeof value === 'object') {
     return '';
   }
 
   const normalizedValue = String(value).trim();
 
-  if (!normalizedValue || normalizedValue.toLowerCase() === 'null' || normalizedValue.toLowerCase() === 'undefined') {
+  if (!normalizedValue || normalizedValue.toLowerCase() === 'null' || normalizedValue.toLowerCase() === 'undefined' || normalizedValue === '[object Object]') {
     return '';
   }
 
@@ -149,15 +149,12 @@ const AppContent = () => {
 
     hasInitializedAppsFlyerRef.current = true;
 
-    appsFlyer.initSdk(
-      {
-        devKey: appsFlyerDevKey,
-        appId: appsFlyerIosAppId || undefined,
-        isDebug: __DEV__,
-        onInstallConversionDataListener: false,
-        onDeepLinkListener: false
-      },
-      (result) => {
+    initializeAttribution({
+      appVariant,
+      appsFlyerDevKey,
+      appsFlyerIosAppId,
+      isDebug: __DEV__,
+      onReady: (result) => {
         syncRevenueCatAttribution().catch(() => {
           // RevenueCat attribution sync is best-effort; retry on the next RevenueCat setup call.
         });
@@ -166,10 +163,10 @@ const AppContent = () => {
           console.log('[AppsFlyer] init success', result);
         }
       },
-      (error) => {
+      onError: (error) => {
         console.error('[AppsFlyer] init failed', error);
       }
-    );
+    });
   }, []);
 
   useEffect(() => {
@@ -333,12 +330,13 @@ const AppContent = () => {
         return;
       }
 
-      traceLiveCallStage('voice_token_request_started');
-      const tokenResponse = await getVoiceToken();
-      traceLiveCallStage('voice_token_request_finished', {
-        success: tokenResponse.success,
-        code: tokenResponse.code,
-        statusCode: tokenResponse.statusCode
+      traceLiveCallStage('voice_session_request_started');
+      const voiceSessionResponse = await getVoiceSession();
+      traceLiveCallStage('voice_session_request_finished', {
+        success: voiceSessionResponse.success,
+        provider: voiceSessionResponse.provider,
+        code: voiceSessionResponse.code,
+        statusCode: voiceSessionResponse.statusCode
       });
 
       const [callLanguage, speechRate, callResponseDelayMs] = await Promise.all([
@@ -353,25 +351,27 @@ const AppContent = () => {
         responseDelayMs: callResponseDelayMs || 1600
       });
 
-      if (!tokenResponse.success || !tokenResponse.token) {
+      if (!voiceSessionResponse.success || !voiceSessionResponse.session) {
         setIsCalling(false);
         setCallStatus('failed');
         setShouldPreferSpeaker(false);
-        traceLiveCallStage('voice_token_request_failed', {
-          code: tokenResponse.code,
-          statusCode: tokenResponse.statusCode
+        traceLiveCallStage('voice_session_request_failed', {
+          code: voiceSessionResponse.code,
+          statusCode: voiceSessionResponse.statusCode
         });
 
-        let errorMessage = tokenResponse.error || 'Unable to get a voice token.';
+        let errorMessage = voiceSessionResponse.error || 'Unable to start voice mode.';
 
-        if (tokenResponse.code === 'VOICE_PAYWALL_REQUIRED' && tokenResponse.billing) {
+        if (voiceSessionResponse.code === 'VOICE_PAYWALL_REQUIRED' && voiceSessionResponse.billing) {
           errorMessage = 'You have no credits available. Upgrade to continue';
-        } else if (tokenResponse.code === 'VOICE_BILLING_NOT_INITIALIZED') {
+        } else if (voiceSessionResponse.code === 'VOICE_BILLING_NOT_INITIALIZED') {
           errorMessage = 'Voice billing is not initialized on the backend yet. Run the billing entitlements migration and try again.';
-        } else if (tokenResponse.code === 'VOICE_TWILIO_NOT_CONFIGURED') {
-          errorMessage = 'Twilio Voice token settings are missing on the backend.';
-        } else if (tokenResponse.statusCode) {
-          errorMessage = `${errorMessage} (status ${tokenResponse.statusCode})`;
+        } else if (voiceSessionResponse.code === 'VOICE_TWILIO_NOT_CONFIGURED' || voiceSessionResponse.code === 'VOICE_OPENAI_NOT_CONFIGURED') {
+          errorMessage = 'Voice provider token settings are missing on the backend.';
+        } else if (voiceSessionResponse.code === 'VOICE_OPENAI_SESSION_FAILED') {
+          errorMessage = 'The backend could not open an OpenAI realtime voice session.';
+        } else if (voiceSessionResponse.statusCode) {
+          errorMessage = `${errorMessage} (status ${voiceSessionResponse.statusCode})`;
         }
 
         Alert.alert(
@@ -382,15 +382,15 @@ const AppContent = () => {
       }
 
       const response = await startVoiceCall({
-        token: tokenResponse.token,
+        session: voiceSessionResponse.session,
         params: {
-          identity: tokenResponse.identity || 'unknown',
+          identity: voiceSessionResponse.identity || 'unknown',
           language: callLanguage || 'en',
           speechRate: String(speechRate || 1),
           responseDelayMs: String(callResponseDelayMs || 1600)
         },
         onStatusChange: (status) => {
-          traceLiveCallStage(`twilio_status_${status}`);
+          traceLiveCallStage(`voice_provider_status_${status}`);
           setCallStatus(status);
 
           if (status === 'ended' || status === 'failed') {
@@ -400,7 +400,7 @@ const AppContent = () => {
           }
         },
         onError: (message) => {
-          traceLiveCallStage('twilio_error', {
+          traceLiveCallStage('voice_provider_error', {
             message
           });
           Sentry.captureMessage(message || 'Unexpected VoIP call error.', {
@@ -659,7 +659,7 @@ const AppContent = () => {
               <Text style={[styles.modePickerTitle, { color: colors.text }]}>Choose audio mode</Text>
               <Text style={[styles.modePickerSubtitle, { color: colors.mutedText }]}>
                 {isLiveCallAvailable
-                  ? 'Start a live call or record in Listen Mode.'
+                  ? 'Start Voice Mode or record in Listen Mode.'
                   : 'Record in Listen Mode.'}
               </Text>
 
@@ -670,9 +670,9 @@ const AppContent = () => {
                   activeOpacity={0.85}
                 >
                   <View style={styles.modePickerOptionHeader}>
-                    <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Live Call</Text>
+                    <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Voice Mode</Text>
                   </View>
-                  <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Talk to Emmaline live with call controls and audio routing.</Text>
+                  <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Talk to Emmaline live with low-latency voice, mute, and audio routing controls.</Text>
                 </TouchableOpacity>
               ) : null}
 
