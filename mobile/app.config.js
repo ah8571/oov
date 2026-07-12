@@ -135,6 +135,8 @@ module.exports = () => {
     scheme: baseConfig.scheme || 'emmaline',
     plugins: filteredPlugins,
     ios: {
+      // Numeric App Store ID for this app. Can be overridden with env `EXPO_IOS_APP_ID` or `EXPO_APPLE_APP_ID`.
+      appStoreId: normalizeOptionalConfigValue(process.env.EXPO_IOS_APP_ID || process.env.EXPO_APPLE_APP_ID || '6783906612'),
       ...(baseConfig.ios || {}),
       infoPlist: {
         ...iosInfoPlist,
