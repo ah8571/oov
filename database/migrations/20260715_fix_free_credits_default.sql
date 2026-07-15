@@ -1,13 +1,12 @@
--- Fix: free_credits_granted default should be 0, not 20.
--- The grantFreeCredits() function in creditService handles the actual grant.
--- Having DEFAULT 20 on free_credits_granted causes the function to skip
--- (it thinks credits were already granted) while credit_balance stays at 0.
+-- Fix: ensure free_credits_granted and credit_balance both default to 20.
+-- The grantFreeCredits() function skips if free_credits_granted > 0,
+-- so the defaults must include the actual balance, not just the flag.
 
-ALTER TABLE public.users ALTER COLUMN free_credits_granted SET DEFAULT 0;
+ALTER TABLE public.users ALTER COLUMN free_credits_granted SET DEFAULT 20;
+ALTER TABLE public.users ALTER COLUMN credit_balance SET DEFAULT 20;
 
--- Reset users who got the bad default (free_credits_granted=20 but credit_balance=0)
--- so grantFreeCredits() can properly grant them when they next check billing status.
+-- Fix existing users who have the flag set to 20 but balance at 0.
 UPDATE public.users
-SET free_credits_granted = 0
+SET credit_balance = 20
 WHERE free_credits_granted = 20
   AND credit_balance = 0;
