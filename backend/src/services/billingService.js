@@ -61,7 +61,8 @@ export const assertUserCanStartVoiceSession = async (userId) => {
 
 export const grantUserCredits = async (userId, creditsToAdd) => {
   // Use the credit service to add credits directly
-  const { supabase } = await import('./databaseService.js');
+  const { getSupabaseClient } = await import('./databaseService.js');
+  const supabase = getSupabaseClient();
   const current = await supabase
     .from('users')
     .select('credit_balance')

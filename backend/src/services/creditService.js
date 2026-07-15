@@ -1,4 +1,4 @@
-import { supabase } from './databaseService.js';
+import { getSupabaseClient } from './databaseService.js';
 
 // Rate card — credits consumed per minute of usage
 const CREDIT_RATES = {
@@ -19,7 +19,7 @@ const roundUpCredits = (durationSeconds, ratePerMinute) => {
 };
 
 const getCreditBalance = async (userId) => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from('users')
     .select('credit_balance, free_credits_granted, monthly_credit_allocation, last_credit_allocation_date, rollover_credits')
     .eq('id', userId)
@@ -41,7 +41,7 @@ const recordCreditTransaction = async ({
   usageDurationSeconds = null,
   metadata = {}
 }) => {
-  const { error } = await supabase
+  const { error } = await getSupabaseClient()
     .from('credit_transactions')
     .insert({
       user_id: userId,
@@ -67,7 +67,7 @@ export const grantFreeCredits = async (userId) => {
     return { granted: false, balance: profile.credit_balance };
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabaseClient()
     .from('users')
     .update({
       credit_balance: FREE_CREDITS_GRANT,
@@ -116,7 +116,7 @@ export const grantMonthlyCredits = async (userId) => {
   const rollover = Math.min(profile.credit_balance, MAX_ROLLOVER_CREDITS);
   const newBalance = PRO_MONTHLY_CREDITS + rollover;
 
-  const { error } = await supabase
+  const { error } = await getSupabaseClient()
     .from('users')
     .update({
       credit_balance: newBalance,
@@ -189,7 +189,7 @@ export const consumeCredits = async (userId, mode, durationSeconds, metadata = {
   const currentBalance = Number(profile.credit_balance || 0);
   const newBalance = Math.max(0, currentBalance - creditsToDeduct);
 
-  const { error } = await supabase
+  const { error } = await getSupabaseClient()
     .from('users')
     .update({
       credit_balance: newBalance,
@@ -224,7 +224,7 @@ export const consumeCredits = async (userId, mode, durationSeconds, metadata = {
 };
 
 export const setMonthlyCreditAllocation = async (userId, monthlyCredits) => {
-  const { error } = await supabase
+  const { error } = await getSupabaseClient()
     .from('users')
     .update({
       monthly_credit_allocation: monthlyCredits,
