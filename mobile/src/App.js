@@ -39,6 +39,7 @@ import {
   getCallLanguagePreference,
   getCallVoicePreference,
   getVoiceProviderPreference,
+  saveVoiceProviderPreference,
   getThemeModePreference,
   saveThemeModePreference
 } from './utils/secureStorage.js';
@@ -827,16 +828,44 @@ const AppContent = () => {
               </Text>
 
               {isLiveCallAvailable ? (
-                <TouchableOpacity
-                  style={[styles.modePickerOption, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
-                  onPress={handleChooseLiveCall}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.modePickerOptionHeader}>
-                    <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Voice Mode</Text>
+                <>
+                  <TouchableOpacity
+                    style={[styles.modePickerOption, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+                    onPress={handleChooseLiveCall}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.modePickerOptionHeader}>
+                      <Text style={[styles.modePickerOptionTitle, { color: colors.text }]}>Voice Mode</Text>
+                    </View>
+                    <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Talk to Emmaline live in a full-screen voice conversation. Saved transcripts are currently available in Listen Mode.</Text>
+                  </TouchableOpacity>
+
+                  <View style={[styles.providerToggleRow, { borderTopColor: colors.border }]}>
+                    <Text style={[styles.providerToggleLabel, { color: colors.mutedText }]}>AI Provider</Text>
+                    <View style={styles.providerToggleButtons}>
+                      <TouchableOpacity
+                        style={[styles.providerChip, voiceProvider === 'openai' && { backgroundColor: colors.chipSelectedBg }]}
+                        onPress={() => {
+                          setVoiceProvider('openai');
+                          saveVoiceProviderPreference('openai');
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={[styles.providerChipText, { color: voiceProvider === 'openai' ? colors.chipSelectedText : colors.mutedText }]}>OpenAI</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.providerChip, voiceProvider === 'grok' && { backgroundColor: colors.chipSelectedBg }]}
+                        onPress={() => {
+                          setVoiceProvider('grok');
+                          saveVoiceProviderPreference('grok');
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={[styles.providerChipText, { color: voiceProvider === 'grok' ? colors.chipSelectedText : colors.mutedText }]}>Grok</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <Text style={[styles.modePickerOptionDescription, { color: colors.mutedText }]}>Talk to Emmaline live in a full-screen voice conversation. Saved transcripts are currently available in Listen Mode.</Text>
-                </TouchableOpacity>
+                </>
               ) : null}
 
               <TouchableOpacity
@@ -960,6 +989,31 @@ const styles = StyleSheet.create({
   modePickerOptionDescription: {
     fontSize: 13,
     lineHeight: 18
+  },
+  providerToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    paddingTop: 12,
+    marginTop: 4
+  },
+  providerToggleLabel: {
+    fontSize: 13,
+    fontWeight: '600'
+  },
+  providerToggleButtons: {
+    flexDirection: 'row',
+    gap: 8
+  },
+  providerChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999
+  },
+  providerChipText: {
+    fontSize: 13,
+    fontWeight: '600'
   },
   modePickerCancelButton: {
     alignSelf: 'center',
