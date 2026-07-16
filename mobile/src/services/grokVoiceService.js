@@ -17,6 +17,9 @@ let callStartedAtMs = null;
 let audioBuffers = [];
 let playbackSound = null;
 let responseInProgress = false;
+let micRecording = null;
+let micInterval = null;
+const MIC_CHUNK_MS = 200;
 
 const muteListeners = new Set();
 const transcriptListeners = new Set();
@@ -125,6 +128,11 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
         setTimeout(() => InCallManager.setSpeakerphoneOn(true), 500);
       } catch {}
     }
+
+    // Start chunked microphone capture via expo-av
+    startMicCapture().catch((err) => {
+      console.log('[GrokVoice] Mic capture failed:', err.message);
+    });
 
     activeCall = true;
     callStartedAtMs = Date.now();
@@ -245,6 +253,8 @@ const createWavBuffer = (pcmBuffer, sampleRate) => {
 };
 
 const cleanupGrokCall = async () => {
+  stopMicCapture();
+
   if (playbackSound) {
     try { await playbackSound.unloadAsync(); } catch {}
     playbackSound = null;
@@ -274,20 +284,86 @@ const cleanupGrokCall = async () => {
   onTrace = null;
 };
 
-export const sendGrokText = (text) => {
-  if (!activeSocket || activeSocket.readyState !== WebSocket.OPEN) return;
-
-  activeSocket.send(JSON.stringify({
-    type: 'conversation.item.create',
-    item: {
-      type: 'message',
-      role: 'user',
-      content: [{ type: 'input_text', text }]
+const startMicCapture = async () => {
+  const recordChunk = async () => {
+    if (micRecording) {
+      try { await micRecording.stopAndUnloadAsync(); } catch {}
+      micRecording = null;
     }
-  }));
 
-  activeSocket.send(JSON.stringify({ type: 'response.create' }));
+    const recording = new Audio.Recording();
+    await recording.prepareToRecordAsync(
+      Platform.OS === 'android'
+        ? {
+            android: {
+              extension: '.wav',
+              outputFormat: 2, // ENCODING_PCM_16BIT
+              audioEncoder: 1, // PCM
+              sampleRate: 24000,
+              numberOfChannels: 1
+            }
+          }
+        : {
+            ios: {
+              extension: '.wav',
+              outputFormat: 'lpcm',
+              audioQuality: 127, // MAX
+              sampleRate: 24000,
+              numberOfChannels: 1,
+              linearPCMBitDepth: 16,
+              linearPCMIsBigEndian: false,
+              linearPCMIsFloat: false
+            }
+          }
+    );
+    await recording.startAsync();
+    micRecording = recording;
+  };
+
+  await recordChunk();
+
+  micInterval = setInterval(async () => {
+    if (!micRecording || !activeSocket || activeSocket.readyState !== WebSocket.OPEN || isMuted) {
+      await recordChunk();
+      return;
+    }
+
+    try {
+      await micRecording.stopAndUnloadAsync();
+      const uri = micRecording.getURI();
+      micRecording = null;
+
+      if (uri) {
+        // Read WAV file, strip 44-byte header to get raw PCM16
+        const wavBase64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        const wavBuffer = Buffer.from(wavBase64, 'base64');
+
+        if (wavBuffer.length > 44) {
+          const pcmBuffer = wavBuffer.slice(44); // Strip WAV header
+          const pcmBase64 = pcmBuffer.toString('base64');
+          activeSocket.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: pcmBase64 }));
+        }
+      }
+    } catch (err) {
+      // Chunk errors are non-fatal — just restart
+    }
+
+    await recordChunk();
+  }, MIC_CHUNK_MS);
 };
+
+const stopMicCapture = () => {
+  if (micInterval) {
+    clearInterval(micInterval);
+    micInterval = null;
+  }
+  if (micRecording) {
+    try { micRecording.stopAndUnloadAsync(); } catch {}
+    micRecording = null;
+  }
+};
+
+export const sendGrokText = (text) => {
 
 export const endGrokVoiceCall = async () => {
   await cleanupGrokCall();
