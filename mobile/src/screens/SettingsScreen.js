@@ -5,10 +5,8 @@ import { deleteAccount, getBillingStatus } from '../services/api.js';
 import {
   getCallLanguagePreference,
   getCallVoicePreference,
-  getNoteTextScalePreference,
   saveCallLanguagePreference,
   saveCallVoicePreference,
-  saveNoteTextScalePreference,
 } from '../utils/secureStorage.js';
 import { useAppTheme } from '../theme/appTheme.js';
 
@@ -120,36 +118,12 @@ const VOICE_OPTIONS = [
 ];
 
 
-const NOTE_TEXT_SIZE_OPTIONS = [
-  {
-    value: 0.95,
-    title: 'Compact',
-    description: 'Fit a bit more text into each note card and note screen.'
-  },
-  {
-    value: 1,
-    title: 'Standard',
-    description: 'Default note text size.'
-  },
-  {
-    value: 1.15,
-    title: 'Larger',
-    description: 'Increase note readability without making the layout feel oversized.'
-  },
-  {
-    value: 1.3,
-    title: 'Largest',
-    description: 'Use the largest note text for easier reading.'
-  }
-];
-
 const areRatesEqual = (left, right) => Math.abs(Number(left) - Number(right)) < 0.001;
 const areDelayValuesEqual = (left, right) => Number(left) === Number(right);
 const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDeleted }) => {
   const { colors, isDarkMode, toggleTheme } = useAppTheme();
   const [callLanguage, setCallLanguage] = useState('en');
   const [callVoice, setCallVoice] = useState('marin');
-  const [noteTextScale, setNoteTextScale] = useState(1);
   const [billingSummary, setBillingSummary] = useState({
     loading: true,
     availableVoiceMinutes: 0,
@@ -163,15 +137,13 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
 
   useEffect(() => {
     const loadPreferences = async () => {
-      const [savedLanguage, savedVoice, savedNoteTextScale] = await Promise.all([
+      const [savedLanguage, savedVoice] = await Promise.all([
         getCallLanguagePreference(),
-        getCallVoicePreference(),
-        getNoteTextScalePreference()
+        getCallVoicePreference()
       ]);
 
       setCallLanguage(savedLanguage || 'en');
       setCallVoice(savedVoice || 'marin');
-      setNoteTextScale(savedNoteTextScale || 1);
     };
 
     loadPreferences();
@@ -229,14 +201,7 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
     }
   };
 
-  const handleSelectNoteTextScale = async (value) => {
-    setNoteTextScale(value);
-    const saved = await saveNoteTextScalePreference(value);
-
-    if (!saved) {
-      Alert.alert('Settings error', 'Unable to save your note text size preference.');
-    }
-  };
+  const handleDeleteAccount = () => {
 
   const handleLogout = () => {
     Alert.alert(
@@ -256,7 +221,7 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
     );
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccountContinue = () => {
     Alert.alert(
       'Delete account',
       'This will permanently remove your Emmaline account and the account-linked transcripts, notes, and related records stored for that account. This cannot be undone.',
@@ -399,37 +364,6 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
                 <Text style={[styles.optionTitle, { color: colors.text }]}>{option.title}</Text>
                 <Text style={[styles.optionDescription, { color: colors.mutedText }]}>{option.description}</Text>
               </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Note text size</Text>
-        <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>Make note previews and note content easier to read if you want larger text.</Text>
-
-        {NOTE_TEXT_SIZE_OPTIONS.map((option) => {
-          const selected = areRatesEqual(noteTextScale, option.value);
-
-          return (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionCard,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-                selected && [styles.optionCardSelected, { borderColor: colors.accent, backgroundColor: colors.surfaceAlt }]
-              ]}
-              onPress={() => handleSelectNoteTextScale(option.value)}
-              activeOpacity={0.85}
-            >
-              <View style={[styles.radio, { borderColor: colors.mutedText }, selected && [styles.radioSelected, { borderColor: colors.accent }]]}>
-                {selected ? <View style={[styles.radioInner, { backgroundColor: colors.accent }]} /> : null}
-              </View>
-              <View style={styles.optionContent}>
-                <Text style={[styles.optionTitle, { color: colors.text }]}>{option.title}</Text>
-                <Text style={[styles.optionDescription, { color: colors.mutedText }]}>{option.description}</Text>
-              </View>
-              <Text style={[styles.rateBadge, { color: colors.mutedText }]}>{option.value.toFixed(2)}x</Text>
             </TouchableOpacity>
           );
         })}

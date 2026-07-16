@@ -5,6 +5,14 @@ import * as FileSystem from 'expo-file-system/legacy';
 import InCallManager from 'react-native-incall-manager';
 import { createGrokVoiceSession } from './api.js';
 
+// Dynamically import react-native-audio-api for mic capture
+let AudioAPI = null;
+try {
+  AudioAPI = require('react-native-audio-api');
+} catch {
+  console.log('[GrokVoice] react-native-audio-api not available, mic streaming disabled');
+}
+
 const GROK_PROVIDER = 'grok-voice';
 const GROK_AUDIO_FILE = `${FileSystem.cacheDirectory}grok-response.pcm`;
 
@@ -17,6 +25,9 @@ let callStartedAtMs = null;
 let audioBuffers = [];
 let playbackSound = null;
 let responseInProgress = false;
+let audioContext = null;
+let micStream = null;
+let micProcessor = null;
 
 const muteListeners = new Set();
 const transcriptListeners = new Set();
@@ -124,6 +135,42 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
         InCallManager.start({ media: 'audio' });
         setTimeout(() => InCallManager.setSpeakerphoneOn(true), 500);
       } catch {}
+    }
+
+    // Start microphone capture for real-time streaming
+    if (AudioAPI) {
+      try {
+        onTrace?.('grok_mic_starting');
+        audioContext = new AudioAPI.AudioContext({ sampleRate: 24000 });
+        micStream = await audioContext.getUserMedia({ audio: true });
+        const source = audioContext.createMediaStreamSource(micStream);
+        micProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        source.connect(micProcessor);
+        micProcessor.connect(audioContext.destination);
+
+        micProcessor.onaudioprocess = (event) => {
+          if (!activeSocket || activeSocket.readyState !== WebSocket.OPEN || isMuted) return;
+
+          const inputData = event.inputBuffer.getChannelData(0);
+          const pcm16 = new Int16Array(inputData.length);
+
+          for (let i = 0; i < inputData.length; i++) {
+            const s = Math.max(-1, Math.min(1, inputData[i]));
+            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+          }
+
+          const base64 = Buffer.from(pcm16.buffer).toString('base64');
+          activeSocket.send(JSON.stringify({
+            type: 'input_audio_buffer.append',
+            audio: base64
+          }));
+        };
+
+        onTrace?.('grok_mic_started');
+      } catch (micError) {
+        console.log('[GrokVoice] Mic streaming unavailable:', micError.message);
+      }
     }
 
     activeCall = true;
@@ -245,6 +292,20 @@ const createWavBuffer = (pcmBuffer, sampleRate) => {
 };
 
 const cleanupGrokCall = async () => {
+  // Stop mic
+  if (micProcessor) {
+    try { micProcessor.disconnect(); } catch {}
+    micProcessor = null;
+  }
+  if (micStream) {
+    try { micStream.getTracks().forEach((t) => t.stop()); } catch {}
+    micStream = null;
+  }
+  if (audioContext) {
+    try { audioContext.close(); } catch {}
+    audioContext = null;
+  }
+
   if (playbackSound) {
     try { await playbackSound.unloadAsync(); } catch {}
     playbackSound = null;
