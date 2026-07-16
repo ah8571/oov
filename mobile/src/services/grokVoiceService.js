@@ -135,6 +135,14 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
       console.log('[GrokVoice] Mic capture failed:', err.message);
     });
 
+    // Send a test message after 2 seconds to verify audio response pipeline
+    setTimeout(() => {
+      if (activeSocket?.readyState === WebSocket.OPEN) {
+        console.log('[GrokVoice] Sending test message');
+        sendGrokText('Say hello and ask how I am doing today.');
+      }
+    }, 2500);
+
     activeCall = true;
     callStartedAtMs = Date.now();
     onStatusChange?.('live');
