@@ -292,30 +292,25 @@ const startMicCapture = async () => {
     }
 
     const recording = new Audio.Recording();
-    await recording.prepareToRecordAsync(
-      Platform.OS === 'android'
-        ? {
-            android: {
-              extension: '.wav',
-              outputFormat: 2, // ENCODING_PCM_16BIT
-              audioEncoder: 1, // PCM
-              sampleRate: 24000,
-              numberOfChannels: 1
-            }
-          }
-        : {
-            ios: {
-              extension: '.wav',
-              outputFormat: 'lpcm',
-              audioQuality: 127, // MAX
-              sampleRate: 24000,
-              numberOfChannels: 1,
-              linearPCMBitDepth: 16,
-              linearPCMIsBigEndian: false,
-              linearPCMIsFloat: false
-            }
-          }
-    );
+    await recording.prepareToRecordAsync({
+      android: {
+        extension: '.wav',
+        outputFormat: 2,
+        audioEncoder: 1,
+        sampleRate: 24000,
+        numberOfChannels: 1
+      },
+      ios: {
+        extension: '.wav',
+        outputFormat: 'lpcm',
+        audioQuality: 127,
+        sampleRate: 24000,
+        numberOfChannels: 1,
+        linearPCMBitDepth: 16,
+        linearPCMIsBigEndian: false,
+        linearPCMIsFloat: false
+      }
+    });
     await recording.startAsync();
     micRecording = recording;
   };
