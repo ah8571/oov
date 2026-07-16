@@ -30,41 +30,6 @@ const emitTranscript = (text) => {
   transcriptListeners.forEach((l) => l(text));
 };
 
-export const getGrokCallActive = () => activeCall;
-
-export const getGrokMuteState = () => isMuted;
-
-export const setGrokMuted = (muted) => {
-  isMuted = muted;
-  emitMuteState();
-
-  if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
-    if (muted) {
-      activeSocket.send(JSON.stringify({ type: 'input_audio_buffer.clear' }));
-    }
-  }
-};
-
-export const subscribeToGrokMute = (listener) => {
-  muteListeners.add(listener);
-  listener(isMuted);
-  return () => { muteListeners.delete(listener); };
-};
-
-export const subscribeToGrokAudioChunks = (listener) => {
-  audioChunkListeners.add(listener);
-  return () => { audioChunkListeners.delete(listener); };
-};
-
-export const ensureMicrophonePermission = async () => {
-  try {
-    const permission = await Audio.requestPermissionsAsync();
-    return { success: permission.granted, error: permission.granted ? null : 'Microphone permission denied' };
-  } catch (error) {
-    return { success: false, error: error?.message || 'Unable to request microphone permission' };
-  }
-};
-
 export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusChange: statusCb, onTrace: traceCb } = {}) => {
   if (activeCall) {
     return { success: false, error: 'A Grok voice call is already active.' };
