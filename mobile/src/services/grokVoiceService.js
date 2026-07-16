@@ -18,8 +18,8 @@ let audioBuffers = [];
 let playbackSound = null;
 let responseInProgress = false;
 let micRecording = null;
-let micInterval = null;
-const MIC_CHUNK_MS = 200;
+let micActive = false;
+const MIC_CHUNK_MS = 250;
 
 const muteListeners = new Set();
 const transcriptListeners = new Set();
@@ -138,11 +138,6 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
     activeCall = true;
     callStartedAtMs = Date.now();
     onStatusChange?.('live');
-
-    // Send initial greeting so the user hears audio immediately
-    setTimeout(() => {
-      sendGrokText('Hi');
-    }, 800);
 
     return { success: true, provider: GROK_PROVIDER };
   } catch (error) {
@@ -291,14 +286,10 @@ const cleanupGrokCall = async () => {
 };
 
 const startMicCapture = async () => {
-  const recordChunk = async () => {
-    if (micRecording) {
-      try { await micRecording.stopAndUnloadAsync(); } catch {}
-      micRecording = null;
-    }
+  micActive = true;
 
-    // Small delay to let audio hardware settle
-    await new Promise((r) => setTimeout(r, 50));
+  const sendChunk = async () => {
+    if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN) return;
 
     const recording = new Audio.Recording();
     try {
@@ -322,27 +313,14 @@ const startMicCapture = async () => {
         }
       });
       await recording.startAsync();
-      micRecording = recording;
-    } catch (err) {
-      console.log('[GrokVoice] Record start error:', err.message);
-      micRecording = null;
-    }
-  };
 
-  await recordChunk();
+      // Record for chunk duration
+      await new Promise((r) => setTimeout(r, MIC_CHUNK_MS));
 
-  micInterval = setInterval(async () => {
-    if (!micRecording || !activeSocket || activeSocket.readyState !== WebSocket.OPEN) {
-      await recordChunk();
-      return;
-    }
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
 
-    try {
-      await micRecording.stopAndUnloadAsync();
-      const uri = micRecording.getURI();
-      micRecording = null;
-
-      if (uri && !isMuted) {
+      if (uri && micActive && !isMuted) {
         const wavBase64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
         const wavBuffer = Buffer.from(wavBase64, 'base64');
 
@@ -359,22 +337,20 @@ const startMicCapture = async () => {
         }
       }
     } catch (err) {
-      // Non-fatal — just restart the chunk
+      // Chunk failed — continue to next
     }
 
-    await recordChunk();
-  }, MIC_CHUNK_MS);
+    // Next chunk
+    if (micActive) {
+      setTimeout(sendChunk, 10);
+    }
+  };
+
+  sendChunk();
 };
 
 const stopMicCapture = () => {
-  if (micInterval) {
-    clearInterval(micInterval);
-    micInterval = null;
-  }
-  if (micRecording) {
-    try { micRecording.stopAndUnloadAsync(); } catch {}
-    micRecording = null;
-  }
+  micActive = false;
 };
 
 export const sendGrokText = (text) => {
