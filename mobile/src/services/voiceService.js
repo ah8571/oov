@@ -1,5 +1,6 @@
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
+import InCallManager from 'react-native-incall-manager';
 import { createNote, createVoiceCallConnection, getNote, getNotes, submitVoiceCallCompletion, updateNote } from './api.js';
 import {
   mediaDevices,
@@ -400,6 +401,15 @@ const cleanupCallResources = async () => {
   isMuted = false;
   emitMuteState();
 
+  // Clean up iOS speakerphone
+  if (Platform.OS === 'ios') {
+    try {
+      InCallManager.stop();
+    } catch {
+      // InCallManager cleanup is best-effort
+    }
+  }
+
   await Audio.setAudioModeAsync({
     allowsRecordingIOS: false,
     playsInSilentModeIOS: true,
@@ -440,10 +450,23 @@ export const startVoiceCall = async ({ session = null, params = {}, onStatusChan
 
   try {
     onTrace?.('native_webrtc_audio_mode_configuring');
+
+    // On iOS, start InCallManager to control speakerphone for WebRTC
+    if (Platform.OS === 'ios') {
+      try {
+        InCallManager.start({ media: 'audio' });
+        InCallManager.setSpeakerphoneOn(true);
+        selectedAudioRoute = { uuid: 'speaker', type: 'speaker', name: 'Speaker' };
+        emitAudioDevices();
+      } catch {
+        // InCallManager setup is best-effort
+      }
+    }
+
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
       playsInSilentModeIOS: true,
-      playThroughEarpieceAndroid: selectedAudioRoute?.type === 'earpiece',
+      playThroughEarpieceAndroid: Platform.OS === 'android' && selectedAudioRoute?.type === 'earpiece',
       staysActiveInBackground: false
     });
 
@@ -641,6 +664,11 @@ export const selectAudioDevice = async (deviceUuid) => {
   emitAudioDevices();
 
   try {
+    // On iOS, WebRTC audio routing is controlled by InCallManager
+    if (Platform.OS === 'ios') {
+      InCallManager.setSpeakerphoneOn(nextRoute.type === 'speaker');
+    }
+
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: activeCall,
       playsInSilentModeIOS: true,

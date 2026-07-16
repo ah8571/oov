@@ -882,7 +882,8 @@ export const getBillingStatus = async () => {
 
     return {
       success: true,
-      billing: response.data.billing
+      billing: response.data.billing,
+      credits: response.data.credits
     };
   } catch (error) {
     return {
