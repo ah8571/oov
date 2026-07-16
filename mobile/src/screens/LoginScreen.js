@@ -19,13 +19,21 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { beginSocialOAuth, completeAuthenticatedUserProfile, loginUser, loginWithSocialProvider, registerUser } from '../services/api.js';
 import legalContent from '../content/legalContent.json';
-import { getOAuthBrowserRedirectUrl, getOAuthRedirectUrl } from '../services/supabaseAuth.js';
+import { getOAuthBrowserRedirectUrl, getOAuthRedirectUrl, hasSession } from '../services/supabaseAuth.js';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const OAUTH_REDIRECT_TIMEOUT_MS = 120000;
 const SOCIAL_LOGIN_TIMEOUT_MS = 20000;
 const OAUTH_REDIRECT_DISMISS_GRACE_MS = 5000;
+
+const checkForSession = async () => {
+  try {
+    return await hasSession();
+  } catch {
+    return false;
+  }
+};
 const REQUIRED_CONSENT_LABEL = legalContent?.consentText?.required
   || 'I agree to the Terms of Use and Privacy Policy, including Emmaline sharing the content I choose to submit with AI service providers to generate responses, transcripts, summaries, and speech.';
 
@@ -380,10 +388,18 @@ const LoginScreen = ({ navigation, onLoginSuccess, pendingProfileSetup = null })
 
       if (result.type !== 'success' || !result.url) {
         if (Platform.OS === 'android' && result.type === 'dismiss') {
-          logAuthFlow('handleSocialOAuth:awaitingAuthStateAfterDismiss', {
-            provider,
-            mode: socialMode
-          });
+          // Browser dismissed — the deep link might arrive through AppNavigator's
+          // Linking listener instead. Poll for auth state rather than giving up.
+          logAuthFlow('handleSocialOAuth:pollingForAuth', { provider });
+          for (let i = 0; i < 15; i++) {
+            await new Promise((r) => setTimeout(r, 1000));
+            const sessionExists = await checkForSession();
+            if (sessionExists) {
+              logAuthFlow('handleSocialOAuth:authDetected');
+              return; // AppNavigator will handle navigation
+            }
+          }
+          logAuthFlow('handleSocialOAuth:pollingTimeout');
           return;
         }
 
