@@ -32,7 +32,10 @@ const FloatingCallButton = ({
   voiceProvider = 'openai',
   grokTextInput = '',
   onGrokTextChange,
-  onGrokSendText
+  onGrokSendText,
+  geminiTextInput = '',
+  onGeminiTextChange,
+  onGeminiSendText
 }) => {
   const [scaleAnim] = React.useState(new Animated.Value(1));
   const [orbScaleAnim] = React.useState(new Animated.Value(1));
@@ -255,6 +258,28 @@ const FloatingCallButton = ({
                 <TouchableOpacity
                   style={[styles.grokSendButton, { backgroundColor: colors.accent }]}
                   onPress={onGrokSendText}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="send" size={16} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {voiceProvider === 'gemini' ? (
+              <View style={styles.grokInputRow}>
+                <TextInput
+                  style={[styles.grokTextInput, { color: colors.text, backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
+                  placeholder="Type a message..."
+                  placeholderTextColor={colors.mutedText}
+                  value={geminiTextInput}
+                  onChangeText={onGeminiTextChange}
+                  onSubmitEditing={onGeminiSendText}
+                  returnKeyType="send"
+                  autoCorrect
+                />
+                <TouchableOpacity
+                  style={[styles.grokSendButton, { backgroundColor: colors.accent }]}
+                  onPress={onGeminiSendText}
                   activeOpacity={0.85}
                 >
                   <Ionicons name="send" size={16} color="#ffffff" />

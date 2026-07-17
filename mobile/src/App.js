@@ -36,6 +36,16 @@ import {
   subscribeToGrokTranscript
 } from './services/grokVoiceService.js';
 import {
+  endGeminiVoiceCall,
+  getGeminiCallActive,
+  getGeminiMuteState,
+  sendGeminiText,
+  setGeminiMuted,
+  startGeminiVoiceCall,
+  subscribeToGeminiMute,
+  subscribeToGeminiTranscript
+} from './services/geminiVoiceService.js';
+import {
   getCallLanguagePreference,
   getCallVoicePreference,
   getVoiceProviderPreference,
@@ -95,6 +105,7 @@ const AppContent = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [voiceProvider, setVoiceProvider] = useState('openai');
   const [grokTextInput, setGrokTextInput] = useState('');
+  const [geminiTextInput, setGeminiTextInput] = useState('');
   const [listenModeState, setListenModeState] = useState('idle');
   const [showModePicker, setShowModePicker] = useState(false);
   const [shouldPreferSpeaker, setShouldPreferSpeaker] = useState(false);
@@ -334,7 +345,7 @@ const AppContent = () => {
   }, [audioDevices, isCalling, selectedAudioDevice, shouldPreferSpeaker]);
 
   const stopLiveCall = async () => {
-    const endFn = voiceProvider === 'grok' ? endGrokVoiceCall : endVoiceCall;
+    const endFn = voiceProvider === 'grok' ? endGrokVoiceCall : voiceProvider === 'gemini' ? endGeminiVoiceCall : endVoiceCall;
     const endResponse = await endFn();
 
     if (!endResponse.success) {
@@ -404,6 +415,7 @@ const AppContent = () => {
       });
 
       const isGrok = storedProvider === 'grok';
+      const isGemini = storedProvider === 'gemini';
       let voiceSessionResponse = {
         success: true,
         session: null,
@@ -415,6 +427,10 @@ const AppContent = () => {
       if (isGrok) {
         traceLiveCallStage('voice_session_request_bypassed', {
           provider: 'grok'
+        });
+      } else if (isGemini) {
+        traceLiveCallStage('voice_session_request_bypassed', {
+          provider: 'gemini'
         });
       } else {
         traceLiveCallStage('voice_session_request_started');
@@ -429,7 +445,7 @@ const AppContent = () => {
 
       const canProceedWithoutBootstrapSession = voiceSessionResponse.code === 'VOICE_OPENAI_SESSION_FAILED';
 
-      if (!isGrok && (!voiceSessionResponse.success || !voiceSessionResponse.session) && !canProceedWithoutBootstrapSession) {
+      if (!isGrok && !isGemini && (!voiceSessionResponse.success || !voiceSessionResponse.session) && !canProceedWithoutBootstrapSession) {
         setIsCalling(false);
         setCallStatus('failed');
         setCallActivityState('idle');
@@ -462,11 +478,50 @@ const AppContent = () => {
         return;
       }
 
-      if (!isGrok && canProceedWithoutBootstrapSession) {
+      if (!isGrok && !isGemini && canProceedWithoutBootstrapSession) {
         traceLiveCallStage('voice_session_request_bypassed', {
           code: voiceSessionResponse.code,
           statusCode: voiceSessionResponse.statusCode
         });
+      }
+
+      if (isGemini) {
+        // Gemini Live WebSocket voice mode
+        const geminiResponse = await startGeminiVoiceCall({
+          voiceConfig: { voiceName: callVoice || 'Puck' },
+          language: callLanguage || 'en',
+          onStatusChange: (status) => {
+            traceLiveCallStage(`gemini_provider_status_${status}`);
+            syncCallActivityFromStage(`voice_provider_status_${status}`);
+            setCallStatus(status);
+
+            if (status === 'live') {
+              setIsCalling(true);
+              return;
+            }
+
+            if (status === 'ended' || status === 'failed') {
+              setIsCalling(false);
+              setCallActivityState('idle');
+              setShouldPreferSpeaker(false);
+              resetLiveCallTrace();
+            }
+          },
+          onTrace: (stage, details) => {
+            traceLiveCallStage(stage, details);
+            syncCallActivityFromStage(stage);
+          }
+        });
+
+        if (!geminiResponse.success) {
+          setIsCalling(false);
+          setCallStatus('failed');
+          setCallActivityState('idle');
+          setShouldPreferSpeaker(false);
+          resetLiveCallTrace();
+          Alert.alert('Gemini call failed', geminiResponse.error || 'Unable to start Gemini voice mode.');
+        }
+        return;
       }
 
       if (isGrok) {
@@ -682,6 +737,11 @@ const AppContent = () => {
       return;
     }
 
+    if (voiceProvider === 'gemini') {
+      setGeminiMuted(!getGeminiMuteState());
+      return;
+    }
+
     const response = await toggleMute();
 
     if (!response.success) {
@@ -697,9 +757,19 @@ const AppContent = () => {
     setGrokTextInput('');
   };
 
+  const handleGeminiSendText = () => {
+    const text = geminiTextInput.trim();
+    if (!text || !getGeminiCallActive()) return;
+
+    sendGeminiText(text);
+    setGeminiTextInput('');
+  };
+
   const handleEndCall = async () => {
     if (voiceProvider === 'grok') {
       await endGrokVoiceCall();
+    } else if (voiceProvider === 'gemini') {
+      await endGeminiVoiceCall();
     } else {
       await endVoiceCall();
     }
@@ -798,6 +868,9 @@ const AppContent = () => {
             grokTextInput={grokTextInput}
             onGrokTextChange={setGrokTextInput}
             onGrokSendText={handleGrokSendText}
+            geminiTextInput={geminiTextInput}
+            onGeminiTextChange={setGeminiTextInput}
+            onGeminiSendText={handleGeminiSendText}
             bottomInset={appBottomRailHeight}
             topInset={insets.top}
           />
@@ -857,6 +930,16 @@ const AppContent = () => {
                         activeOpacity={0.85}
                       >
                         <Text style={[styles.providerChipText, { color: voiceProvider === 'grok' ? colors.chipSelectedText : colors.mutedText }]}>Grok</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.providerChip, voiceProvider === 'gemini' && { backgroundColor: colors.chipSelectedBg }]}
+                        onPress={() => {
+                          setVoiceProvider('gemini');
+                          saveVoiceProviderPreference('gemini');
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={[styles.providerChipText, { color: voiceProvider === 'gemini' ? colors.chipSelectedText : colors.mutedText }]}>Gemini</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

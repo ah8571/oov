@@ -21,6 +21,7 @@ import readerRoutes from './routes/reader.js';
 import supportRoutes from './routes/support.js';
 import voiceRoutes from './routes/voice.js';
 import grokVoiceRoutes from './routes/grokVoice.js';
+import geminiVoiceRoutes from './routes/geminiVoice.js';
 
 // Import middleware
 import { errorHandler, requestLogger } from './middleware/index.js';
@@ -97,6 +98,7 @@ app.use('/api/reader', readerRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/voice/grok', grokVoiceRoutes);
+app.use('/api/voice/gemini', geminiVoiceRoutes);
 
 app.use('/calls', callRoutes);
 app.use('/notes', noteRoutes);
@@ -108,6 +110,7 @@ app.use('/reader', readerRoutes);
 app.use('/support', supportRoutes);
 app.use('/voice', voiceRoutes);
 app.use('/voice/grok', grokVoiceRoutes);
+app.use('/voice/gemini', geminiVoiceRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

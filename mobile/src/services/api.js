@@ -840,6 +840,25 @@ export const createGrokVoiceSession = async (options = {}) => {
   }
 };
 
+export const createGeminiVoiceSession = async (options = {}) => {
+  try {
+    await addTokenToHeaders();
+    const response = await apiClient.post('/voice/gemini/session', {
+      model: String(options.model || '').trim() || null
+    });
+
+    return {
+      success: true,
+      ...response.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: formatApiError(error, 'Unable to start Gemini voice session.')
+    };
+  }
+};
+
 export const createVoiceCallConnection = async (offerSdp, options = {}) => {
   try {
     const token = await getAccessToken();

@@ -30,7 +30,7 @@ Emmaline uses a **credit system** to unify usage across all AI-powered modes. Us
 
 "Option A" Grok's realtime voice supposedly half price of OpenAI
 
-Deepgram AI? Nova 2.0 Sonic
+Deepgram AI, Nova 2.0 Sonic, Gemini 2.5 Flash NativeAudio Dialog (Thinking)
 
 "Option B" — split STT from the rest of the stack. We'd use:
 
@@ -57,32 +57,7 @@ ElevenLabs or Resemble for TTS output
 - Effect: unused credits carry forward, but you can never have more than 200 at renewal
 - Free tier credits never expire
 
-## Schema Design
 
-### users table (new columns)
-- `credit_balance INTEGER NOT NULL DEFAULT 0` — current available credits
-- `free_credits_granted INTEGER NOT NULL DEFAULT 20` — one-time free allocation
-- `monthly_credit_allocation INTEGER NOT NULL DEFAULT 0` — credits/month (100 for pro)
-- `last_credit_allocation_date TIMESTAMPTZ` — last monthly renewal
-- `rollover_credits INTEGER NOT NULL DEFAULT 0` — rolled over from previous month
-
-### credit_transactions table (new)
-- `user_id UUID` — FK to users
-- `type` — free_grant | monthly_renewal | usage | purchase | rollover | expiry | adjustment
-- `credits INTEGER` — positive for additions, negative for consumption
-- `balance_after INTEGER` — running balance after transaction
-- `source` — voice_mode | listen_mode | reader_natural | reader_basic | purchase | system
-- `usage_duration_seconds INTEGER` — nullable, for usage transactions
-- `metadata JSONB`
-- `created_at TIMESTAMPTZ`
-
-## Migration Path
-1. Add credit columns to `users` table
-2. Create `credit_transactions` table
-3. Grant initial free credits to existing users
-4. Update billing service to read/write credits instead of seconds
-5. Update mobile UI to show credits instead of minutes
-6. Add credit consumption hooks to voice, listen, and reader flows
 
 ---
 
@@ -127,17 +102,13 @@ Rename product thinking from live call to voice mode.
 Recommended evaluation order:
 1. OpenAI direct (current implementation — WebRTC)
 2. xAI Grok direct (WebSocket — API-compatible, ~half the cost)
-3. Google direct
+3. Inworld
+5. Gemini 3.1 Flash Live 
 4. Retell benchmark
 5. Vapi benchmark
 
-Why:
-- direct integrations better match cost sensitivity
-- packaged vendors are benchmarks, not defaults
-- Twilio should no longer be the center of the in-app voice experience
-- Grok Voice Agent is OpenAI Realtime API-compatible — switching is a URL + API key change for WebSocket clients, or a WebSocket transport build for WebRTC clients
 
-### B. Reader Voice
+### B. Natural Voices (solo)
 Recommended evaluation order:
 1. ElevenLabs
 Alternatives to Elevanlabs
@@ -147,11 +118,8 @@ Alternatives to Elevanlabs
 3. PlayHT
 4. Cartesia
 6. Noiz.ai
-
-
-Why:
-- reader experience is mostly driven by narration quality
-- this is the fastest place to create a noticeable UX improvement
+7. Deepgram AI
+4. Nova 2.0 Sonic
 
 ### Multi-lingual assistance
 1. Openai real time
@@ -195,4 +163,87 @@ Best future Twilio use cases:
   - Event name: `input_audio_transcription.updated` (cumulative) vs OpenAI's `delta`
 - **Languages:** 20+ with native accents, including Spanish (es-MX, es-ES)
 - **Our integration effort:** Medium — event protocol identical, but we need a WebSocket transport layer alongside our current WebRTC implementation. Feature-flag behind settings.
+
+### Gemini Live (Google) — WebSocket Voice + LiveKit Plugin
+
+- **Docs:** https://ai.google.dev/gemini-api/docs/live-api
+- **WebSocket quickstart:** https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
+- **Ephemeral tokens:** https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
+- **LiveKit plugin:** https://docs.livekit.io/agents/models/realtime/plugins/gemini/
+- **Voices:** https://ai.google.dev/gemini-api/docs/live#change-voices
+- **Pricing (Gemini 3.1 Flash Live):** ~$0.005 input + $0.018 output per minute ≈ **$0.023/min** (~1/3 of Grok, ~1/7 of OpenAI)
+- **API key / Billing:** https://aistudio.google.com/apikey
+- **Model:** `gemini-3.1-flash-live-preview` (confirmed via LiveKit docs)
+- **Protocol:** WebSocket (WSS), raw PCM 16-bit
+- **Technical specs:**
+  - Input: 16kHz 16-bit little-endian PCM (different from Grok's 24kHz)
+  - Output: 24kHz 16-bit little-endian PCM
+  - Built-in VAD (server-side, no client VAD config needed)
+  - Barge-in supported natively
+  - 70+ languages including Spanish
+  - Function calling / tool use via `tools` config
+  - Video input supported (≤1 FPS JPEG)
+- **Auth:** API key via `?key=` query param on WebSocket URL. Google recommends ephemeral tokens (via `/v1beta/models/{model}:generateEphemeralToken` over REST) for production to avoid exposing raw keys client-side.
+- **Message format (WebSocket):**
+  - Setup: `{"setup": {"model": "models/...", "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {...}}}}`
+  - Audio input: `{"realtimeInput": {"mediaChunks": [{"mimeType": "audio/pcm;rate=16000", "data": base64}]}}`
+  - Audio output: `serverContent.modelTurn.parts[].inlineData.data` (base64)
+  - Text input: `{"clientContent": {"turns": [{"role": "user", "parts": [{"text": "..."}]}], "turnComplete": true}}`
+- **LiveKit plugin notes (⚠️ for 3.1):**
+  - Gemini 3.1 Flash Live has known LiveKit compatibility limitations as of 2026-07
+  - `send_client_content` only works for initial history seeding — rejected after first model turn
+  - `generate_reply()`, `update_instructions()`, `update_chat_ctx()` incompatible with 3.1
+  - Basic voice conversations, tool calling, and audio I/O work fine
+  - LiveKit plugin uses `GOOGLE_API_KEY` env var; also supports Vertex AI
+- **Our integration:** ✅ Built — WebSocket direct (no LiveKit layer). API key passed via backend route for auth. Input at 16kHz via PcmCaptureModule, output at 24kHz via expo-av WAV playback.
+- **LiveKit upgrade path:** Could migrate to LiveKit agent later for WebRTC-quality audio. LiveKit plugin handles the protocol bridge; we'd run a LiveKit Agent process that speaks WebRTC to the phone and Gemini WebSocket internally.
+
+### LiveKit — WebRTC Transport Layer (not a model provider)
+
+- **Docs:** https://docs.livekit.io/
+- **Voice AI quickstart:** https://docs.livekit.io/agents/start/voice-ai/
+- **Gemini plugin:** https://docs.livekit.io/agents/models/realtime/plugins/gemini/
+- **Grok/xAI integration:** https://docs.livekit.io/agents/integrations/xai/
+- **Pricing:** LiveKit Cloud free tier available; paid plans scale with usage. Self-host open-source option.
+- **Role:** Open-source WebRTC platform — acts as middleware between mobile SDK and AI model backends
+- **Value proposition:**
+  - Production-quality WebRTC (Opus codec, jitter buffer, echo cancellation, packet loss concealment)
+  - One mobile SDK (`livekit-react-native`) replaces our hand-rolled PCM pipeline
+  - Agent framework for bridging WebRTC ↔ WebSocket model providers
+  - Built-in turn detection, STT, TTS plugins
+  - Would give Grok/Gemini the same audio quality as OpenAI without model-specific code
+- **Architecture pattern:** Phone ↔ WebRTC ↔ LiveKit Server ↔ Agent Process ↔ WebSocket ↔ AI Model
+- **Tradeoffs:**
+  - Adds server infrastructure (LiveKit server + agent process)
+  - Another dependency in the stack
+  - 3.1 Flash Live compatibility still evolving
+  - Would still need OpenAI Realtime path (not needed, OpenAI already has native WebRTC)
+
+### Inworld — Packaged Voice Agent Platform (TTS + STT + LLM Router)
+
+- **Docs:** https://docs.inworld.ai/
+- **API reference:** https://docs.inworld.ai/api-reference/introduction
+- **Pricing:** https://inworld.ai/pricing
+- **Models (Realtime Router):** https://inworld.ai/models
+- **Real-time API:** https://inworld.ai/realtime-api
+- **Pricing breakdown (per-minute estimate):**
+  - Realtime TTS-2: $9–25 per 1M characters (~$0.009–0.025/min at ~1000 chars/min)
+  - Realtime STT 1: $0.10–0.15 per hour (~$0.0017–0.0025/min)
+  - LLMs: billed "at cost" through their Router (220+ models including GPT-4o, Gemini, Claude)
+  - Combined estimate: ~$0.03–0.06/min depending on LLM choice and plan tier
+  - Plans: On-Demand (free tier with 70min TTS), Creator ($25/mo), Builder ($100), Developer ($300), Growth ($1500), Enterprise (custom)
+- **Protocol:** WebRTC (real-time API)
+- **Key features:**
+  - Voice cloning & voice design (TTS-2)
+  - 100+ languages for TTS-2, 15 for TTS 1.5
+  - Instant voice cloning (TTS-2)
+  - 220+ LLM models via Router (you pick the brain, they handle the voice)
+  - WebRTC transport (same quality tier as OpenAI)
+- **Tradeoffs:**
+  - Not a single voice model — it's an orchestration layer (you pick STT + LLM + TTS independently)
+  - LLM costs are separate and passed through "at cost" — the 3¢ figure is TTS only
+  - More moving parts to configure and debug
+  - Credit system similar to ours may create confusing double-billing
+  - GDPR, SOC 2 Type II; HIPAA available as add-on
+- **Our assessment:** Interesting for the WebRTC quality + model flexibility, but the pricing isn't meaningfully cheaper than Grok direct. The value is in the packaged WebRTC transport, not the per-minute savings.
 
