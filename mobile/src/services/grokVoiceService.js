@@ -3,7 +3,6 @@ import { Platform } from 'react-native';
 import { Buffer } from 'buffer';
 import * as FileSystem from 'expo-file-system/legacy';
 import InCallManager from 'react-native-incall-manager';
-import AudioRecord from 'react-native-audio-record';
 import { createGrokVoiceSession } from './api.js';
 
 const GROK_PROVIDER = 'grok-voice';
@@ -293,41 +292,6 @@ const cleanupGrokCall = async () => {
 const startMicCapture = async () => {
   micActive = true;
 
-  // Android: use AudioRecord for real PCM (MediaRecorder can't do PCM)
-  if (Platform.OS === 'android' && AudioRecord) {
-    try {
-      AudioRecord.init({
-        sampleRate: 24000,
-        channels: 1,
-        bitsPerSample: 16,
-        audioSource: 6 // MIC
-      });
-
-      AudioRecord.on('data', (base64Data) => {
-        if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN || isMuted) return;
-
-        activeSocket.send(JSON.stringify({
-          type: 'input_audio_buffer.append',
-          audio: base64Data
-        }));
-
-        if (!startMicCapture._chunkCount) startMicCapture._chunkCount = 0;
-        startMicCapture._chunkCount++;
-        if (startMicCapture._chunkCount <= 3 || startMicCapture._chunkCount % 10 === 0) {
-          const buf = Buffer.from(base64Data, 'base64');
-          console.log('[GrokVoice] Mic chunk sent:', startMicCapture._chunkCount, { pcmBytes: buf.length });
-        }
-      });
-
-      AudioRecord.start();
-      console.log('[GrokVoice] Native PCM mic recording started (AudioRecord)');
-      return;
-    } catch (err) {
-      console.log('[GrokVoice] AudioRecord init failed, falling back to Audio.Recording:', err.message);
-    }
-  }
-
-  // iOS / fallback: per-chunk Audio.Recording (LPCM works on iOS)
   const RECORDING_CONFIG = {
     android: {
       extension: '.wav',
@@ -383,6 +347,7 @@ const startMicCapture = async () => {
       console.log('[GrokVoice] Chunk error:', err.message);
     }
 
+    // Minimal gap before next chunk
     if (micActive) {
       setTimeout(sendChunk, 1);
     }
@@ -393,8 +358,6 @@ const startMicCapture = async () => {
 
 const stopMicCapture = () => {
   micActive = false;
-  // Stop AudioRecord if it was used
-  try { AudioRecord?.stop(); } catch {}
 };
 
 export const sendGrokText = (text) => {
