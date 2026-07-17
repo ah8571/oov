@@ -95,7 +95,7 @@ const getConfiguredApiBaseUrl = () => {
 
 const configuredApiBaseUrl = getConfiguredApiBaseUrl();
 
-const API_BASE_URL = normalizeApiBaseUrl(configuredApiBaseUrl);
+export const API_BASE_URL = normalizeApiBaseUrl(configuredApiBaseUrl);
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 const formatApiError = (error, fallbackMessage) => {
