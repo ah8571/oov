@@ -123,11 +123,16 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
       staysActiveInBackground: false
     });
 
-    // Start iOS speaker
+    // Force speaker output on both platforms
     if (Platform.OS === 'ios') {
       try {
         InCallManager.start({ media: 'audio' });
         setTimeout(() => InCallManager.setSpeakerphoneOn(true), 500);
+      } catch {}
+    } else {
+      try {
+        InCallManager.start({ media: 'audio' });
+        InCallManager.setSpeakerphoneOn(true);
       } catch {}
     }
 
@@ -269,9 +274,7 @@ const cleanupGrokCall = async () => {
     activeSocket = null;
   }
 
-  if (Platform.OS === 'ios') {
-    try { InCallManager.stop(); } catch {}
-  }
+  try { InCallManager.stop(); } catch {}
 
   await Audio.setAudioModeAsync({
     allowsRecordingIOS: false,
