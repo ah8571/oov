@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { Buffer } from 'buffer';
 import * as FileSystem from 'expo-file-system/legacy';
 import InCallManager from 'react-native-incall-manager';
-import AudioRecord from 'react-native-audio-record';
+import { startPcmCapture } from './pcmCapture.js';
 import { createGrokVoiceSession } from './api.js';
 
 const GROK_PROVIDER = 'grok-voice';
@@ -292,63 +292,44 @@ const cleanupGrokCall = async () => {
 
 const startMicCapture = async () => {
   micActive = true;
+  let pcmSession = null;
 
-  // Android: use AudioRecord (real PCM via AudioRecord native API)
-  if (Platform.OS === 'android' && AudioRecord) {
-    AudioRecord.init({
-      sampleRate: 24000,
-      channels: 1,
-      bitsPerSample: 16,
-      audioSource: 6 // MIC
-    });
+  // Android: use our custom PcmCapture native module (AudioRecord → real PCM)
+  if (Platform.OS === 'android') {
+    try {
+      pcmSession = startPcmCapture({
+        sampleRate: 24000,
+        onData: (base64Data) => {
+          if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN || isMuted) return;
 
-    AudioRecord.on('data', (base64Data) => {
-      if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN || isMuted) return;
+          activeSocket.send(JSON.stringify({
+            type: 'input_audio_buffer.append',
+            audio: base64Data
+          }));
 
-      activeSocket.send(JSON.stringify({
-        type: 'input_audio_buffer.append',
-        audio: base64Data
-      }));
-
-      if (!startMicCapture._chunkCount) startMicCapture._chunkCount = 0;
-      startMicCapture._chunkCount++;
-      if (startMicCapture._chunkCount <= 3 || startMicCapture._chunkCount % 10 === 0) {
-        const buf = Buffer.from(base64Data, 'base64');
-        console.log('[GrokVoice] Mic chunk sent:', startMicCapture._chunkCount, { pcmBytes: buf.length });
-      }
-    });
-
-    AudioRecord.start();
-    console.log('[GrokVoice] Native PCM mic capture started (AudioRecord)');
-    return;
+          if (!startMicCapture._chunkCount) startMicCapture._chunkCount = 0;
+          startMicCapture._chunkCount++;
+          const buf = Buffer.from(base64Data, 'base64');
+          if (startMicCapture._chunkCount <= 3 || startMicCapture._chunkCount % 10 === 0) {
+            console.log('[GrokVoice] PCM chunk sent:', startMicCapture._chunkCount, { pcmBytes: buf.length });
+          }
+        }
+      });
+      console.log('[GrokVoice] Native PCM capture started (AudioRecord)');
+      return;
+    } catch (err) {
+      console.log('[GrokVoice] Native PCM init failed, falling back:', err.message);
+    }
   }
 
-  // iOS fallback: per-chunk Audio.Recording (LPCM works on iOS)
+  // iOS / fallback
   const RECORDING_CONFIG = {
-    android: {
-      extension: '.wav',
-      outputFormat: 2,
-      audioEncoder: 1,
-      sampleRate: 24000,
-      numberOfChannels: 1
-    },
-    ios: {
-      extension: '.wav',
-      outputFormat: 'lpcm',
-      audioQuality: 127,
-      sampleRate: 24000,
-      numberOfChannels: 1,
-      linearPCMBitDepth: 16,
-      linearPCMIsBigEndian: false,
-      linearPCMIsFloat: false
-    }
+    android: { extension: '.wav', outputFormat: 2, audioEncoder: 1, sampleRate: 24000, numberOfChannels: 1 },
+    ios: { extension: '.wav', outputFormat: 'lpcm', audioQuality: 127, sampleRate: 24000, numberOfChannels: 1, linearPCMBitDepth: 16, linearPCMIsBigEndian: false, linearPCMIsFloat: false }
   };
 
   const sendChunk = async () => {
-    if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN) {
-      console.log('[GrokVoice] Mic loop stopped:', { micActive, socketReady: activeSocket?.readyState });
-      return;
-    }
+    if (!micActive || !activeSocket || activeSocket.readyState !== WebSocket.OPEN) return;
 
     const recording = new Audio.Recording();
     try {
@@ -361,16 +342,11 @@ const startMicCapture = async () => {
       if (uri && micActive && !isMuted && activeSocket?.readyState === WebSocket.OPEN) {
         const wavBase64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
         const wavBuffer = Buffer.from(wavBase64, 'base64');
-
         if (wavBuffer.length > 44) {
-          const pcmBuffer = wavBuffer.slice(44);
-          activeSocket.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: pcmBuffer.toString('base64') }));
+          activeSocket.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: wavBuffer.slice(44).toString('base64') }));
         }
       }
-    } catch (err) {
-      console.log('[GrokVoice] Chunk error:', err.message);
-    }
-
+    } catch (err) {}
     if (micActive) setTimeout(sendChunk, 1);
   };
 
@@ -379,7 +355,6 @@ const startMicCapture = async () => {
 
 const stopMicCapture = () => {
   micActive = false;
-  try { AudioRecord?.stop(); } catch {}
 };
 
 export const sendGrokText = (text) => {
