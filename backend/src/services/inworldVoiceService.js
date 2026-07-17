@@ -17,11 +17,12 @@ const generateSignature = (apiKey, dateTime, host, nonce) => {
 
   const params = [dateTime, host, 'ai.inworld.engine.WorldEngine/GenerateToken', nonce];
 
+  // HmacSHA256(param, signature) — param is the message, signature is the key
   for (const param of params) {
-    signature = crypto.createHmac('sha256', param).update(signature).digest('hex');
+    signature = crypto.createHmac('sha256', signature).update(param).digest('hex');
   }
 
-  return crypto.createHmac('sha256', 'iw1_request').update(signature).digest('hex');
+  return crypto.createHmac('sha256', signature).update('iw1_request').digest('hex');
 };
 
 export const createInworldSession = async (options = {}) => {
