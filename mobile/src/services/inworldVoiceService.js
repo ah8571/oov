@@ -238,14 +238,14 @@ export const startInworldVoiceCall = async ({
 
     const { wsUrl, jwt } = sessionResponse;
 
+    // React Native's WebSocket doesn't support custom headers.
+    // Pass JWT as a query parameter instead.
+    const authWsUrl = `${wsUrl}&token=${encodeURIComponent(jwt)}`;
+
     onTrace?.('inworld_websocket_connecting');
 
     await new Promise((resolve, reject) => {
-      const ws = new WebSocket(wsUrl, {
-        headers: {
-          Authorization: `Bearer ${jwt}`
-        }
-      });
+      const ws = new WebSocket(authWsUrl);
       activeSocket = ws;
       ws.binaryType = 'arraybuffer';
 
