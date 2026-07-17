@@ -29,6 +29,7 @@ import { errorHandler, requestLogger } from './middleware/index.js';
 
 // Import WebSocket handler
 import { handleEchoWebSocket } from './websocket/echoHandler.js';
+import { handleInworldWebSocket } from './websocket/inworldProxyHandler.js';
 import { getGoogleCloudConfigStatus } from './services/googleCloudAuth.js';
 import { getSupabaseDebugInfo } from './services/databaseService.js';
 
@@ -50,6 +51,14 @@ const websocketRoutes = [
   {
     path: '/api/ws/echo',
     handler: handleEchoWebSocket
+  },
+  {
+    path: '/ws/inworld',
+    handler: handleInworldWebSocket
+  },
+  {
+    path: '/api/ws/inworld',
+    handler: handleInworldWebSocket
   }
 ];
 const websocketServers = new Map(

@@ -4,7 +4,7 @@ import { Buffer } from 'buffer';
 import * as FileSystem from 'expo-file-system/legacy';
 import InCallManager from 'react-native-incall-manager';
 import { startPcmCapture } from './pcmCapture.js';
-import { createInworldVoiceSession } from './api.js';
+import { API_BASE_URL } from './api.js';
 
 const INWORLD_PROVIDER = 'inworld-voice';
 const INWORLD_AUDIO_FILE = `${FileSystem.cacheDirectory}inworld-response.pcm`;
@@ -224,28 +224,13 @@ export const startInworldVoiceCall = async ({
 
     onTrace?.('inworld_session_request_started');
 
-    const sessionResponse = await createInworldVoiceSession({
-      model: modelId || null,
-      voice,
-      language: languageHint
-    });
-
-    if (!sessionResponse.success) {
-      throw new Error(sessionResponse.error || 'Unable to start Inworld voice session.');
-    }
-
-    onTrace?.('inworld_session_request_finished');
-
-    const { wsUrl, jwt } = sessionResponse;
-
-    // React Native's WebSocket doesn't support custom headers.
-    // Pass JWT as a query parameter instead.
-    const authWsUrl = `${wsUrl}&token=${encodeURIComponent(jwt)}`;
+    // Connect through our backend WebSocket proxy (backend handles JWT + Inworld auth)
+    const backendWsUrl = API_BASE_URL.replace(/^http/, 'ws') + '/ws/inworld';
 
     onTrace?.('inworld_websocket_connecting');
 
     await new Promise((resolve, reject) => {
-      const ws = new WebSocket(authWsUrl);
+      const ws = new WebSocket(backendWsUrl);
       activeSocket = ws;
       ws.binaryType = 'arraybuffer';
 
