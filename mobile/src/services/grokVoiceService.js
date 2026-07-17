@@ -105,8 +105,8 @@ export const startGrokVoiceCall = async ({ voice = DEFAULT_GROK_VOICE, onStatusC
         instructions: '',
         turn_detection: {
           type: 'server_vad',
-          silence_duration_ms: 900,
-          prefix_padding_ms: 400
+          silence_duration_ms: 400,
+          prefix_padding_ms: 200
         },
         audio: {
           input: { format: { type: 'audio/pcm', rate: 24000 }, transport: 'json' },
@@ -310,8 +310,15 @@ const startMicCapture = async () => {
           if (!startMicCapture._chunkCount) startMicCapture._chunkCount = 0;
           startMicCapture._chunkCount++;
           const buf = Buffer.from(base64Data, 'base64');
-          if (startMicCapture._chunkCount <= 3 || startMicCapture._chunkCount % 10 === 0) {
+          if (startMicCapture._chunkCount <= 3 || startMicCapture._chunkCount % 50 === 0) {
             console.log('[GrokVoice] PCM chunk sent:', startMicCapture._chunkCount, { pcmBytes: buf.length });
+          }
+
+          // Force Grok to process audio every ~4 seconds (50 chunks × 80ms)
+          if (startMicCapture._chunkCount % 50 === 0) {
+            activeSocket.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
+            activeSocket.send(JSON.stringify({ type: 'response.create' }));
+            console.log('[GrokVoice] Manual commit + response.create');
           }
         }
       });

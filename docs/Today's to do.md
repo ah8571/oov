@@ -5,8 +5,13 @@
 - Update name to Ali
 - Work through key words for people to better find the apps (like STT or TTS or how other apps are phrasing it)
 - 30 character new name for apple
+Ali: Reader, Learn Languages (28) 
 
-## Start reaching out to influencers about live streaming with the product
+## Create promo code workflows for influencers
+
+## SKAN w/ Apple set up
+
+## Start reaching out to influencers 
 
 ## Perhaps start working on viral dance videos... 
 
