@@ -668,7 +668,11 @@ export const selectAudioDevice = async (deviceUuid) => {
   emitAudioDevices();
 
   try {
-    if (Platform.OS === 'ios') {
+    if (nextRoute.type === 'bluetooth') {
+      InCallManager.stop();
+      InCallManager.start({ media: 'audio' });
+      InCallManager.setSpeakerphoneOn(false);
+    } else if (Platform.OS === 'ios') {
       InCallManager.setSpeakerphoneOn(nextRoute.type === 'speaker');
     }
 
@@ -676,7 +680,6 @@ export const selectAudioDevice = async (deviceUuid) => {
       allowsRecordingIOS: activeCall,
       playsInSilentModeIOS: true,
       staysActiveInBackground: false,
-      shouldRouteToBluetooth: nextRoute.type === 'bluetooth',
       ...(Platform.OS === 'android'
         ? { playThroughEarpieceAndroid: nextRoute.type === 'earpiece' }
         : {})
