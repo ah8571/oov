@@ -5,11 +5,59 @@ import {
   RTCPeerConnection,
   RTCSessionDescription
 } from 'react-native-webrtc';
-import { API_BASE_URL } from './api.js';
+import { API_BASE_URL, createNote, getNote, getNotes, updateNote } from './api.js';
 
 const INWORLD_PROVIDER = 'inworld-voice';
 const DEFAULT_INWORLD_VOICE = 'Clive';
 const DEFAULT_INWORLD_LANGUAGE = 'en-US';
+
+const NOTE_TOOLS = [
+  {
+    type: 'function',
+    name: 'list_notes',
+    description: "List the user's saved notes so you can answer questions about what notes exist.",
+    parameters: { type: 'object', additionalProperties: false, properties: {} }
+  },
+  {
+    type: 'function',
+    name: 'read_note',
+    description: 'Read a saved note by note ID or by an exact title match when the user asks about a specific note.',
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        noteId: { type: 'string', description: 'The exact note ID if it is already known.' },
+        title: { type: 'string', description: 'The exact note title to look up when the note ID is not known.' }
+      }
+    }
+  },
+  {
+    type: 'function',
+    name: 'save_note',
+    description: "Create a new note or update an existing note when the user explicitly asks to save something to notes.",
+    parameters: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['title', 'content'],
+      properties: {
+        noteId: { type: 'string', description: 'The existing note ID to update, if known.' },
+        title: { type: 'string', description: 'A concise title for the note.' },
+        content: { type: 'string', description: 'The note body. For checklist items, write each on its own line as "[ ] item" or "[x] item" without any dash or bullet prefix.' }
+      }
+    }
+  }
+];
+
+const speakerRoute = { uuid: 'speaker', type: 'speaker', name: 'Speaker' };
+const earpieceRoute = { uuid: 'earpiece', type: 'earpiece', name: 'Phone' };
+const audioRoutes = [speakerRoute, earpieceRoute];
+let selectedAudioRoute = speakerRoute;
+
+const audioDeviceListeners = new Set();
+
+const emitAudioDevices = () => {
+  audioDeviceListeners.forEach((l) => l({ audioDevices: audioRoutes, selectedDevice: selectedAudioRoute }));
+};
 
 let peerConnection = null;
 let dataChannel = null;
@@ -128,7 +176,7 @@ export const startInworldVoiceCall = async ({
         session: {
           type: 'realtime',
           model: llmModel,
-          instructions: '',
+          instructions: 'You can use your note tools only when the user explicitly asks. Keep responses brief and natural.',
           output_modalities: ['audio', 'text'],
           audio: {
             input: {
@@ -144,6 +192,7 @@ export const startInworldVoiceCall = async ({
               model: 'inworld-tts-2'
             }
           },
+          tools: NOTE_TOOLS,
           providerData: {
             stt: {
               voice_profile: false,
@@ -242,6 +291,8 @@ export const startInworldVoiceCall = async ({
 
     activeCall = true;
     callStartedAtMs = Date.now();
+    selectedAudioRoute = speakerRoute;
+    emitAudioDevices();
     onStatusChange?.('live');
 
     return { success: true, provider: INWORLD_PROVIDER };
@@ -291,10 +342,79 @@ const handleInworldMessage = (msg) => {
     case 'response.done':
       break;
 
+    case 'response.function_call_arguments.done':
+      executeToolCall(msg).catch(err => console.error('[InworldVoice] Tool call error:', err.message));
+      break;
+
     case 'error':
       console.error('[InworldVoice] Server error:', msg);
       break;
   }
+};
+
+const executeToolCall = async (msg) => {
+  if (!dataChannel || dataChannel.readyState !== 'open') return;
+
+  const callId = msg.call_id || msg.response_id;
+  const name = msg.name;
+  let args = {};
+
+  try {
+    args = typeof msg.arguments === 'string' ? JSON.parse(msg.arguments) : (msg.arguments || {});
+  } catch {}
+
+  console.log('[InworldVoice] Tool call:', name, args);
+
+  let result = '{}';
+
+  try {
+    switch (name) {
+      case 'list_notes': {
+        const notes = await getNotes(null, 50, 0);
+        result = JSON.stringify(notes && notes.data ? notes.data : []);
+        break;
+      }
+      case 'read_note': {
+        if (args.noteId) {
+          const note = await getNote(args.noteId);
+          result = JSON.stringify(note || {});
+        } else if (args.title) {
+          const notes = await getNotes(null, 50, 0);
+          const found = (notes?.data || []).find(n => (n.title || '').toLowerCase() === String(args.title).toLowerCase());
+          if (found) {
+            const note = await getNote(found.id);
+            result = JSON.stringify(note || found);
+          } else {
+            result = JSON.stringify({ error: 'No note found with that title.' });
+          }
+        }
+        break;
+      }
+      case 'save_note': {
+        if (args.noteId) {
+          const updated = await updateNote(args.noteId, { title: args.title, content: args.content });
+          result = JSON.stringify(updated || { success: true });
+        } else {
+          const created = await createNote({ title: args.title, content: args.content });
+          result = JSON.stringify(created || { success: true });
+        }
+        break;
+      }
+    }
+  } catch (err) {
+    result = JSON.stringify({ error: err.message });
+  }
+
+  dataChannel.send(JSON.stringify({
+    type: 'conversation.item.create',
+    item: {
+      type: 'function_call_output',
+      call_id: callId,
+      output: result
+    }
+  }));
+
+  dataChannel.send(JSON.stringify({ type: 'response.create' }));
 };
 
 const cleanupInworldCall = async () => {
@@ -318,6 +438,7 @@ const cleanupInworldCall = async () => {
 
   try { InCallManager.stop(); } catch {}
 
+  selectedAudioRoute = speakerRoute;
   activeCall = false;
   isMuted = false;
   callStartedAtMs = null;
@@ -369,6 +490,35 @@ export const subscribeToInworldTranscript = (listener) => {
   return () => { transcriptListeners.delete(listener); };
 };
 
+export const getInworldAudioDeviceState = () => ({
+  audioDevices: audioRoutes,
+  selectedDevice: selectedAudioRoute
+});
+
+export const selectInworldAudioDevice = async (deviceUuid) => {
+  const device = audioRoutes.find(r => r.uuid === deviceUuid);
+  if (!device) return { success: false, error: 'Unknown audio device.' };
+
+  selectedAudioRoute = device;
+
+  try {
+    if (deviceUuid === 'speaker') {
+      InCallManager.setSpeakerphoneOn(true);
+    } else {
+      InCallManager.setSpeakerphoneOn(false);
+    }
+  } catch {}
+
+  emitAudioDevices();
+  return { success: true };
+};
+
+export const subscribeToInworldAudioDevices = (listener) => {
+  audioDeviceListeners.add(listener);
+  listener({ audioDevices: audioRoutes, selectedDevice: selectedAudioRoute });
+  return () => { audioDeviceListeners.delete(listener); };
+};
+
 export const ensureInworldMicrophonePermission = async () => {
   const { ensureMicrophonePermission } = require('./voiceService.js');
   return ensureMicrophonePermission();
@@ -383,5 +533,8 @@ export default {
   setInworldMuted,
   subscribeToInworldMute,
   subscribeToInworldTranscript,
+  getInworldAudioDeviceState,
+  selectInworldAudioDevice,
+  subscribeToInworldAudioDevices,
   ensureInworldMicrophonePermission
 };

@@ -47,11 +47,14 @@ import {
 } from './services/geminiVoiceService.js';
 import {
   endInworldVoiceCall,
+  getInworldAudioDeviceState,
   getInworldCallActive,
   getInworldMuteState,
+  selectInworldAudioDevice,
   sendInworldText,
   setInworldMuted,
   startInworldVoiceCall,
+  subscribeToInworldAudioDevices,
   subscribeToInworldMute,
   subscribeToInworldTranscript
 } from './services/inworldVoiceService.js';
@@ -254,7 +257,12 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeToAudioDevices(({ audioDevices: nextAudioDevices, selectedDevice }) => {
+    const unsubscribeOpenAI = subscribeToAudioDevices(({ audioDevices: nextAudioDevices, selectedDevice }) => {
+      setAudioDevices(nextAudioDevices || []);
+      setSelectedAudioDevice(selectedDevice || null);
+    });
+
+    const unsubscribeInworld = subscribeToInworldAudioDevices(({ audioDevices: nextAudioDevices, selectedDevice }) => {
       setAudioDevices(nextAudioDevices || []);
       setSelectedAudioDevice(selectedDevice || null);
     });
@@ -263,7 +271,7 @@ const AppContent = () => {
     setAudioDevices(currentAudioState.audioDevices || []);
     setSelectedAudioDevice(currentAudioState.selectedDevice || null);
 
-    return unsubscribe;
+    return () => { unsubscribeOpenAI(); unsubscribeInworld(); };
   }, []);
 
   useEffect(() => {
@@ -779,7 +787,9 @@ const AppContent = () => {
   };
 
   const handleSelectAudioRoute = async (deviceUuid) => {
-    const response = await selectAudioDevice(deviceUuid);
+    const response = voiceProvider === 'inworld'
+      ? await selectInworldAudioDevice(deviceUuid)
+      : await selectAudioDevice(deviceUuid);
 
     if (!response.success) {
       Alert.alert('Audio route unavailable', response.error || 'Unable to switch the call audio route.');
@@ -994,26 +1004,7 @@ const AppContent = () => {
                       >
                         <Text style={[styles.providerChipText, { color: voiceProvider === 'openai' ? colors.chipSelectedText : colors.mutedText }]}>OpenAI</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.providerChip, voiceProvider === 'grok' && { backgroundColor: colors.chipSelectedBg }]}
-                        onPress={() => {
-                          setVoiceProvider('grok');
-                          saveVoiceProviderPreference('grok');
-                        }}
-                        activeOpacity={0.85}
-                      >
-                        <Text style={[styles.providerChipText, { color: voiceProvider === 'grok' ? colors.chipSelectedText : colors.mutedText }]}>Grok</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.providerChip, voiceProvider === 'gemini' && { backgroundColor: colors.chipSelectedBg }]}
-                        onPress={() => {
-                          setVoiceProvider('gemini');
-                          saveVoiceProviderPreference('gemini');
-                        }}
-                        activeOpacity={0.85}
-                      >
-                        <Text style={[styles.providerChipText, { color: voiceProvider === 'gemini' ? colors.chipSelectedText : colors.mutedText }]}>Gemini</Text>
-                      </TouchableOpacity>
+                      {/* Grok and Gemini hidden — experimental WebSocket providers */}
                       <TouchableOpacity
                         style={[styles.providerChip, voiceProvider === 'inworld' && { backgroundColor: colors.chipSelectedBg }]}
                         onPress={() => {
