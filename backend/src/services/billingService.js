@@ -1,5 +1,6 @@
 import {
-  getUserBillingProfile
+  getUserBillingProfile,
+  getSupabaseClient
 } from './databaseService.js';
 import { getRevenueCatProStatus } from './revenueCatService.js';
 import { getUserCreditStatus } from './creditService.js';
@@ -14,26 +15,64 @@ export const getWeeklyTierForProduct = (productId) => {
   return WEEKLY_TIER_CONFIG[productId] || null;
 };
 
+export const getPaddleProStatus = async (userId) => {
+  if (!userId) return { isProActive: false };
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('user_billing_entitlements')
+    .select('paddle_status, paddle_tier, is_pro_active')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return { isProActive: false };
+
+  return {
+    isProActive: data.paddle_status === 'active' && data.is_pro_active === true,
+    tier: data.paddle_tier || null
+  };
+};
+
 export const getUserVoiceBillingStatus = async (userId) => {
-  const [billingProfile, revenueCatStatus, creditStatus] = await Promise.all([
+  const [billingProfile, revenueCatStatus, creditStatus, paddleStatus] = await Promise.all([
     getUserBillingProfile(userId).catch(() => ({})),
     getRevenueCatProStatus(userId).catch(() => ({})),
-    getUserCreditStatus(userId).catch(() => ({}))
+    getUserCreditStatus(userId).catch(() => ({})),
+    getPaddleProStatus(userId).catch(() => ({}))
   ]);
 
   const hasRevenueCatProAccess = Boolean(revenueCatStatus?.isProActive);
+  const hasPaddleProAccess = Boolean(paddleStatus?.isProActive);
   const hasCredits = (creditStatus.creditBalance || 0) > 0;
-  const hasVoiceAccess = hasRevenueCatProAccess || hasCredits;
+  const hasVoiceAccess = hasRevenueCatProAccess || hasPaddleProAccess || hasCredits;
+
+  const billingState = hasRevenueCatProAccess
+    ? 'pro_iap'
+    : hasPaddleProAccess
+      ? 'pro_paddle'
+      : billingProfile?.billing_state || 'trial';
+
+  const voiceAccessSource = hasRevenueCatProAccess
+    ? 'apple_iap'
+    : hasPaddleProAccess
+      ? 'paddle'
+      : hasCredits
+        ? 'credits'
+        : 'none';
 
   return {
-    billingState: hasRevenueCatProAccess ? 'pro' : billingProfile?.billing_state || 'trial',
+    billingState,
     hasVoiceAccess,
-    voiceAccessSource: hasRevenueCatProAccess ? 'subscription' : hasCredits ? 'credits' : 'none',
+    voiceAccessSource,
     paywallTriggered: !hasVoiceAccess,
     paywallReason: hasVoiceAccess ? null : 'out_of_credits',
     creditBalance: creditStatus.creditBalance || 0,
     freeCreditsGranted: creditStatus.freeCreditsGranted || 0,
     monthlyCreditAllocation: creditStatus.monthlyCreditAllocation || 0,
+    paddle: {
+      active: hasPaddleProAccess,
+      tier: paddleStatus?.tier || null
+    },
     revenueCat: {
       configured: Boolean(revenueCatStatus?.configured),
       status: revenueCatStatus?.status || 'not_configured',
