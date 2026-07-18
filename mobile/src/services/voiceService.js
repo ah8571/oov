@@ -98,7 +98,8 @@ export const setOnNotesChanged = (callback) => {
 
 const audioRoutes = [
   { uuid: 'speaker', type: 'speaker', name: 'Speaker' },
-  { uuid: 'earpiece', type: 'earpiece', name: 'Phone' }
+  { uuid: 'earpiece', type: 'earpiece', name: 'Phone' },
+  { uuid: 'bluetooth', type: 'bluetooth', name: 'Bluetooth' }
 ];
 
 const muteListeners = new Set();
@@ -667,9 +668,16 @@ export const selectAudioDevice = async (deviceUuid) => {
   emitAudioDevices();
 
   try {
-    // On iOS, WebRTC audio routing is controlled by InCallManager
     if (Platform.OS === 'ios') {
-      InCallManager.setSpeakerphoneOn(nextRoute.type === 'speaker');
+      if (nextRoute.type === 'speaker') {
+        InCallManager.setSpeakerphoneOn(true);
+      } else if (nextRoute.type === 'bluetooth') {
+        InCallManager.setSpeakerphoneOn(false);
+        InCallManager.setForceBluetooth(true);
+      } else {
+        InCallManager.setSpeakerphoneOn(false);
+        InCallManager.setForceBluetooth(false);
+      }
     }
 
     await Audio.setAudioModeAsync({

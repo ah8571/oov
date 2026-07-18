@@ -53,7 +53,8 @@ const NOTE_TOOLS = [
 
 const speakerRoute = { uuid: 'speaker', type: 'speaker', name: 'Speaker' };
 const earpieceRoute = { uuid: 'earpiece', type: 'earpiece', name: 'Phone' };
-const audioRoutes = [speakerRoute, earpieceRoute];
+const bluetoothRoute = { uuid: 'bluetooth', type: 'bluetooth', name: 'Bluetooth' };
+const audioRoutes = [speakerRoute, earpieceRoute, bluetoothRoute];
 let selectedAudioRoute = speakerRoute;
 
 const audioDeviceListeners = new Set();
@@ -519,8 +520,12 @@ export const selectInworldAudioDevice = async (deviceUuid) => {
   try {
     if (deviceUuid === 'speaker') {
       InCallManager.setSpeakerphoneOn(true);
+    } else if (deviceUuid === 'bluetooth') {
+      InCallManager.setSpeakerphoneOn(false);
+      InCallManager.setForceBluetooth(true);
     } else {
       InCallManager.setSpeakerphoneOn(false);
+      InCallManager.setForceBluetooth(false);
     }
   } catch {}
 
