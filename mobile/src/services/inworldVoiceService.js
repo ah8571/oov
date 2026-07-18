@@ -45,6 +45,15 @@ const normalizeInworldLanguage = (value) => {
   return DEFAULT_INWORLD_LANGUAGE;
 };
 
+const INWORLD_VOICES = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Clive', 'Liam', 'Sarah'];
+
+const normalizeInworldVoice = (openAiVoice) => {
+  // Inworld voices are different from OpenAI. Map common choices or default to Clive.
+  const name = String(openAiVoice || '').trim();
+  if (INWORLD_VOICES.includes(name)) return name;
+  return DEFAULT_INWORLD_VOICE;
+};
+
 export const startInworldVoiceCall = async ({
   voice = DEFAULT_INWORLD_VOICE,
   language = DEFAULT_INWORLD_LANGUAGE,
@@ -60,6 +69,7 @@ export const startInworldVoiceCall = async ({
     onStatusChange = statusCb;
     onTrace = traceCb;
     const languageHint = normalizeInworldLanguage(language);
+    const inworldVoice = normalizeInworldVoice(voice);
 
     onTrace?.('inworld_rtc_config_fetching');
 
@@ -130,7 +140,7 @@ export const startInworldVoiceCall = async ({
               }
             },
             output: {
-              voice,
+              voice: inworldVoice,
               model: 'inworld-tts-2'
             }
           },
@@ -151,7 +161,7 @@ export const startInworldVoiceCall = async ({
         }
       }));
 
-      console.log('[InworldVoice] WebRTC session configured:', { voice, model: llmModel, language: languageHint });
+      console.log('[InworldVoice] WebRTC session configured:', { voice: inworldVoice, model: llmModel, language: languageHint });
     };
 
     dataChannel.onmessage = (event) => {
