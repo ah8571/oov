@@ -5,6 +5,8 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
+import OnboardingScreen from './components/OnboardingScreen';
+import FeatureTooltip from './components/FeatureTooltip';
 import { getVoiceSession, uploadListenModeRecording } from './services/api.js';
 import { initializeAttribution } from './services/attributionService.js';
 import { syncRevenueCatAttribution } from './services/revenueCatService.js';
@@ -123,6 +125,8 @@ const AppContent = () => {
   const [inworldTextInput, setInworldTextInput] = useState('');
   const [listenModeState, setListenModeState] = useState('idle');
   const [showModePicker, setShowModePicker] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [shouldPreferSpeaker, setShouldPreferSpeaker] = useState(false);
   const hasInitializedAppsFlyerRef = useRef(false);
   const liveCallTraceRef = useRef({
@@ -220,6 +224,17 @@ const AppContent = () => {
       setCallActivityState((current) => (current === nextActivityState ? current : nextActivityState));
     }
   };
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const { getOnboardingComplete } = require('./utils/secureStorage.js');
+      const complete = await getOnboardingComplete();
+      if (!complete) {
+        setShowOnboarding(true);
+      }
+    };
+    checkOnboarding();
+  }, []);
 
   useEffect(() => {
     const loadThemeMode = async () => {
@@ -913,7 +928,8 @@ const AppContent = () => {
         />
 
         {isAuthenticated ? (
-          <FloatingCallButton
+          <>
+            <FloatingCallButton
             onPress={handleInitiateCall}
             isActiveCall={isCalling || listenModeState === 'recording' || listenModeState === 'processing'}
             showCallControls={isCalling}
@@ -958,6 +974,25 @@ const AppContent = () => {
             onInworldSendText={handleInworldSendText}
             bottomInset={appBottomRailHeight}
             topInset={insets.top}
+          />
+          </>
+        ) : null}
+
+        {showOnboarding && isAuthenticated ? (
+          <OnboardingScreen
+            onComplete={async () => {
+              setShowOnboarding(false);
+              setShowTooltip(true);
+              const { saveOnboardingComplete } = require('./utils/secureStorage.js');
+              await saveOnboardingComplete();
+            }}
+          />
+        ) : null}
+
+        {showTooltip && isAuthenticated ? (
+          <FeatureTooltip
+            visible={showTooltip}
+            onDismiss={() => setShowTooltip(false)}
           />
         ) : null}
 

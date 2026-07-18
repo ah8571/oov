@@ -64,6 +64,7 @@ consider a 'silent text' option in the speaker section but designed with this ki
 
 - perhaps first screens for new users teach them some of the benefits of the app
 
+- confirmation email set up eventually
 
 cleaner product framing:
 Also in the app or on the website: Call or text Emmaline at <number>

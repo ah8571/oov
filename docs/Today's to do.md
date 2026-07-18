@@ -13,15 +13,16 @@ Ali: Your AI workspace
 new website: alihelp.tech
 email: support@alihelp.tech
 
-[x] App display name — changed in app.json, update App Store Connect / Play Console listing. The bundle ID stays com.emmaline.app.
+[x] App display name — changed in app.json, 
+[ ] update App Store Connect / Play Console listing. The bundle ID stays com.emmaline.app.
 [x] In-app branding — replaced "Emmaline" → "Ali" across mobile, backend, website (20+ files)
-[x] Backend references — email templates, support emails, greeting messages all updated
 [x] Legal content — mobile + shared legalContent.json updated with Ali branding + alihelp.tech email
 [x] Website — header, footer, SEO metadata, sitemap, robots all updated to alihelp.tech
 
 
 [ ] Website — emmaline.app would ideally redirect to ali.app (if you can get it). You'd update the Next.js site branding. Keep the old domain as a redirect.
-[ ] Supabase — the project URL (xyz.supabase.co) doesn't contain the app name, so no change needed. But any email templates, auth pages, or branded elements would need updating.
+[ ] Google auth page
+[ ] Supabase — auth pages, or branded elements would need updating.
 [ ] RevenueCat — app identifier stays the same (bundle ID), so no migration. Just update the app name in their dashboard.
 
 
@@ -33,7 +34,13 @@ email: support@alihelp.tech
 
 ## Remodeling the subscription method 
 
-to go to web for payments (ie to get payment for the app asap) along with incorporating privacy oriented skan conventions. 
+to go to web for payments (ie to get payment for the app asap) along with incorporating privacy oriented skan conventions.
+
+Env Var	Where
+STRIPE_SECRET_KEY	Dashboard → API Keys → sk_live_...
+STRIPE_WEBHOOK_SECRET	Dashboard → Webhooks → whsec_...
+STRIPE_PRICE_WEEKLY	Product "Ali Weekly" → price_...
+STRIPE_PRICE_MONTHLY	Product "Ali Monthly" → price_...
 
 ## Weekly allotments 
 See notes below for updating

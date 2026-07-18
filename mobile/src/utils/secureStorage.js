@@ -160,6 +160,21 @@ export const saveAiDisclosureAccepted = async (accepted = true) => {
   }
 };
 
+export const getOnboardingComplete = async () => {
+  try {
+    const value = await SecureStore.getItemAsync('ali_onboarding_complete');
+    return value === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const saveOnboardingComplete = async () => {
+  try {
+    await SecureStore.setItemAsync('ali_onboarding_complete', 'true');
+  } catch {}
+};
+
 export const getCallLanguagePreference = async () => {
   const preferences = await getPreferences();
   return preferences.callLanguage || 'en';
@@ -293,5 +308,7 @@ export default {
   saveThemeModePreference,
   getNoteTextScalePreference,
   saveNoteTextScalePreference,
+  getOnboardingComplete,
+  saveOnboardingComplete
   logout
 };
