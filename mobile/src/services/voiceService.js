@@ -668,27 +668,22 @@ export const selectAudioDevice = async (deviceUuid) => {
   emitAudioDevices();
 
   try {
-    if (nextRoute.type === 'bluetooth') {
-      InCallManager.stop();
-      InCallManager.start({ media: 'audio' });
+    if (nextRoute.type === 'speaker') {
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false });
+      InCallManager.setSpeakerphoneOn(true);
+    } else if (nextRoute.type === 'bluetooth') {
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: true });
       InCallManager.setSpeakerphoneOn(false);
-    } else if (Platform.OS === 'ios') {
-      InCallManager.setSpeakerphoneOn(nextRoute.type === 'speaker');
+    } else {
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false });
+      InCallManager.setSpeakerphoneOn(false);
     }
+  } catch {}
 
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: activeCall,
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      ...(Platform.OS === 'android'
-        ? { playThroughEarpieceAndroid: nextRoute.type === 'earpiece' }
-        : {})
-    });
-
-    return {
-      success: true,
-      selectedDevice: selectedAudioRoute
-    };
+  return {
+    success: true,
+    selectedDevice: selectedAudioRoute
+  };
   } catch (error) {
     return {
       success: false,

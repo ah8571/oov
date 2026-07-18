@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Audio } from 'expo-av';
 import InCallManager from 'react-native-incall-manager';
 import {
   mediaDevices,
@@ -291,18 +291,19 @@ export const startInworldVoiceCall = async ({
 
     onTrace?.('inworld_sdp_exchange_finished');
 
-    // Set up audio routing
-    if (Platform.OS === 'ios') {
-      try {
-        InCallManager.start({ media: 'audio' });
-        setTimeout(() => InCallManager.setSpeakerphoneOn(true), 500);
-      } catch {}
-    } else {
-      try {
-        InCallManager.start({ media: 'audio' });
-        InCallManager.setSpeakerphoneOn(true);
-      } catch {}
-    }
+    // Set up audio mode with Bluetooth support from the start
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+      shouldRouteToBluetooth: false,
+      playThroughEarpieceAndroid: false,
+      staysActiveInBackground: false
+    });
+
+    try {
+      InCallManager.start({ media: 'audio' });
+      InCallManager.setSpeakerphoneOn(true);
+    } catch {}
 
     activeCall = true;
     callStartedAtMs = Date.now();
@@ -518,13 +519,15 @@ export const selectInworldAudioDevice = async (deviceUuid) => {
   selectedAudioRoute = device;
 
   try {
-    if (deviceUuid === 'bluetooth') {
-      // Restart audio session to pick up Bluetooth routing
-      InCallManager.stop();
-      InCallManager.start({ media: 'audio' });
+    if (deviceUuid === 'speaker') {
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false, playThroughEarpieceAndroid: false });
+      InCallManager.setSpeakerphoneOn(true);
+    } else if (deviceUuid === 'bluetooth') {
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: true, playThroughEarpieceAndroid: false });
       InCallManager.setSpeakerphoneOn(false);
     } else {
-      InCallManager.setSpeakerphoneOn(deviceUuid === 'speaker');
+      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false, playThroughEarpieceAndroid: true });
+      InCallManager.setSpeakerphoneOn(false);
     }
   } catch {}
 
