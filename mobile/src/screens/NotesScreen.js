@@ -243,13 +243,14 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
             <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedNotes}>
               <Feather name="trash-2" size={20} color={colors.text} />
             </TouchableOpacity>
-          ) : null}
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={selectedNoteIds.length > 0 ? () => setSelectedNoteIds([]) : handleCreateNote}
-          >
-            <Text style={[styles.doneText, { color: colors.text }]}>{selectedNoteIds.length > 0 ? 'Done' : '+'}</Text>
-          </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreateNote}
+            >
+              <Text style={[styles.createButtonText, { color: colors.text }]}>+</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -378,10 +379,6 @@ const styles = StyleSheet.create({
     color: '#111111',
     fontWeight: '300',
     lineHeight: 36
-  },
-  doneText: {
-    fontSize: 16,
-    fontWeight: '500'
   },
   topicScroll: {
     backgroundColor: '#fff',
