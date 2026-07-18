@@ -1,4 +1,3 @@
-import { Audio } from 'expo-av';
 import InCallManager from 'react-native-incall-manager';
 import {
   mediaDevices,
@@ -291,15 +290,7 @@ export const startInworldVoiceCall = async ({
 
     onTrace?.('inworld_sdp_exchange_finished');
 
-    // Set up audio mode with Bluetooth support from the start
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-      shouldRouteToBluetooth: false,
-      playThroughEarpieceAndroid: false,
-      staysActiveInBackground: false
-    });
-
+    // Set up audio — default to speaker
     try {
       InCallManager.start({ media: 'audio' });
       InCallManager.setSpeakerphoneOn(true);
@@ -519,18 +510,8 @@ export const selectInworldAudioDevice = async (deviceUuid) => {
   selectedAudioRoute = device;
 
   try {
-    console.log('[InworldVoice] Switching audio to:', deviceUuid);
-    if (deviceUuid === 'speaker') {
-      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false, playThroughEarpieceAndroid: false });
-      InCallManager.setSpeakerphoneOn(true);
-    } else if (deviceUuid === 'bluetooth') {
-      console.log('[InworldVoice] Enabling Bluetooth routing...');
-      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: true, playThroughEarpieceAndroid: false });
-      InCallManager.setSpeakerphoneOn(false);
-    } else {
-      await Audio.setAudioModeAsync({ shouldRouteToBluetooth: false, playThroughEarpieceAndroid: true });
-      InCallManager.setSpeakerphoneOn(false);
-    }
+    InCallManager.setSpeakerphoneOn(deviceUuid === 'speaker');
+    console.log('[InworldVoice] Audio route:', deviceUuid);
   } catch (err) {
     console.error('[InworldVoice] Audio switch error:', err.message);
   }
