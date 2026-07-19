@@ -1,9 +1,9 @@
-name: emmaline
+name: ali
 services:
   # Backend API Service
   - name: backend
     github:
-      repo: ah8571/emmaline
+      repo: ah8571/ali
       branch: main
     source_dir: backend
     build_command: npm ci
@@ -52,11 +52,11 @@ services:
         scope: RUN_AND_BUILD_TIME
         value: ${NEWSLETTER_ADMIN_KEY}
       - key: CORS_ORIGIN
-        value: https://emmaline.app
+        value: https://alihelp.tech
       - key: WEBSOCKET_URL
-        value: wss://emmaline.app/ws/media-stream
+        value: wss://api.alihelp.tech/api/ws/media-stream
       - key: API_URL
-        value: https://emmaline.app
+        value: https://api.alihelp.tech
     routes:
       - path: /api
         preserve_path_prefix: true
@@ -64,7 +64,7 @@ services:
   # Landing Page Website Service
   - name: website
     github:
-      repo: ah8571/emmaline
+      repo: ah8571/ali
       branch: main
     source_dir: website
     build_command: npm ci && npm run build
@@ -74,7 +74,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: BACKEND_URL
-        value: https://emmaline.app
+        value: https://api.alihelp.tech
     routes:
       - path: /
         preserve_path_prefix: true

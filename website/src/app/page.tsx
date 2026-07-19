@@ -2,82 +2,74 @@
 
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
-import Waitlist from '../components/Waitlist';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Video Background (optional - uncomment when you have a video) */}
-      {/* <video 
-        className="video-background" 
-        autoPlay 
-        muted 
-        loop 
-        playsInline
-        src="/demo.mp4"
-      /> */}
-      
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
 
       <div className="relative z-10 w-full">
-        <SiteHeader ctaHref="#waitlist" ctaLabel="Download" />
+        <SiteHeader ctaLabel="Ali" />
       </div>
 
       {/* Content */}
       <div className="content w-full px-4 pb-20 pt-16 md:pt-24">
         <div className="max-w-3xl mx-auto text-center space-y-8">
-          {/* Logo/Brand */}
+          {/* Brand */}
           <div className="space-y-2">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              Voice Assistant For Real Conversations
+              Ali — Voice AI for Real Conversations
             </h1>
             <p className="text-white/60 text-lg md:text-xl">
-              A voice-first assistant for asking questions, practicing conversations, and thinking out loud naturally.
+              A voice-first assistant for asking questions, practicing languages, and thinking out loud naturally.
             </p>
           </div>
 
-          {/* Hero Description */}
+          {/* Hero */}
           <div className="space-y-4">
             <p className="text-xl md:text-2xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-              Get instant answers, rehearse important conversations, or talk with an AI assistant that actually listens.
+              Talk, learn, and stay organized. Ali listens in real time, responds in natural voices, and captures notes hands-free.
             </p>
             <p className="text-white/60 md:text-lg">
-              Built for voice-first help now, with room to grow into calling and texting capabilities over time.
+              Bilingual tutor · Voice conversations · Notes & transcription
             </p>
           </div>
 
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-12 max-w-2xl mx-auto">
             <div className="space-y-2">
-              <p className="font-semibold">AI Powered</p>
-              <p className="text-white/60 text-sm">Smart conversations powered by advanced AI</p>
+              <p className="font-semibold">Live Voice</p>
+              <p className="text-white/60 text-sm">Real-time conversations powered by Inworld AI</p>
             </div>
             <div className="space-y-2">
-              <p className="font-semibold">Voice First</p>
-              <p className="text-white/60 text-sm">Natural conversations, no typing required</p>
+              <p className="font-semibold">Bilingual Tutor</p>
+              <p className="text-white/60 text-sm">Practice languages with native-accent switching</p>
             </div>
             <div className="space-y-2">
-              <p className="font-semibold">Private</p>
-              <p className="text-white/60 text-sm">Your conversations stay private & secure</p>
+              <p className="font-semibold">Voice Notes</p>
+              <p className="text-white/60 text-sm">Capture thoughts and create notes hands-free</p>
             </div>
           </div>
 
-          {/* Waitlist Signup */}
-          <div id="waitlist" className="space-y-4 my-12 scroll-mt-24">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Join the Waitlist</h2>
-              <p className="text-white/60">Be the first to know when we launch</p>
-            </div>
-            <Waitlist />
-          </div>
-
-          {/* App Download Links (when ready) */}
+          {/* CTA */}
           <div className="space-y-3 my-12">
-            <p className="text-white/60 text-sm">Available Soon</p>
+            <p className="text-white/60 text-sm">Get started</p>
             <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <button 
-                disabled
+              <a
+                href="/subscribe"
+                className="inline-block bg-white text-black font-semibold rounded-xl px-8 py-4 hover:bg-white/90 transition"
+              >
+                Subscribe
+              </a>
+              <a
+                href="/affiliates"
+                className="inline-block border border-white/20 text-white font-semibold rounded-xl px-8 py-4 hover:bg-white/5 transition"
+              >
+                Affiliate Program
+              </a>
+            </div>
+          </div>
                 className="px-6 py-2 border border-white/30 rounded-lg text-white/50 cursor-not-allowed disabled:opacity-50"
               >
                 App Store

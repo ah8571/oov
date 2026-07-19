@@ -24,9 +24,8 @@ email: support@alihelp.tech
 [ ] Google auth page
 [ ] Supabase — auth pages, or branded elements would need updating.
 [ ] RevenueCat — app identifier stays the same (bundle ID), so no migration. Just update the app name in their dashboard.
-
-
 [x] Email — support@emmaline.app → support@ali.app means new domain, new email setup, forwarding from the old address.
+[ ] Resend configuration
 [ ] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
 [ ] App Store review — a name change on an existing app is usually fine, but Apple occasionally flags dramatic rebrands. Having the same bundle ID helps.
 [ ] GitHub — repo can be renamed, GitHub redirects automatically.
@@ -52,14 +51,17 @@ See notes below for updating
 
 ## Consider weaving in less than .01 cent api providers
 
+**OpenRouter Audio APIs can cover the below
 Self-hosted providers
 Faster Whisper Large-v3 / Insanely Fast Whisper (.2 per hour of transcription potentially) - open-source
-- model on a rented GPU server (using providers like RunPod, Mystic or Vast.ai) [runpod charges per second of use]
-Self hosted
 Kokoro-82M with budget friendly runpod gpu could lead to sub .01 compute costs
 StyleTTS 2
 ChatTTS
 XTTS v2 by Coqui
+
+
+
+RunPod is a specialized GPU cloud provider. You lease massive Nvidia graphics cards (like H100s or A100s) to host, train, or serve AI models.The Focus: High-performance hardware optimization.The Cost: Expensive (ranging from $0.20/hr for tiny GPUs to $3.50+/hr for elite cards).The Use Case: RunPod is where companies host the actual brain of an open-weight model (like Qwen or Llama) if they choose not to use OpenRouter.
 
 Need to keep interstitial api costs lower than .01 ad payout
 
@@ -70,6 +72,7 @@ Transcription
 TTS reading (Apple has built in AVSpeechSynthesizer)
 Don't use for real time voice
 
+## Ads set up
 Ad-rewarded feature:
 "Ad-Triggered Actions: Instead of random pop-ups, use a Rewarded Interstitial ad format. Require the user to watch a 5-second video specifically to "unlock" a long transcription or article read-aloud. Users accept ads much better when it directly grants them a feature."
 
@@ -93,7 +96,9 @@ User uploads a 1-hour file
 
 
 
+## reader screen edits
 
+don't have people scroll to find the read aloud button. have the main keys sticky on the bottom of the pane. make the text pane either only so long put the downloads somewhere else
 
 
 # Tomorrow

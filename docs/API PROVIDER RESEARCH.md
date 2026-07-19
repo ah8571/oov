@@ -110,6 +110,9 @@ Recommended evaluation order:
 8. Phonic Speech-to-speech (Listed on livekit)
 9. Ultravox Realtime (open-source)
 
+For more voice affordability look into: 
+https://openrouter.ai/openai/gpt-audio-mini
+
 ### Natural Voices (TTS)
 Recommended evaluation order:
 1. ElevenLabs
@@ -154,6 +157,9 @@ Recommended evaluation order:
 4. Soniox
 
 low cost models 
+qwen/qwen3-asr-flash-2026-02-10 [https://openrouter.ai/models?output_modalities=transcription] .000035/second
+mistralai/voxtral-mini-transcribe [https://openrouter.ai/models?output_modalities=transcription] .003/minute
+nvidia/parakeet-tdt-0.6b-v3 [https://openrouter.ai/models?output_modalities=transcription] .0015/minute
 Deepgram nova-2 (.0043 per minute)
 Groq's Whisper
 Assembly (.0025 per minute)
