@@ -62,6 +62,9 @@ export default function SiteFooter() {
             <Link href="/support" className="transition hover:text-white">
               Support
             </Link>
+            <Link href="/affiliates" className="transition hover:text-white">
+              Affiliates
+            </Link>
           </div>
           <p className="text-sm text-white/35">© 2026 Ali. All rights reserved.</p>
         </div>
