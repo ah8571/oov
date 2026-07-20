@@ -6,7 +6,7 @@ import SeoArticleLayout from '@/components/SeoArticleLayout';
 import { consumerCompetitors } from '@/lib/consumerCompetitors';
 
 export const metadata: Metadata = {
-  title: 'Best AI Phone Assistant For Everyday Tasks And Note Taking | Ali',
+  title: 'Best AI Phone Assistant For Everyday Tasks And Note Taking | ali',
   description:
     'Compare consumer AI phone assistant alternatives for everyday help, voice conversations, and note taking, including Emmaline, ChatGPT Voice, Gemini Live, Replika, Pi, Character.AI, and Call Annie.',
   alternates: {

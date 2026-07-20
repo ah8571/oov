@@ -10,7 +10,7 @@ export default function Home() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
 
       <div className="relative z-10 w-full">
-        <SiteHeader ctaLabel="Ali" />
+        <SiteHeader ctaLabel="ali" />
       </div>
 
       {/* Content */}
@@ -19,7 +19,7 @@ export default function Home() {
           {/* Brand */}
           <div className="space-y-2">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              Ali — Voice AI for Real Conversations
+              ali — Voice AI for Real Conversations
             </h1>
             <p className="text-white/60 text-lg md:text-xl">
               A voice-first assistant for asking questions, practicing languages, and thinking out loud naturally.
@@ -29,7 +29,7 @@ export default function Home() {
           {/* Hero */}
           <div className="space-y-4">
             <p className="text-xl md:text-2xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-              Talk, learn, and stay organized. Ali listens in real time, responds in natural voices, and captures notes hands-free.
+              Talk, learn, and stay organized. ali listens in real time, responds in natural voices, and captures notes hands-free.
             </p>
             <p className="text-white/60 md:text-lg">
               Bilingual tutor · Voice conversations · Notes & transcription
@@ -52,26 +52,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* CTA */}
-          <div className="space-y-3 my-12">
-            <p className="text-white/60 text-sm">Get started</p>
-            <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <a
-                href="/subscribe"
-                className="inline-block bg-white text-black font-semibold rounded-xl px-8 py-4 hover:bg-white/90 transition"
-              >
-                Subscribe
-              </a>
-              <a
-                href="/affiliates"
-                className="inline-block border border-white/20 text-white font-semibold rounded-xl px-8 py-4 hover:bg-white/5 transition"
-              >
-                Affiliate Program
-              </a>
-            </div>
           </div>
-
-        </div>
       </div>
 
       <div className="relative z-10 mt-20 w-full">

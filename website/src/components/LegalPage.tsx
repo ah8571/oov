@@ -13,7 +13,7 @@ export default function LegalPage({ documentKey }: LegalPageProps) {
     <main className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-4xl px-4 py-16 md:py-24">
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 md:p-10">
-          <p className="text-xs uppercase tracking-[0.24em] text-white/45">Ali legal</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-white/45">ali legal</p>
           <h1 className="mt-3 text-4xl font-semibold md:text-5xl">{document.title}</h1>
           <p className="mt-4 text-sm text-white/45">Last updated {document.lastUpdated}</p>
         </div>

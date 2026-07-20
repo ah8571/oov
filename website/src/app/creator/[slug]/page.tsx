@@ -51,7 +51,7 @@ export default function CreatorLandingPage({ params }: CreatorPageProps) {
               <p className="text-xs uppercase tracking-[0.35em] text-white/55">Creator Invite</p>
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-                  Try Ali through {creatorName}
+                  Try ali through {creatorName}
                 </h1>
                 <p className="text-lg md:text-xl text-white/72 max-w-2xl leading-relaxed">
                   A rough draft creator page for voice-first help, conversation practice, and AI support that feels natural on mobile.

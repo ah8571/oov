@@ -14,9 +14,9 @@ export default function AffiliatesPage() {
     <main className="min-h-screen bg-black text-white">
       {/* Hero */}
       <section className="text-center px-6 py-24 max-w-2xl mx-auto">
-        <h1 className="text-5xl font-bold mb-4">Ali Affiliate Program</h1>
+        <h1 className="text-5xl font-bold mb-4">ali Affiliate Program</h1>
         <p className="text-white/50 text-lg mb-10">
-          Share Ali with your audience. They get a free trial, you earn when they stay.
+          Share ali with your audience. They get a free trial, you earn when they stay.
         </p>
         <a href="#apply" className="inline-block bg-white text-black font-semibold rounded-xl px-8 py-4 hover:bg-white/90 transition">
           Apply Now

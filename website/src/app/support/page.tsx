@@ -12,7 +12,7 @@ export default function SupportPage() {
             <p className="text-xs uppercase tracking-[0.24em] text-white/45">Support</p>
             <h1 className="text-4xl font-semibold md:text-5xl">Help, privacy, and account requests</h1>
             <p className="text-base leading-8 text-white/70 md:text-lg">
-              Use this form to contact Ali support about bugs, billing questions, privacy requests, account deletion, or data access requests.
+              Use this form to contact ali support about bugs, billing questions, privacy requests, account deletion, or data access requests.
             </p>
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-sm leading-7 text-white/65">
               <p>Support email: support@emmaline.app</p>

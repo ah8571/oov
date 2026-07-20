@@ -5,8 +5,9 @@
 - Update name to Ali
 - Work through key words for people to better find the apps (like STT or TTS or how other apps are phrasing it)
 - 30 character new name for apple
-Ali: Reader, Transcribe, Learn (30) 
-Ali: AI Voice Assistant 
+Ali: Reader Transcriber Tutor <- (30) 
+Ali: AI Voice Assistant <-
+Later
 Ali: Multitask with AI
 Ali: Your AI workspace
 
