@@ -90,7 +90,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'More like a universal AI app than a durable assistant identity',
     ],
     emmalineAngle:
-      'Emmaline can differentiate by narrowing the workflow: call the assistant, think out loud, capture useful notes, and make the interaction feel closer to a dedicated phone assistant than a general AI app.',
+      'ali can differentiate by narrowing the workflow: call the assistant, think out loud, capture useful notes, and make the interaction feel closer to a dedicated phone assistant than a general AI app.',
   },
   {
     slug: 'gemini-live',
@@ -153,7 +153,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'Still feels closer to an ecosystem layer than a focused phone companion',
     ],
     emmalineAngle:
-      'Emmaline can position itself as a cleaner, call-first alternative for users who want conversation capture and a dedicated assistant relationship instead of another broad platform surface.',
+      'ali can position itself as a cleaner, call-first alternative for users who want conversation capture and a dedicated assistant relationship instead of another broad platform surface.',
   },
   {
     slug: 'replika',
@@ -208,7 +208,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'Companion positioning will not fit users seeking a lighter executive-assistant feel',
     ],
     emmalineAngle:
-      'Emmaline can stay grounded in practical voice work: call in, rehearse, brainstorm, capture notes, and leave with something useful instead of only nurturing the relationship itself.',
+      'ali can stay grounded in practical voice work: call in, rehearse, brainstorm, capture notes, and leave with something useful instead of only nurturing the relationship itself.',
   },
   {
     slug: 'pi',
@@ -267,7 +267,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'Can feel emotionally fluent before it feels operationally useful',
     ],
     emmalineAngle:
-      'Emmaline can compete by treating the phone call as the product center: real-time conversation in, structured notes and assistant continuity out.',
+      'ali can compete by treating the phone call as the product center: real-time conversation in, structured notes and assistant continuity out.',
   },
   {
     slug: 'character-ai',
@@ -322,7 +322,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'Entertainment framing weakens its fit for real-world conversation help',
     ],
     emmalineAngle:
-      'Emmaline can own the grounded lane: real conversations, note capture, and everyday help without turning the assistant into a character marketplace.',
+      'ali can own the grounded lane: real conversations, note capture, and everyday help without turning the assistant into a character marketplace.',
   },
   {
     slug: 'call-annie',
@@ -385,7 +385,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
     strengths: [
       'Strong relevance to AI phone-call search intent',
       'Simple mental model: call an AI and talk',
-      'Historically closer to Emmaline\'s category than most chat-first products',
+      'Historically closer to ali\'s category than most chat-first products',
     ],
     limits: [
       'The current official positioning is narrower and discontinuity is explicit',
@@ -393,7 +393,7 @@ export const consumerCompetitors: ConsumerCompetitor[] = [
       'Hard to recommend as a long-term assistant foundation today',
     ],
     emmalineAngle:
-      'Emmaline can position itself as the modern follow-on for users who still want the simple call-an-AI feeling, but need a product that is current, note-friendly, and built to grow.',
+      'ali can position itself as the modern follow-on for users who still want the simple call-an-AI feeling, but need a product that is current, note-friendly, and built to grow.',
     reviewTitle: 'Call Annie Review: What To Look For In An AI Phone Assistant Alternative',
     reviewSummary:
       'A review page for people who remember Call Annie and need a current read on what the official product looks like now.',

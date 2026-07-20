@@ -5,7 +5,7 @@ import SiteHeader from '../../components/SiteHeader';
 export default function TermsPage() {
   return (
     <>
-      <SiteHeader ctaHref="/#waitlist" ctaLabel="Join Waitlist" />
+      <SiteHeader />
       <LegalPage documentKey="termsOfService" />
       <SiteFooter />
     </>

@@ -10,7 +10,7 @@ export default function Home() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
 
       <div className="relative z-10 w-full">
-        <SiteHeader ctaLabel="ali" />
+        <SiteHeader />
       </div>
 
       {/* Content */}
@@ -28,16 +28,13 @@ export default function Home() {
 
           {/* Hero */}
           <div className="space-y-4">
-            <p className="text-xl md:text-2xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-              Talk, learn, and stay organized. ali listens in real time, responds in natural voices, and captures notes hands-free.
-            </p>
             <p className="text-white/60 md:text-lg">
-              Bilingual tutor · Voice conversations · Notes & transcription
+              Bilingual tutor · Voice conversations · Voice notes · Transcriber · Natural reader
             </p>
           </div>
 
           {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-12 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-12 max-w-3xl mx-auto">
             <div className="space-y-2">
               <p className="font-semibold">Live Voice</p>
               <p className="text-white/60 text-sm">Real-time conversations powered by Inworld AI</p>
@@ -49,6 +46,18 @@ export default function Home() {
             <div className="space-y-2">
               <p className="font-semibold">Voice Notes</p>
               <p className="text-white/60 text-sm">Capture thoughts and create notes hands-free</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold">Transcriber</p>
+              <p className="text-white/60 text-sm">Automatic speech-to-text for any conversation</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold">Natural Reader</p>
+              <p className="text-white/60 text-sm">Listen to articles, notes, and content aloud</p>
+            </div>
+            <div className="space-y-2">
+              <p className="font-semibold">AI Summary</p>
+              <p className="text-white/60 text-sm">Smart summaries of your calls and notes</p>
             </div>
           </div>
 

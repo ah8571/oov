@@ -8,7 +8,7 @@ import { consumerCompetitors } from '@/lib/consumerCompetitors';
 export const metadata: Metadata = {
   title: 'Best AI Phone Assistant For Everyday Tasks And Note Taking | ali',
   description:
-    'Compare consumer AI phone assistant alternatives for everyday help, voice conversations, and note taking, including Emmaline, ChatGPT Voice, Gemini Live, Replika, Pi, Character.AI, and Call Annie.',
+    'Compare consumer AI phone assistant alternatives for everyday help, voice conversations, and note taking, including ali, ChatGPT Voice, Gemini Live, Replika, Pi, Character.AI, and Call Annie.',
   alternates: {
     canonical: '/best-ai-phone-assistant',
   },
@@ -27,7 +27,7 @@ export default function BestAiPhoneAssistantPage() {
   const toc = [
     { id: 'methodology', label: 'What this guide compares' },
     { id: 'platforms', label: 'Platforms compared in this guide' },
-    { id: 'why-emmaline', label: 'Why Emmaline can still stand out' },
+    { id: 'why-emmaline', label: 'Why ali can still stand out' },
     { id: 'cluster', label: 'Continue this cluster' },
   ];
 
@@ -35,7 +35,7 @@ export default function BestAiPhoneAssistantPage() {
     <SeoArticleLayout
       eyebrow="Consumer AI Phone Assistant Guide"
       title="Best AI Phone Assistant For Everyday Tasks And Note Taking"
-      intro="This guide compares consumer-facing AI voice products through the lens Emmaline cares about most: natural conversations, everyday assistance, and whether the product actually feels like a phone assistant instead of a chatbot with a microphone icon."
+      intro="This guide compares consumer-facing AI voice products through the lens ali cares about most: natural conversations, everyday assistance, and whether the product actually feels like a phone assistant instead of a chatbot with a microphone icon."
       toc={toc}
     >
       <section id="methodology" className="space-y-4">
@@ -86,7 +86,7 @@ export default function BestAiPhoneAssistantPage() {
                   <div className="flex flex-wrap gap-4 text-sm">
                     {comparisonHref ? (
                       <Link href={comparisonHref} className="rounded-full border border-white/20 px-4 py-2 text-white transition hover:border-white hover:bg-white hover:text-black">
-                        Read {competitor.name} vs Emmaline
+                        Read {competitor.name} vs ali
                       </Link>
                     ) : null}
                   </div>
@@ -98,12 +98,12 @@ export default function BestAiPhoneAssistantPage() {
       </section>
 
       <section id="why-emmaline" className="space-y-4">
-        <h2 className="text-2xl font-semibold md:text-3xl">Why Emmaline can still be differentiated</h2>
+        <h2 className="text-2xl font-semibold md:text-3xl">Why ali can still be differentiated</h2>
         <p className="text-base leading-8 text-white/70 md:text-lg">
           The opportunity is not to out-generalize ChatGPT or out-ecosystem Google. The opportunity is to feel more dedicated: a voice-first assistant with a phone-native experience, a clearer identity, and note-friendly workflows that turn spoken thought into something usable.
         </p>
         <p className="text-base leading-8 text-white/60 md:text-lg">
-          That is why the comparison angle matters. A lot of the current market is optimized for breadth, companionship, or entertainment. Emmaline can still occupy a sharper position around calling, brainstorming, transcripts, and conversation-driven note capture.
+          That is why the comparison angle matters. A lot of the current market is optimized for breadth, companionship, or entertainment. ali can still occupy a sharper position around calling, brainstorming, transcripts, and conversation-driven note capture.
         </p>
       </section>
 
@@ -112,27 +112,27 @@ export default function BestAiPhoneAssistantPage() {
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Link href="/compare/chatgpt-voice-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">ChatGPT Voice vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">ChatGPT Voice vs ali</p>
           </Link>
           <Link href="/compare/gemini-live-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">Gemini Live vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">Gemini Live vs ali</p>
           </Link>
           <Link href="/compare/replika-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">Replika vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">Replika vs ali</p>
           </Link>
           <Link href="/compare/pi-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">Pi vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">Pi vs ali</p>
           </Link>
           <Link href="/compare/character-ai-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">Character.AI Voice vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">Character.AI Voice vs ali</p>
           </Link>
           <Link href="/compare/call-annie-vs-emmaline" className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]">
             <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-            <p className="mt-2 text-lg font-semibold text-white">Call Annie vs Emmaline</p>
+            <p className="mt-2 text-lg font-semibold text-white">Call Annie vs ali</p>
           </Link>
         </div>
       </section>

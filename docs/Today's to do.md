@@ -11,20 +11,18 @@ Later
 Ali: Multitask with AI
 Ali: Your AI workspace
 
-new website: alihelp.tech
-email: support@alihelp.tech
-
 [x] App display name — changed in app.json, 
-[ ] update App Store Connect / Play Console listing. The bundle ID stays com.emmaline.app.
 [x] In-app branding — replaced "Emmaline" → "Ali" across mobile, backend, website (20+ files)
 [x] Legal content — mobile + shared legalContent.json updated with Ali branding + alihelp.tech email
 [x] Website — header, footer, SEO metadata, sitemap, robots all updated to alihelp.tech
-[ ] emmaline.app would ideally redirect to alihelp.tech (if you can get it). You'd update the Next.js site branding. Keep the old domain as a redirect.
-[ ] Google auth page
-[ ] RevenueCat — app identifier stays the same (bundle ID), so no migration. Just update the app name in their dashboard.
+[x] Google auth page [google is verifying]
 [x] Email — support@emmaline.app → support@ali.app 
-[ ] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
 [x] GitHub — repo can be renamed, GitHub redirects automatically.
+[x] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
+[ ] add env variables in digital ocean
+[ ] update App Store Connect / Play Console listing. The bundle ID stays com.emmaline.app.
+[ ] RevenueCat — app identifier stays the same (bundle ID), so no migration. Just update the app name in their dashboard.
+[ ] emmaline.app redirect to alihelp.tech
 [ ] API endpoints — api.emmaline.app would need to change or be aliased. If you keep the old domain as an alias, no mobile code changes needed.
 [ ] App Store review — a name change on an existing app is usually fine, but Apple occasionally flags dramatic rebrands. Having the same bundle ID helps.
 [ ] logins - several apps use support@emmaline.app, need to document [resemble.ai, ]

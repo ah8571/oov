@@ -43,7 +43,7 @@ export default function CreatorLandingPage({ params }: CreatorPageProps) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),transparent_32%),linear-gradient(180deg,#050505_0%,#000000_55%,#060606_100%)]" />
 
       <div className="relative z-10">
-        <SiteHeader ctaHref="#early-access" ctaLabel="Get Early Access" />
+        <SiteHeader />
 
         <section className="px-4 pt-16 pb-10 md:pt-24">
           <div className="max-w-5xl mx-auto grid gap-10 lg:grid-cols-[1.2fr_0.8fr] items-start">

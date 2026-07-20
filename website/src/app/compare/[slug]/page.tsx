@@ -34,8 +34,8 @@ export function generateMetadata({ params }: ComparisonPageProps): Metadata {
   }
 
   return {
-    title: `${competitor.name} vs Emmaline | AI Phone Assistant Comparison`,
-    description: `Compare ${competitor.name} and Emmaline across voice-first experience, assistant identity, and everyday AI phone assistant use cases.`,
+    title: `${competitor.name} vs ali | AI Phone Assistant Comparison`,
+    description: `Compare ${competitor.name} and ali across voice-first experience, assistant identity, and everyday AI phone assistant use cases.`,
     alternates: {
       canonical: `/compare/${params.slug}`,
     },
@@ -61,7 +61,7 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
     { id: 'pricing-and-access', label: 'Pricing and access' },
     { id: 'review-signal', label: 'Review signal' },
     { id: 'reddit-signal', label: 'Reddit signal' },
-    { id: 'emmaline-difference', label: 'Where Emmaline is different' },
+    { id: 'emmaline-difference', label: 'Where ali is different' },
     { id: 'best-fit', label: 'Best fit by user type' },
     { id: 'related-reads', label: 'Related reads' },
   ];
@@ -69,8 +69,8 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
   return (
     <SeoArticleLayout
       eyebrow="Consumer Comparison"
-      title={`${competitor.name} vs Emmaline`}
-      intro={`This comparison looks at ${competitor.name} through Emmaline's intended lane: a practical AI phone assistant for real conversations, everyday help, and note-friendly voice workflows instead of a generic chatbot experience.`}
+      title={`${competitor.name} vs ali`}
+      intro={`This comparison looks at ${competitor.name} through ali's intended lane: a practical AI phone assistant for real conversations, everyday help, and note-friendly voice workflows instead of a generic chatbot experience.`}
       toc={toc}
     >
       <section id="bottom-line" className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
@@ -104,7 +104,7 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
             <InlineSources sources={competitor.reviewSources} />
           </p>
           <p className="leading-8 text-white/60">
-            That is enough to say the old app is no longer live in the normal consumer-download sense. It is not enough to say why the product was discontinued, so this comparison should stay focused on the clearer question: if someone liked the original call-an-AI idea, why might Emmaline be a better current alternative?
+            That is enough to say the old app is no longer live in the normal consumer-download sense. It is not enough to say why the product was discontinued, so this comparison should stay focused on the clearer question: if someone liked the original call-an-AI idea, why might ali be a better current alternative?
           </p>
         </section>
       ) : null}
@@ -134,12 +134,12 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
       </section>
 
       <section id="emmaline-difference" className="space-y-4">
-        <h2 className="text-2xl font-semibold md:text-3xl">Where Emmaline is different</h2>
+        <h2 className="text-2xl font-semibold md:text-3xl">Where ali is different</h2>
         <p className="leading-8 text-white/70">{competitor.emmalineAngle}</p>
         <p className="leading-8 text-white/60">
           {isCallAnnie
-            ? 'The strongest alternative angle is not that Emmaline recreates a discontinued app one-for-one. It is that Emmaline can keep the low-friction call-first mental model while adding a note-friendly workflow: call in, think out loud, brainstorm in real time, and keep the useful parts through transcripts, call detail, and notes.'
-            : 'The part the generic voice products usually skip is the note-friendly workflow. Emmaline can be judged on a tighter loop: call in, think out loud, brainstorm in real time, and keep the useful parts through transcripts, call detail, and notes. That pushes it closer to a practical phone assistant than a broad voice demo or companion chat.'}
+            ? 'The strongest alternative angle is not that ali recreates a discontinued app one-for-one. It is that ali can keep the low-friction call-first mental model while adding a note-friendly workflow: call in, think out loud, brainstorm in real time, and keep the useful parts through transcripts, call detail, and notes.'
+            : 'The part the generic voice products usually skip is the note-friendly workflow. ali can be judged on a tighter loop: call in, think out loud, brainstorm in real time, and keep the useful parts through transcripts, call detail, and notes. That pushes it closer to a practical phone assistant than a broad voice demo or companion chat.'}
         </p>
       </section>
 
@@ -156,7 +156,7 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
         </div>
 
         <div className="rounded-3xl border border-white/10 p-6 md:p-8">
-          <h2 className="text-2xl font-semibold">Why users might still want Emmaline</h2>
+          <h2 className="text-2xl font-semibold">Why users might still want ali</h2>
           <ul className="mt-4 space-y-3 text-white/70">
             {competitor.limits.map((limit) => (
               <li key={limit} className="leading-8">
@@ -170,7 +170,7 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
       <section id="best-fit" className="space-y-4">
         <h2 className="text-2xl font-semibold md:text-3xl">Best fit by user type</h2>
         <p className="leading-8 text-white/70">
-          {competitor.name} is a stronger fit for {competitor.audience.toLowerCase()} Emmaline is a stronger fit for users who want a more focused AI phone assistant feel, direct phone-style interaction, and note-taking around conversations instead of a broad chat surface or companion product.
+          {competitor.name} is a stronger fit for {competitor.audience.toLowerCase()} ali is a stronger fit for users who want a more focused AI phone assistant feel, direct phone-style interaction, and note-taking around conversations instead of a broad chat surface or companion product.
         </p>
       </section>
 
@@ -195,7 +195,7 @@ export default function ComparisonPage({ params }: ComparisonPageProps) {
               className="rounded-2xl border border-white/10 p-4 transition hover:border-white/30 hover:bg-white/[0.04]"
             >
               <p className="text-sm uppercase tracking-[0.16em] text-white/45">Comparison</p>
-              <p className="mt-2 text-lg font-semibold text-white">{entry.name} vs Emmaline</p>
+              <p className="mt-2 text-lg font-semibold text-white">{entry.name} vs ali</p>
               <p className="mt-2 text-sm leading-7 text-white/60">{entry.summary}</p>
             </Link>
           ))}

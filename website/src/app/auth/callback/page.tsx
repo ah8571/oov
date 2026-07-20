@@ -49,10 +49,10 @@ export default function AuthCallbackPage() {
         href={appRedirectUrl}
         className="hidden min-h-11 items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition hover:bg-white/90"
       >
-        Open Emmaline
+        Open ali
       </a>
       <noscript>
-        <a href={appRedirectUrl}>Open Emmaline</a>
+        <a href={appRedirectUrl}>Open ali</a>
       </noscript>
     </main>
   );

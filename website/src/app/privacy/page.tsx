@@ -5,7 +5,7 @@ import SiteHeader from '../../components/SiteHeader';
 export default function PrivacyPage() {
   return (
     <>
-      <SiteHeader ctaHref="/#waitlist" ctaLabel="Join Waitlist" />
+      <SiteHeader />
       <LegalPage documentKey="privacyPolicy" />
       <SiteFooter />
     </>
