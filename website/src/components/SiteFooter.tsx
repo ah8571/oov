@@ -47,9 +47,6 @@ export default function SiteFooter() {
         <div className="space-y-4">
           <p className="text-sm uppercase tracking-[0.24em] text-white/45">Company</p>
           <div className="grid gap-3 text-sm text-white/60">
-            <Link href="/#waitlist" className="transition hover:text-white">
-              Join Waitlist
-            </Link>
             <Link href="/privacy" className="transition hover:text-white">
               Privacy
             </Link>

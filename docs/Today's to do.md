@@ -6,7 +6,8 @@
 - Work through key words for people to better find the apps (like STT or TTS or how other apps are phrasing it)
 - 30 character new name for apple
 Emmaline: Free Reader, Transcriber
-Ali: Reader Transcriber Tutor <- (30) 
+oov: Reader Transcriber Tutor <- (30)
+oov: Free Reader, Transcriber <- (29) 
 Ali: AI Voice Assistant <-
 Later
 Ali: Multitask with AI
@@ -15,21 +16,26 @@ Ali: Your AI workspace
 consider grabbing oov.tools
 oov.digital
 
-[ ] In-app branding — replaced "Emmaline" → "Ali" across mobile, backend, website (20+ files)
-[ ] Legal content — mobile + shared legalContent.json updated with Ali branding + alihelp.tech email
-[ ] Website — header, footer, SEO metadata, sitemap, robots all updated to alihelp.tech
-[ ] cloudflare / networking
+[x] In-app branding — replaced "Emmaline" → "Ali" across mobile, backend, website (20+ files)
+[x] Legal content — mobile + shared legalContent.json updated with Ali branding + alihelp.tech email
+[x] Website — header, footer, SEO metadata, sitemap, robots all updated to alihelp.tech
+[x] cloudflare / networking
 [ ] Google auth page
-[ ] Email — support@emmaline.app → support@
-[ ] GitHub — repo can be renamed, GitHub redirects automatically.
+[x] Email — support@emmaline.app → support@oov.digital
+[x] GitHub — repo renamed
 [ ] supabase auth urls
 [ ] add env variables in digital ocean
-[ ] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
+[x] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
 [ ] API endpoints — api.emmaline.app would need to change or be aliased. If you keep the old domain as an alias, no mobile code changes needed.
 [ ] App display name — changed in app.json?
 [ ] unsubscribe from emmaline.app 
 [ ] App Store review — a name change on an existing app is usually fine, but Apple occasionally flags dramatic rebrands. Having the same bundle ID helps.
 [ ] logins - several apps use support@emmaline.app, need to document [resemble.ai, ]
+
+Intentionally unchanged
+com.emmaline.app — bundle ID
+emmaline_pro_* — RevenueCat product IDs
+emmaline_supabase_session etc. — storage keys (reset on re-login)
 
 ## Remodeling the subscription method 
 
