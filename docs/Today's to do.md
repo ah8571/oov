@@ -26,10 +26,10 @@ oov.digital
 [ ] supabase auth urls
 [ ] add env variables in digital ocean
 [x] Digital Ocean — droplet/app names are cosmetic, easy to rename. But if you use emmaline in any DNS/hostname config, those need updating.
-[ ] API endpoints — api.emmaline.app would need to change or be aliased. If you keep the old domain as an alias, no mobile code changes needed.
+[x] API endpoints — api.emmaline.app would need to change or be aliased. If you keep the old domain as an alias, no mobile code changes needed.
 [ ] App display name — changed in app.json?
-[ ] unsubscribe from emmaline.app 
 [ ] App Store review — a name change on an existing app is usually fine, but Apple occasionally flags dramatic rebrands. Having the same bundle ID helps.
+[ ] unsubscribe from emmaline.app 
 [ ] logins - several apps use support@emmaline.app, need to document [resemble.ai, ]
 
 Intentionally unchanged
@@ -39,7 +39,12 @@ emmaline_supabase_session etc. — storage keys (reset on re-login)
 
 ## Remodeling the subscription method 
 
-[ ] update subscription info (bundle stays the same); The product IDs emmaline_pro_monthly, emmaline_pro_weekly_30min, etc. appear in: App Store Connect / Play Console; You create new products, old ones keep serving existing subs; RevenueCat, Mirrors the store products, Auto-import from stores, then update offerings; Code (billingService.js, revenueCatService.js). Maps product ID → credits to grant	~4 lines to update
+[ ] update subscription info (bundle stays the same); The product IDs emmaline_pro_monthly, emmaline_pro_weekly_30min, etc. appear in: App Store Connect / Play Console; You create new products, old ones keep serving existing subs; 
+[ ] RevenueCat, Mirrors the store products, Auto-import from stores, then update offerings; Code (billingService.js, revenueCatService.js). Maps product ID → credits to grant	~4 lines to update
+[ ] Rename products in Stripe: "Ali Weekly" → "Oov Weekly", "Ali Monthly" → "Oov Monthly". The tier keys in code are still ali_weekly / ali_monthly — those are internal identifiers, but the display labels are already "oov Weekly" / "oov Monthly".
+[ ] Set the env vars in DO: STRIPE_PRICE_WEEKLY, STRIPE_PRICE_MONTHLY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+[ ] Create the webhook endpoint in Stripe: https://api.oov.digital/api/stripe/webhook (events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted)
+
 
 to go to web for payments (ie to get payment for the app asap) along with incorporating privacy oriented skan conventions.
 
