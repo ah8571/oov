@@ -20,16 +20,23 @@ const roundUpCredits = (durationSeconds, ratePerMinute) => {
 
 const getCreditBalance = async (userId) => {
   const { data, error } = await getSupabaseClient()
-    .from('users')
+    .from('user_billing_entitlements')
     .select('credit_balance, free_credits_granted, monthly_credit_allocation, last_credit_allocation_date, rollover_credits')
-    .eq('id', userId)
-    .single();
+    .eq('user_id', userId)
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Unable to fetch credit balance: ${error.message}`);
   }
 
-  return data;
+  // Return defaults if no row exists yet (new user)
+  return data || {
+    credit_balance: 0,
+    free_credits_granted: 0,
+    monthly_credit_allocation: 0,
+    last_credit_allocation_date: null,
+    rollover_credits: 0
+  };
 };
 
 const recordCreditTransaction = async ({
@@ -68,13 +75,13 @@ export const grantFreeCredits = async (userId) => {
   }
 
   const { error } = await getSupabaseClient()
-    .from('users')
+    .from('user_billing_entitlements')
     .update({
       credit_balance: FREE_CREDITS_GRANT,
       free_credits_granted: FREE_CREDITS_GRANT,
       updated_at: new Date().toISOString()
     })
-    .eq('id', userId);
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Unable to grant free credits: ${error.message}`);
@@ -117,14 +124,14 @@ export const grantMonthlyCredits = async (userId) => {
   const newBalance = PRO_MONTHLY_CREDITS + rollover;
 
   const { error } = await getSupabaseClient()
-    .from('users')
+    .from('user_billing_entitlements')
     .update({
       credit_balance: newBalance,
       last_credit_allocation_date: now.toISOString(),
       rollover_credits: rollover,
       updated_at: now.toISOString()
     })
-    .eq('id', userId);
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Unable to grant monthly credits: ${error.message}`);
@@ -190,12 +197,12 @@ export const consumeCredits = async (userId, mode, durationSeconds, metadata = {
   const newBalance = Math.max(0, currentBalance - creditsToDeduct);
 
   const { error } = await getSupabaseClient()
-    .from('users')
+    .from('user_billing_entitlements')
     .update({
       credit_balance: newBalance,
       updated_at: new Date().toISOString()
     })
-    .eq('id', userId);
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Unable to deduct credits: ${error.message}`);
@@ -225,12 +232,12 @@ export const consumeCredits = async (userId, mode, durationSeconds, metadata = {
 
 export const setMonthlyCreditAllocation = async (userId, monthlyCredits) => {
   const { error } = await getSupabaseClient()
-    .from('users')
+    .from('user_billing_entitlements')
     .update({
       monthly_credit_allocation: monthlyCredits,
       updated_at: new Date().toISOString()
     })
-    .eq('id', userId);
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Unable to set monthly allocation: ${error.message}`);

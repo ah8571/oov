@@ -424,16 +424,21 @@ const FloatingCallButton = ({
             ) : null}
 
             <View style={styles.liveCallFooter}>
-              <TouchableOpacity
-                style={[
-                  styles.liveCallPrimaryAction,
-                  { backgroundColor: isMuted ? (isDarkMode ? '#402128' : '#ffe3e3') : colors.surfaceAlt, borderColor: isMuted ? 'transparent' : colors.border }
-                ]}
-                onPress={() => onToggleMute?.()}
-                activeOpacity={0.85}
-              >
-                <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={16} color={isMuted ? '#c92a2a' : colors.text} />
-              </TouchableOpacity>
+              <View style={styles.muteButtonWrap}>
+                <TouchableOpacity
+                  style={[
+                    styles.liveCallPrimaryAction,
+                    { backgroundColor: isMuted ? (isDarkMode ? '#402128' : '#ffe3e3') : colors.surfaceAlt, borderColor: isMuted ? 'transparent' : colors.border }
+                  ]}
+                  onPress={() => onToggleMute?.()}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name={isMuted ? 'mic-off' : 'mic'} size={16} color={isMuted ? '#c92a2a' : colors.text} />
+                </TouchableOpacity>
+                {isMuted && (
+                  <Text style={[styles.muteLabel, { color: '#c92a2a' }]}>Muted</Text>
+                )}
+              </View>
 
               {audioRoutes.length > 0 ? (
                 <View style={styles.liveCallRouteRow}>
@@ -708,6 +713,14 @@ const styles = StyleSheet.create({
   liveCallPrimaryActionText: {
     fontSize: 14,
     fontWeight: '700'
+  },
+  muteButtonWrap: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  muteLabel: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   liveCallRouteRow: {
     flexDirection: 'row',

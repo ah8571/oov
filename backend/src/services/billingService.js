@@ -96,21 +96,21 @@ export const grantUserCredits = async (userId, creditsToAdd) => {
   const { getSupabaseClient } = await import('./databaseService.js');
   const supabase = getSupabaseClient();
   const current = await supabase
-    .from('users')
+    .from('user_billing_entitlements')
     .select('credit_balance')
-    .eq('id', userId)
-    .single();
+    .eq('user_id', userId)
+    .maybeSingle();
 
   const currentBalance = Number(current?.data?.credit_balance || 0);
   const newBalance = currentBalance + Math.max(0, Math.round(Number(creditsToAdd || 0)));
 
   await supabase
-    .from('users')
+    .from('user_billing_entitlements')
     .update({
       credit_balance: newBalance,
       updated_at: new Date().toISOString()
     })
-    .eq('id', userId);
+    .eq('user_id', userId);
 
   // Record the transaction
   await supabase
