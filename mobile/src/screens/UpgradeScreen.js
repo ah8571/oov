@@ -233,7 +233,7 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
 
       <View style={styles.section}>
         <View style={[styles.usageCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.usageTitle, { color: colors.text }]}>Your credits</Text>
+          <Text style={[styles.usageTitle, { color: colors.text }]}>Your available credits</Text>
           <View style={styles.usageRow}>
             <View style={styles.usageItem}>
               <Text style={[styles.usageValue, { color: colors.text }]}>

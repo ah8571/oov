@@ -4,7 +4,7 @@ import {
   RTCPeerConnection,
   RTCSessionDescription
 } from 'react-native-webrtc';
-import { API_BASE_URL, createNote, getNote, getNotes, updateNote } from './api.js';
+import { API_BASE_URL, createNote, getNote, getNotes, submitVoiceCallCompletion, updateNote } from './api.js';
 
 const INWORLD_PROVIDER = 'inworld-voice';
 const DEFAULT_INWORLD_VOICE = 'Sarah';
@@ -431,6 +431,9 @@ const executeToolCall = async (msg) => {
 };
 
 const cleanupInworldCall = async () => {
+  const durationMs = callStartedAtMs ? Date.now() - callStartedAtMs : 0;
+  const durationSeconds = Math.round(durationMs / 1000);
+
   if (localStream) {
     localStream.getTracks().forEach(track => {
       track.stop();
@@ -457,6 +460,23 @@ const cleanupInworldCall = async () => {
   callStartedAtMs = null;
   onStatusChange = null;
   onTrace = null;
+
+  // Submit call completion for credit tracking
+  if (durationSeconds > 2) {
+    submitVoiceCallCompletion({
+      durationSeconds,
+      voice: 'inworld',
+      model: 'inworld'
+    }).then((result) => {
+      if (!result.success) {
+        console.warn('[InworldVoice] Call completion failed:', result.error);
+      } else {
+        console.log('[InworldVoice] Call recorded, ID:', result.callId);
+      }
+    }).catch((err) => {
+      console.error('[InworldVoice] Call completion error:', err?.message);
+    });
+  }
 };
 
 export const sendInworldText = (text) => {

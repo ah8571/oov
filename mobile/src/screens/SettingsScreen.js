@@ -108,7 +108,8 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
     usedVoiceMinutes: 0,
     remainingFreeTrialSeconds: 0,
     voiceAccessSource: 'none',
-    isProActive: false
+    isProActive: false,
+    creditBalance: null
   });
   const scrollViewRef = useRef(null);
   const scrollOffsetRef = useRef(0);
@@ -139,7 +140,8 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
         usedVoiceMinutes: Number(((response.billing.usedCallSeconds || 0) / 60).toFixed(1)),
         remainingFreeTrialSeconds: Number(response.billing.remainingFreeTrialSeconds || 0),
         voiceAccessSource: response.billing.voiceAccessSource || 'none',
-        isProActive: Boolean(response.billing.stripe?.active)
+        isProActive: Boolean(response.billing.stripe?.active),
+        creditBalance: response.credits?.creditBalance ?? null
       });
       return;
     }
@@ -150,7 +152,8 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
       usedVoiceMinutes: 0,
       remainingFreeTrialSeconds: 0,
       voiceAccessSource: 'none',
-      isProActive: false
+      isProActive: false,
+      creditBalance: null
     });
   }, []);
 
@@ -248,6 +251,21 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
     >
       <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.pageTitle, { color: colors.text }]}>Settings</Text>
+      </View>
+
+      {/* Available credits */}
+      <View style={styles.section}>
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.infoCardCopy}>
+            <Text style={[styles.infoCardTitle, { color: colors.text }]}>Your available credits</Text>
+            <Text style={[styles.infoCardDescription, { color: billingSummary.creditBalance != null ? colors.accent : colors.mutedText }]}>
+              {billingSummary.loading ? 'Loading...' : billingSummary.creditBalance != null ? billingSummary.creditBalance : '—'}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={onOpenUpgrade} activeOpacity={0.8}>
+            <Text style={[styles.upgradeLink, { color: colors.accent }]}>Upgrade</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.section}>
