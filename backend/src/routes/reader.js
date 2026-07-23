@@ -3,6 +3,7 @@ import multer from 'multer';
 import authMiddleware from '../middleware/auth.js';
 import {
   deleteReaderAudio as deleteReaderAudioRecord,
+  getReaderAudio as getReaderAudioRecord,
   listReaderAudio as listReaderAudioRecords,
   updateReaderAudio as updateReaderAudioRecord,
   saveReaderAudio as saveReaderAudioRecord,
@@ -403,7 +404,6 @@ router.get('/audio/saved', authMiddleware, async (req, res) => {
         title: entry.title,
         fileName: entry.file_name,
         contentType: entry.content_type,
-        audioBase64: entry.audio_base64,
         metadata: {
           ...(entry.metadata || {}),
           characterCount: entry.character_count,
@@ -417,6 +417,36 @@ router.get('/audio/saved', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Reader audio list failed:', error.message);
     return res.status(400).json({ error: error.message || 'Unable to load saved reader audio' });
+  }
+});
+
+router.get('/audio/saved/:savedAudioId', authMiddleware, async (req, res) => {
+  try {
+    const entry = await getReaderAudioRecord(req.user.userId, req.params.savedAudioId);
+
+    if (!entry) {
+      return res.status(404).json({ error: 'Saved reader audio not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      id: entry.id,
+      title: entry.title,
+      fileName: entry.file_name,
+      contentType: entry.content_type,
+      audioBase64: entry.audio_base64,
+      metadata: {
+        ...(entry.metadata || {}),
+        characterCount: entry.character_count,
+        chunkCount: entry.chunk_count,
+        languageCode: entry.language_code
+      },
+      createdAt: entry.created_at,
+      updatedAt: entry.updated_at
+    });
+  } catch (error) {
+    console.error('Reader audio fetch failed:', error.message);
+    return res.status(400).json({ error: error.message || 'Unable to fetch saved reader audio' });
   }
 });
 

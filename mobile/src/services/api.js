@@ -1137,6 +1137,32 @@ export const getSavedReaderAudio = async () => {
   }
 };
 
+export const getSavedReaderAudioById = async (savedAudioId) => {
+  try {
+    await addTokenToHeaders();
+    logApiRequest('get', `/reader/audio/saved/${savedAudioId}`);
+    const response = await apiClient.get(`/reader/audio/saved/${savedAudioId}`);
+
+    return {
+      success: true,
+      id: response.data.id,
+      title: response.data.title,
+      fileName: response.data.fileName,
+      contentType: response.data.contentType,
+      audioBase64: response.data.audioBase64,
+      metadata: response.data.metadata || {},
+      createdAt: response.data.createdAt,
+      updatedAt: response.data.updatedAt
+    };
+  } catch (error) {
+    logApiFailure('get', `/reader/audio/saved/${savedAudioId}`, error);
+    return {
+      success: false,
+      error: formatApiError(error, 'Failed to fetch saved reader audio')
+    };
+  }
+};
+
 export const deleteSavedReaderAudio = async (savedAudioId) => {
   try {
     await addTokenToHeaders();

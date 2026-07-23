@@ -277,11 +277,12 @@ export const saveReaderAudio = async (userId, readerAudio) => {
   return data;
 };
 
+// intentionally omits audio_base64 — those blobs are multi-MB and kill list performance
 export const listReaderAudio = async (userId) => {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('reader_saved_audio')
-    .select('id, title, file_name, content_type, audio_base64, character_count, chunk_count, language_code, metadata, created_at, updated_at')
+    .select('id, title, file_name, content_type, character_count, chunk_count, language_code, metadata, created_at, updated_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -291,6 +292,23 @@ export const listReaderAudio = async (userId) => {
   }
 
   return data || [];
+};
+
+export const getReaderAudio = async (userId, savedAudioId) => {
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from('reader_saved_audio')
+    .select('id, title, file_name, content_type, audio_base64, character_count, chunk_count, language_code, metadata, created_at, updated_at')
+    .eq('user_id', userId)
+    .eq('id', savedAudioId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching reader audio:', error);
+    throw error;
+  }
+
+  return data || null;
 };
 
 export const deleteReaderAudio = async (userId, savedAudioId) => {

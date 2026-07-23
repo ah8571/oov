@@ -21,6 +21,7 @@ import {
   deleteSavedReaderAudio,
   generateReaderAudio,
   getSavedReaderAudio,
+  getSavedReaderAudioById,
   importReaderDocument,
   saveReaderAudio,
   updateSavedReaderAudio
@@ -223,7 +224,7 @@ const renameSavedAudioFileIfNeeded = async (entry, nextTitle, nextFileName = nul
 };
 
 const buildSavedAudioEntryFromRemote = async (entry) => {
-  if (!entry?.id || !entry?.audioBase64) {
+  if (!entry?.id) {
     return null;
   }
 
@@ -234,7 +235,17 @@ const buildSavedAudioEntryFromRemote = async (entry) => {
   const audioInfo = await FileSystem.getInfoAsync(targetUri);
 
   if (!audioInfo.exists) {
-    await FileSystem.writeAsStringAsync(targetUri, entry.audioBase64, {
+    // List endpoint no longer includes audioBase64 — fetch on demand.
+    const audioBase64 = entry.audioBase64 || await (async () => {
+      const fetchResult = await getSavedReaderAudioById(entry.id);
+      return fetchResult.success ? fetchResult.audioBase64 : null;
+    })();
+
+    if (!audioBase64) {
+      return null;
+    }
+
+    await FileSystem.writeAsStringAsync(targetUri, audioBase64, {
       encoding: FileSystem.EncodingType.Base64
     });
   }
