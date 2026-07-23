@@ -9,7 +9,7 @@ import {
 } from 'react-native-webrtc';
 
 const OPENAI_REALTIME_PROVIDER = 'openai-realtime';
-const DEFAULT_REALTIME_MODEL = 'gpt-4o-mini-realtime-preview';
+const DEFAULT_REALTIME_MODEL = 'gpt-realtime-1.5';
 const DEFAULT_REALTIME_VOICE = 'marin';
 const DEFAULT_REALTIME_INSTRUCTIONS = 'You can use your note tools only when the user explicitly asks. Keep responses brief and natural.';
 const LANGUAGE_LABELS = {

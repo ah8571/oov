@@ -165,7 +165,7 @@ const handleCompleteRealtimeCall = async (req, res) => {
     const userId = req.user.userId;
     const durationSeconds = Math.max(0, Math.round(Number(req.body?.durationSeconds || 0)));
     const voice = String(req.body?.voice || 'marin').trim() || 'marin';
-    const model = String(req.body?.model || 'gpt-4o-mini-realtime-preview').trim() || 'gpt-4o-mini-realtime-preview';
+    const model = String(req.body?.model || 'gpt-realtime-1.5').trim() || 'gpt-realtime-1.5';
 
     if (durationSeconds <= 0) {
       return res.status(400).json({ error: 'Call duration must be greater than 0 seconds.' });
