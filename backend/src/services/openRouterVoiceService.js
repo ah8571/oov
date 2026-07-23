@@ -82,7 +82,8 @@ export const openRouterTextToSpeech = async (text, options = {}) => {
 };
 
 /**
- * Transcribe audio using OpenRouter STT (OpenAI-compatible transcriptions endpoint).
+ * Transcribe audio using OpenRouter STT.
+ * Sends audio as base64-encoded data URL in JSON.
  */
 export const openRouterSpeechToText = async (audioBuffer, options = {}) => {
   if (!API_KEY) {
@@ -92,49 +93,41 @@ export const openRouterSpeechToText = async (audioBuffer, options = {}) => {
   const model = options.model || 'nvidia/parakeet-tdt-0.6b-v3';
   const language = options.language || 'en';
   const format = options.format || 'mp3';
+  const mimeType = format === 'mp3' ? 'audio/mpeg' : `audio/${format}`;
+  const dataUrl = `data:${mimeType};base64,${audioBuffer.toString('base64')}`;
 
   try {
-    // Build a multipart form using a boundary
-    const boundary = `----FormBoundary${Date.now()}`;
-    const filename = `audio.${format}`;
-    const contentType = `audio/${format === 'mp3' ? 'mpeg' : format}`;
-
-    const body = Buffer.concat([
-      Buffer.from(`--${boundary}\r\n`),
-      Buffer.from(`Content-Disposition: form-data; name="model"\r\n\r\n`),
-      Buffer.from(`${model}\r\n`),
-      Buffer.from(`--${boundary}\r\n`),
-      Buffer.from(`Content-Disposition: form-data; name="language"\r\n\r\n`),
-      Buffer.from(`${language}\r\n`),
-      Buffer.from(`--${boundary}\r\n`),
-      Buffer.from(`Content-Disposition: form-data; name="file"; filename="${filename}"\r\n`),
-      Buffer.from(`Content-Type: ${contentType}\r\n\r\n`),
-      audioBuffer,
-      Buffer.from(`\r\n--${boundary}--\r\n`),
-    ]);
-
     const response = await axios.post(
-      `${OPENROUTER_BASE}/audio/transcriptions`,
-      body,
+      `${OPENROUTER_BASE}/chat/completions`,
       {
-        headers: getHeaders({
-          'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        }),
+        model,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: `Transcribe this audio. Language: ${language}.` },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+        max_tokens: 4096,
+      },
+      {
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
         timeout: 60000,
       }
     );
 
+    const text = response.data?.choices?.[0]?.message?.content || '';
+
     return {
       success: true,
-      text: (response.data?.text || '').trim(),
+      text: text.trim(),
       model: response.data?.model || model,
     };
   } catch (error) {
-    const detail = error.response?.data?.text
-      || (typeof error.response?.data === 'string' ? error.response.data.substring(0, 200) : null)
-      || error.response?.data?.error?.message
-      || error.message;
-    console.error('[OpenRouter STT] Error:', typeof detail === 'string' ? detail.substring(0, 200) : detail);
+    const detail = error.response?.data?.error?.message || error.message;
+    console.error('[OpenRouter STT] Error:', detail?.substring?.(0, 200) || detail);
     throw new Error(`OpenRouter STT failed: ${typeof detail === 'string' ? detail.substring(0, 100) : 'Provider error'}`);
   }
 };

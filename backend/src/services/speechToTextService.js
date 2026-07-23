@@ -357,13 +357,12 @@ export const transcribeWithOpenRouter = async (audioBuffer, options = {}) => {
     throw new Error('OpenRouter is not configured. Set OPENROUTER_CODING_KEY.');
   }
 
-  const audioBase64 = audioBuffer.toString('base64');
   const model = options.model || OPENROUTER_STT_MODELS.default.id;
 
-  const result = await openRouterSpeechToText(audioBase64, {
+  const result = await openRouterSpeechToText(audioBuffer, {
     model,
     language: options.language || 'en',
-    format: options.format || 'wav',
+    format: options.format || 'mp3',
   });
 
   return String(result.text || '').trim();
