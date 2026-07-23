@@ -15,6 +15,7 @@ import { consumeCredits } from '../services/creditService.js';
 const router = express.Router();
 const MAX_AUDIO_EXPORT_CHARACTERS = 50000;
 const MAX_AUDIO_CHUNK_LENGTH = 4000;
+const MAX_AUDIO_CHUNK_LENGTH_OPENROUTER = 400;
 const DEFAULT_READER_PROVIDER = String(process.env.READER_TTS_PROVIDER || process.env.TTS_PROVIDER || 'google').trim().toLowerCase();
 const DEFAULT_RESEMBLE_VOICE_PROFILE = String(process.env.READER_RESEMBLE_VOICE_PROFILE || 'lucy').trim().toLowerCase();
 const RESEMBLE_MODEL = process.env.RESEMBLE_MODEL || 'chatterbox-turbo';
@@ -77,18 +78,23 @@ const upload = multer({
   }
 });
 
-const splitTextIntoAudioChunks = (text) => {
+const splitTextIntoAudioChunks = (text, provider = 'google') => {
   const source = String(text || '').trim();
 
   if (!source) {
     return [];
   }
 
+  // Kokoro-82M on OpenRouter has a much smaller context window than other providers.
+  const maxChunkLength = provider === 'openrouter'
+    ? MAX_AUDIO_CHUNK_LENGTH_OPENROUTER
+    : MAX_AUDIO_CHUNK_LENGTH;
+
   const chunks = [];
   let remainingText = source;
 
-  while (remainingText.length > MAX_AUDIO_CHUNK_LENGTH) {
-    const candidate = remainingText.slice(0, MAX_AUDIO_CHUNK_LENGTH);
+  while (remainingText.length > maxChunkLength) {
+    const candidate = remainingText.slice(0, maxChunkLength);
     const sentenceBreak = Math.max(
       candidate.lastIndexOf('. '),
       candidate.lastIndexOf('? '),
@@ -96,7 +102,8 @@ const splitTextIntoAudioChunks = (text) => {
       candidate.lastIndexOf('\n')
     );
     const wordBreak = candidate.lastIndexOf(' ');
-    const breakIndex = sentenceBreak > 300 ? sentenceBreak + 1 : wordBreak > 300 ? wordBreak : MAX_AUDIO_CHUNK_LENGTH;
+    const minBreak = Math.max(80, Math.floor(maxChunkLength * 0.75));
+    const breakIndex = sentenceBreak > minBreak ? sentenceBreak + 1 : wordBreak > minBreak ? wordBreak : maxChunkLength;
 
     chunks.push(remainingText.slice(0, breakIndex).trim());
     remainingText = remainingText.slice(breakIndex).trim();
@@ -166,7 +173,7 @@ const buildReaderAudioResponse = async ({ normalizedText, title, languagePrefere
   }
 
   const voiceConfig = resolveReaderVoiceConfig(provider, languagePreference, voiceProfile);
-  const chunks = splitTextIntoAudioChunks(normalizedText);
+  const chunks = splitTextIntoAudioChunks(normalizedText, provider);
   const audioBuffers = [];
 
   // Process chunks in parallel batches of 2 (OpenRouter rate limit friendly)

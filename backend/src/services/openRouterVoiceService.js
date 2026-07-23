@@ -56,7 +56,7 @@ export const openRouterTextToSpeech = async (text, options = {}) => {
       {
         headers: getHeaders(),
         responseType: 'arraybuffer',
-        timeout: 30000,
+        timeout: 60000,
       }
     );
 
