@@ -9,7 +9,7 @@ import {
 } from 'react-native-webrtc';
 
 const OPENAI_REALTIME_PROVIDER = 'openai-realtime';
-const DEFAULT_REALTIME_MODEL = 'gpt-realtime-2.1';
+const DEFAULT_REALTIME_MODEL = 'gpt-4o-mini-realtime-preview';
 const DEFAULT_REALTIME_VOICE = 'marin';
 const DEFAULT_REALTIME_INSTRUCTIONS = 'You can use your note tools only when the user explicitly asks. Keep responses brief and natural.';
 const LANGUAGE_LABELS = {
@@ -358,11 +358,14 @@ const stopLocalTracks = () => {
   localAudioStream = null;
 };
 
+let callCleanupDone = false;
+
 const cleanupCallResources = async () => {
   const durationMs = callStartedAtMs ? Date.now() - callStartedAtMs : 0;
   const durationSeconds = Math.round(durationMs / 1000);
 
-  if (durationSeconds > 2 && callVoice) {
+  if (durationSeconds > 2 && callVoice && !callCleanupDone) {
+    callCleanupDone = true;
     submitVoiceCallCompletion({
       durationSeconds,
       voice: callVoice,
@@ -376,8 +379,6 @@ const cleanupCallResources = async () => {
     }).catch((err) => {
       console.error('[VoiceMode] Call completion error:', err?.message);
     });
-  } else {
-    console.log('[VoiceMode] Skipping call completion — duration:', durationSeconds, 'voice:', callVoice);
   }
 
   callStartedAtMs = null;
@@ -613,6 +614,7 @@ export const startVoiceCall = async ({ session = null, params = {}, onStatusChan
     onTrace?.('native_webrtc_sdp_exchange_finished');
 
     activeCall = true;
+    callCleanupDone = false;
     callStartedAtMs = Date.now();
     callVoice = String(params.voice || session?.voice || DEFAULT_REALTIME_VOICE).trim() || DEFAULT_REALTIME_VOICE;
     callModel = session?.model || DEFAULT_REALTIME_MODEL;

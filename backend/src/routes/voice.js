@@ -165,7 +165,7 @@ const handleCompleteRealtimeCall = async (req, res) => {
     const userId = req.user.userId;
     const durationSeconds = Math.max(0, Math.round(Number(req.body?.durationSeconds || 0)));
     const voice = String(req.body?.voice || 'marin').trim() || 'marin';
-    const model = String(req.body?.model || 'gpt-realtime-2.1').trim() || 'gpt-realtime-2.1';
+    const model = String(req.body?.model || 'gpt-4o-mini-realtime-preview').trim() || 'gpt-4o-mini-realtime-preview';
 
     if (durationSeconds <= 0) {
       return res.status(400).json({ error: 'Call duration must be greater than 0 seconds.' });
@@ -174,8 +174,9 @@ const handleCompleteRealtimeCall = async (req, res) => {
     const minutes = durationSeconds / 60;
     const inputMinutes = Number((minutes * 0.4).toFixed(2));
     const outputMinutes = Number((minutes * 0.6).toFixed(2));
-    const audioInputCostUsd = Number((inputMinutes * 0.06).toFixed(6));
-    const audioOutputCostUsd = Number((outputMinutes * 0.24).toFixed(6));
+    // gpt-4o-mini-realtime-preview pricing: $0.006/min input, $0.024/min output
+    const audioInputCostUsd = Number((inputMinutes * 0.006).toFixed(6));
+    const audioOutputCostUsd = Number((outputMinutes * 0.024).toFixed(6));
     const totalVendorCostUsd = Number((audioInputCostUsd + audioOutputCostUsd).toFixed(6));
 
     const call = await saveCall(userId, {
