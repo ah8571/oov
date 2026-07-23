@@ -26,7 +26,7 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
   return (
     <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onDismiss}>
       <Animated.View style={[styles.content, { opacity }]}>
-        {/* Curvy arrow pointing down-right to the FAB */}
+        {/* Curvy arrow pointing down to the FAB */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
           <Ionicons name="chevron-down" size={28} color="#ffffff" style={styles.arrow1} />
           <Ionicons name="chevron-down" size={28} color="#ffffff" style={styles.arrow2} />
@@ -51,44 +51,34 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    paddingBottom: 90,
-    paddingRight: 20,
-    zIndex: 1000
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
   content: {
-    alignItems: 'flex-end'
+    alignItems: 'center',
   },
   arrowWrap: {
-    marginRight: 22,
     marginBottom: -8,
-    flexDirection: 'column',
-    alignItems: 'flex-end'
+    alignItems: 'center',
   },
   arrow1: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 18,
     marginBottom: -12,
-    opacity: 0.5
+    opacity: 0.5,
   },
   arrow2: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 12,
     marginBottom: -10,
-    opacity: 0.7
+    opacity: 0.7,
   },
-  arrow3: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 4
-  },
+  arrow3: {},
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
     padding: 20,
     maxWidth: 280,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)'
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
   },
   title: {
     color: '#ffffff',
