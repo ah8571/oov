@@ -182,6 +182,8 @@ const handleCompleteRealtimeCall = async (req, res) => {
       type: 'voice_realtime',
       status: 'completed',
       duration: durationSeconds,
+      startedAt: new Date(Date.now() - durationSeconds * 1000).toISOString(),
+      endedAt: new Date().toISOString(),
       metadata: { voice, model, provider: 'openai-realtime' }
     });
 
