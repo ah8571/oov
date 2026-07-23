@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 
 import LoginScreen from '../screens/LoginScreen';
-import TranscriptScreen from '../screens/TranscriptScreen';
 import NotesScreen from '../screens/NotesScreen';
 import ReaderScreen from '../screens/ReaderScreen';
 import CreateNoteScreen from '../screens/CreateNoteScreen';
@@ -77,36 +76,6 @@ const AIDisclosureScreen = ({ navigation, isChecking = false, onAccept, onLogout
   );
 };
 
-const TranscriptStack = ({ onAppHeaderScroll, stackKey, transcriptResetToken }) => {
-  const { colors } = useAppTheme();
-
-  return (
-    <Stack.Navigator
-      key={stackKey}
-      initialRouteName="TranscriptList"
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.surface, borderBottomColor: colors.border, shadowColor: 'transparent' },
-        headerTintColor: colors.text,
-        headerTitleStyle: { color: colors.text },
-        cardStyle: { backgroundColor: colors.background }
-      }}
-    >
-      <Stack.Screen 
-        name="TranscriptList" 
-        options={{ headerShown: false }}
-      >
-        {(screenProps) => <TranscriptScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} transcriptResetToken={transcriptResetToken} />}
-      </Stack.Screen>
-      <Stack.Screen 
-        name="CallDetail" 
-        options={{ headerShown: false }}
-      >
-        {(screenProps) => <CallDetailScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} transcriptResetToken={transcriptResetToken} />}
-      </Stack.Screen>
-    </Stack.Navigator>
-  );
-};
-
 const NotesStack = ({ onAppHeaderScroll, notesResetToken, stackKey }) => {
   const { colors } = useAppTheme();
 
@@ -133,6 +102,12 @@ const NotesStack = ({ onAppHeaderScroll, notesResetToken, stackKey }) => {
       >
         {(screenProps) => <CreateNoteScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} notesResetToken={notesResetToken} />}
       </Stack.Screen>
+      <Stack.Screen
+        name="CallDetail"
+        options={{ headerShown: false }}
+      >
+        {(screenProps) => <CallDetailScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} />}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 };
@@ -141,9 +116,7 @@ const AppHome = ({ onLogout }) => {
   const [uiState, setUiState] = useState({
     activeScreen: 'notes',
     menuOpen: false,
-    transcriptStackVersion: 0,
     notesStackVersion: 0,
-    transcriptResetToken: 0,
     notesResetToken: 0
   });
   const { colors, isDarkMode } = useAppTheme();
@@ -153,7 +126,7 @@ const AppHome = ({ onLogout }) => {
   const floatingButtonSize = designTokens.chrome.menuButtonSize;
   const contentTopInset = topInset + 6;
   const controlBackgroundColor = isDarkMode ? '#000000' : '#ffffff';
-  const { activeScreen, menuOpen, transcriptStackVersion, notesStackVersion, transcriptResetToken, notesResetToken } = uiState;
+  const { activeScreen, menuOpen, notesStackVersion, notesResetToken } = uiState;
 
   const handleAppHeaderScroll = useCallback((offsetY = 0) => {
     const normalizedOffset = Number.isFinite(Number(offsetY)) ? Math.max(0, Number(offsetY)) : 0;
@@ -277,13 +250,6 @@ const AppHome = ({ onLogout }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => openScreen('transcripts')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.menuItemText, { color: colors.text }]}>Transcripts</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
               onPress={() => openScreen('reader')}
               activeOpacity={0.8}
             >
@@ -332,9 +298,7 @@ const AppHome = ({ onLogout }) => {
       >
         {activeScreen === 'notes'
           ? <NotesStack stackKey={`notes-${notesStackVersion}`} onAppHeaderScroll={handleAppHeaderScroll} notesResetToken={notesResetToken} />
-          : activeScreen === 'transcripts'
-            ? <TranscriptStack stackKey={`transcripts-${transcriptStackVersion}`} onAppHeaderScroll={handleAppHeaderScroll} transcriptResetToken={transcriptResetToken} />
-            : activeScreen === 'reader'
+          : activeScreen === 'reader'
               ? <ReaderScreen onAppHeaderScroll={handleAppHeaderScroll} />
               : activeScreen === 'support'
                 ? <SupportScreen />

@@ -30,7 +30,7 @@ const getTranscriptModeLabel = (callRecord) => {
   return 'Live Call';
 };
 
-const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
+const TranscriptScreen = ({ navigation, onAppHeaderScroll, embedded = false }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [transcripts, setTranscripts] = useState([]);
@@ -216,18 +216,21 @@ const TranscriptScreen = ({ navigation, onAppHeaderScroll }) => {
     </View>
   );
 
-  const renderListHeader = () => (
-    <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-      <Text style={[styles.pageTitle, { color: colors.text }]}>Transcripts</Text>
-      <View style={styles.headerActions}>
-        {selectedTranscriptIds.length > 0 ? (
-          <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedTranscripts}>
-            <Feather name="trash-2" size={20} color={colors.text} />
-          </TouchableOpacity>
-        ) : null}
+  const renderListHeader = () => {
+    if (embedded) return null;
+    return (
+      <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Transcripts</Text>
+        <View style={styles.headerActions}>
+          {selectedTranscriptIds.length > 0 ? (
+            <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedTranscripts}>
+              <Feather name="trash-2" size={20} color={colors.text} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const bottomContentInset = Math.max(insets.bottom, BOTTOM_SAFE_ZONE);
 

@@ -9,10 +9,11 @@ import {
   ActivityIndicator,
   SectionList
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteNote, getNotes, getTopics } from '../services/api.js';
 import NoteCard from '../components/NoteCard';
+import TranscriptScreen from './TranscriptScreen';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 import { getNoteTextScalePreference } from '../utils/secureStorage.js';
@@ -20,13 +21,20 @@ import { setOnNotesChanged } from '../services/voiceService.js';
 
 /**
  * NotesScreen
- * View notes organized by topic with ability to create new notes
+ * View notes organized by topic with ability to create new notes.
+ * Also includes a Transcripts tab for viewing call transcripts.
  */
 const BOTTOM_SAFE_ZONE = 44;
+
+const TABS = [
+  { key: 'notes', label: 'Notes', icon: 'document-text' },
+  { key: 'transcripts', label: 'Transcripts', icon: 'mic' },
+];
 
 const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const [activeTab, setActiveTab] = useState('notes');
   const [notes, setNotes] = useState([]);
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -236,75 +244,114 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
 
   const renderListHeader = () => (
     <>
-      <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Text style={[styles.pageTitle, { color: colors.text }]}>Notes</Text>
-        <View style={styles.headerActions}>
-          {selectedNoteIds.length > 0 ? (
-            <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedNotes}>
-              <Feather name="trash-2" size={20} color={colors.text} />
-            </TouchableOpacity>
-          ) : (
+      {/* Tab bar */}
+      <View style={[styles.tabBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
             <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreateNote}
+              key={tab.key}
+              style={[styles.tab, isActive && [styles.tabActive, { borderBottomColor: colors.accent }]]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.createButtonText, { color: colors.text }]}>+</Text>
+              <Ionicons
+                name={tab.icon}
+                size={16}
+                color={isActive ? colors.accent : colors.mutedText}
+                style={styles.tabIcon}
+              />
+              <Text style={[styles.tabText, { color: isActive ? colors.accent : colors.mutedText }]}>
+                {tab.label}
+              </Text>
+              <Ionicons
+                name={isActive ? 'chevron-down' : 'chevron-forward'}
+                size={14}
+                color={isActive ? colors.accent : colors.mutedText}
+              />
             </TouchableOpacity>
-          )}
-        </View>
+          );
+        })}
       </View>
 
-      {topics.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[styles.topicScroll, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
-          contentContainerStyle={styles.topicContent}
-        >
-          <TouchableOpacity
-            style={[
-              styles.topicTag,
-              { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-              selectedTopic === null && [styles.topicTagActive, { backgroundColor: colors.accent, borderColor: colors.accent }]
-            ]}
-            onPress={() => setSelectedTopic(null)}
-          >
-            <Text
-              style={[
-                styles.topicTagText,
-                { color: colors.mutedText },
-                selectedTopic === null && styles.topicTagTextActive
-              ]}
-            >
-              All
-            </Text>
-          </TouchableOpacity>
+      {activeTab === 'notes' ? (
+        <>
+          <View style={[styles.headerBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <View style={styles.titleRow}>
+              <Ionicons name="chevron-down" size={18} color={colors.mutedText} />
+              <Text style={[styles.pageTitle, { color: colors.text }]}>Notes</Text>
+            </View>
+            <View style={styles.headerActions}>
+              {selectedNoteIds.length > 0 ? (
+                <TouchableOpacity style={styles.iconButton} onPress={handleDeleteSelectedNotes}>
+                  <Feather name="trash-2" size={20} color={colors.text} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.createButton}
+                  onPress={handleCreateNote}
+                >
+                  <Text style={[styles.createButtonText, { color: colors.text }]}>+</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
 
-          {topics.map(topic => (
-            <TouchableOpacity
-              key={topic.id}
-              style={[
-                styles.topicTag,
-                { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-                selectedTopic === topic.id && [styles.topicTagActive, { backgroundColor: colors.accent, borderColor: colors.accent }]
-              ]}
-              onPress={() => setSelectedTopic(topic.id)}
+          {topics.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={[styles.topicScroll, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}
+              contentContainerStyle={styles.topicContent}
             >
-              <Text
+              <TouchableOpacity
                 style={[
-                  styles.topicTagText,
-                  { color: colors.mutedText },
-                  selectedTopic === topic.id && styles.topicTagTextActive
+                  styles.topicTag,
+                  { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                  selectedTopic === null && [styles.topicTagActive, { backgroundColor: colors.accent, borderColor: colors.accent }]
                 ]}
+                onPress={() => setSelectedTopic(null)}
               >
-                {topic.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      ) : null}
+                <Text
+                  style={[
+                    styles.topicTagText,
+                    { color: colors.mutedText },
+                    selectedTopic === null && styles.topicTagTextActive
+                  ]}
+                >
+                  All
+                </Text>
+              </TouchableOpacity>
 
-      <View style={styles.listHeaderSpacer} />
+              {topics.map(topic => (
+                <TouchableOpacity
+                  key={topic.id}
+                  style={[
+                    styles.topicTag,
+                    { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                    selectedTopic === topic.id && [styles.topicTagActive, { backgroundColor: colors.accent, borderColor: colors.accent }]
+                  ]}
+                  onPress={() => setSelectedTopic(topic.id)}
+                >
+                  <Text
+                    style={[
+                      styles.topicTagText,
+                      { color: colors.mutedText },
+                      selectedTopic === topic.id && styles.topicTagTextActive
+                    ]}
+                  >
+                    {topic.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : null}
+
+          <View style={styles.listHeaderSpacer} />
+        </>
+      ) : (
+        <View style={styles.listHeaderSpacer} />
+      )}
     </>
   );
 
@@ -312,7 +359,13 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }] }>
-      {loading ? (
+      {activeTab === 'transcripts' ? (
+        <TranscriptScreen
+          navigation={navigation}
+          onAppHeaderScroll={onAppHeaderScroll}
+          embedded
+        />
+      ) : loading ? (
         <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
       ) : errorMessage ? (
         <View style={styles.emptyState}>
@@ -341,6 +394,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa'
   },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomWidth: 2,
+  },
+  tabIcon: {
+    marginRight: 2,
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
   headerBar: {
     backgroundColor: '#fff',
     paddingHorizontal: designTokens.chrome.listHeaderHorizontalPadding,
@@ -351,6 +430,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   pageTitle: {
     fontSize: designTokens.typography.pageTitle,
