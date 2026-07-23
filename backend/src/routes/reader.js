@@ -169,21 +169,26 @@ const buildReaderAudioResponse = async ({ normalizedText, title, languagePrefere
   const chunks = splitTextIntoAudioChunks(normalizedText);
   const audioBuffers = [];
 
-  for (const chunk of chunks) {
-    const audioBuffer = await textToAudio(chunk, {
-      provider,
-      languageCode: voiceConfig.languageCode,
-      voice: voiceConfig.voice,
-      speakingRate: speechRate,
-      audioEncoding: 'MP3',
-      responseFormat: 'mp3',
-      outputFormat: 'mp3',
-      title,
-      voiceUuid: voiceConfig.voiceUuid,
-      model: voiceConfig.model
-    });
-
-    audioBuffers.push(audioBuffer);
+  // Process chunks in parallel batches of 4 for speed
+  for (let i = 0; i < chunks.length; i += 4) {
+    const batch = chunks.slice(i, i + 4);
+    const batchResults = await Promise.all(
+      batch.map((chunk) =>
+        textToAudio(chunk, {
+          provider,
+          languageCode: voiceConfig.languageCode,
+          voice: voiceConfig.voice,
+          speakingRate: speechRate,
+          audioEncoding: 'MP3',
+          responseFormat: 'mp3',
+          outputFormat: 'mp3',
+          title,
+          voiceUuid: voiceConfig.voiceUuid,
+          model: voiceConfig.model
+        })
+      )
+    );
+    audioBuffers.push(...batchResults);
   }
 
   const mergedAudio = Buffer.concat(audioBuffers);

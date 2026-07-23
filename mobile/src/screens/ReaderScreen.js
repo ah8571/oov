@@ -1291,15 +1291,6 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.secondaryButton, styles.fullWidthButton, { borderColor: colors.border, backgroundColor: colors.surface, opacity: isGeneratingAudio ? 0.72 : 1 }]}
-            onPress={handleGenerateAudio}
-            disabled={isGeneratingAudio}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>{isGeneratingAudio ? 'Saving audio...' : 'Save audio below'}</Text>
-          </TouchableOpacity>
-
           {savedAudioEntries.length > 0 ? (
             <View style={styles.savedAudioSection}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Saved audio</Text>
