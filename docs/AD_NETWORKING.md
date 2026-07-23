@@ -58,4 +58,36 @@ I can provide the exact code block to initialize it securely.
 [4] [https://applovin.com](https://applovin.com/platform-enforcement)
 [5] [https://www.redtrack.io](https://www.redtrack.io/blog/how-to-prevent-ad-fraud/)
 
+Yes, registering your devices as test devices makes it completely safe to develop, build, and test your app without risking a click fraud ban.
+## What Happens When You Register a Test Device?
+
+* Safe to Click: You can view the ads, click them, and completely go through the ad flows. AppLovin flags all traffic from that specific device ID as "Test Data" on their servers, meaning no money is generated and no advertiser is billed. [1] 
+* Easy to Exit: The pop-up ads will function normally, allowing you to click the "X" or "Close" button to exit out of them and test how your app resumes its normal behavior.
+* Works Across All Builds: This safety applies to all build types (Development builds, Expo Go, Staging, or even Release builds) as long as the device you are holding is registered in your code or dashboard.
+
+------------------------------
+## How to Ensure Your Test Setup is 100% Active
+To be absolutely certain you are safe, verify these two visual and technical indicators:
+## 1. Look for the "Test Ad" Watermark
+When an interstitial pop-up appears on your registered device, AppLovin will overlay a visible "Test Ad" label or banner across the screen. If you see that watermark, your fraud protection is active. If you see a real corporate ad without any "Test" label, do not click it—your device ID is not being recognized properly.
+## 2. Handle iOS 14+ Privacy Restrictions (Crucial for React Native)
+On iOS devices, Apple hides your App Tracking Transparency (ATT) ID by default. If your app hasn't requested tracking permission, your device ID will return as all zeros (00000000-0000-0000-0000-000000000000), causing AppLovin to miss your test device registration. [2] 
+To fix this during development, you must use AppLovin's Mediation Debugger tool inside your app. It provides a visual interface to verify your test status:
+
+// Trigger this button somewhere in your developer/admin menu
+AppLovinMAX.showMediationDebugger();
+
+Opening this screen will tell you exactly whether AppLovin recognizes your phone as a safe test device or a live production device.
+------------------------------
+If you want to set up the device registration correctly on your current setup, let me know:
+
+* Are you testing on an Android device, an iPhone, or an emulator/simulator?
+* Are you using Expo or bare React Native CLI to run your development builds?
+
+I can give you the specific steps to extract your exact ID for that platform.
+
+[1] [https://support.google.com](https://support.google.com/admob/thread/283634420/do-i-have-to-set-testingdevices-ids-for-my-closed-tesing-campain?hl=en)
+[2] [https://developer.apple.com](https://developer.apple.com/videos/play/wwdc2022/10166/)
+
+
 *written by google.com/ai*

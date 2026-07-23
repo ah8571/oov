@@ -38,7 +38,7 @@ export const OPENROUTER_STT_MODELS = {
 
 /**
  * Generate speech from text using OpenRouter TTS.
- * Returns { audioBase64, format, durationMs }
+ * Returns { audioBase64, format, generationId }
  */
 export const openRouterTextToSpeech = async (text, options = {}) => {
   if (!API_KEY) {
@@ -46,44 +46,39 @@ export const openRouterTextToSpeech = async (text, options = {}) => {
   }
 
   const model = options.model || 'hexgrad/kokoro-82m';
-  const voice = options.voice || 'af_heart'; // Default Kokoro voice (American female)
-
-  // Kokoro uses a system prompt with voice prefix format
-  const systemPrompt = `You are a text-to-speech engine. Generate speech for the following text. Voice: ${voice}. Output audio only.`;
+  const voice = options.voice || 'af_heart';
 
   try {
     const response = await axios.post(
-      `${OPENROUTER_BASE}/chat/completions`,
+      `${OPENROUTER_BASE}/audio/speech`,
       {
         model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: text },
-        ],
-        max_tokens: 4096,
+        input: text,
+        voice,
       },
-      { headers: getHeaders(), timeout: 30000 }
+      {
+        headers: getHeaders(),
+        responseType: 'arraybuffer',
+        timeout: 30000,
+      }
     );
 
-    const choice = response.data?.choices?.[0];
-    const content = choice?.message?.content || '';
-
-    // TTS models return audio data in the response
-    // Check for audio in the message content or dedicated audio field
-    const audioData = response.data?.audio || choice?.audio || null;
-    const usage = response.data?.usage || {};
+    const audioBase64 = Buffer.from(response.data).toString('base64');
+    const generationId = response.headers['x-generation-id'] || null;
+    const contentType = response.headers['content-type'] || 'audio/mp3';
+    const format = contentType.includes('wav') ? 'wav' : contentType.includes('pcm') ? 'pcm' : 'mp3';
 
     return {
       success: true,
-      audioBase64: audioData?.data || null,
-      format: audioData?.format || 'wav',
-      durationMs: audioData?.duration_ms || 0,
-      text: content,
-      model: response.data?.model || model,
-      cost: usage?.cost || 0,
+      audioBase64,
+      format,
+      generationId,
+      model,
     };
   } catch (error) {
-    const detail = error.response?.data?.error?.message || error.message;
+    const detail = error.response?.data
+      ? Buffer.from(error.response.data).toString('utf8').substring(0, 200)
+      : error.message;
     console.error('[OpenRouter TTS] Error:', detail);
     throw new Error(`OpenRouter TTS failed: ${detail}`);
   }
