@@ -3,7 +3,7 @@ import multer from 'multer';
 import authMiddleware from '../middleware/auth.js';
 import { summarizeTranscript } from '../services/aiService.js';
 import { saveCall, saveCallCosts, saveSummary, saveTranscript } from '../services/databaseService.js';
-import { transcribeUploadedAudio } from '../services/speechToTextService.js';
+import { transcribeWithOpenRouter } from '../services/speechToTextService.js';
 import { consumeCredits } from '../services/creditService.js';
 
 const router = express.Router();
@@ -33,7 +33,10 @@ router.post('/sessions', authMiddleware, upload.single('audio'), async (req, res
       new Date(new Date(endedAt).getTime() - durationMs).toISOString()
     );
     const languagePreference = String(req.body?.languagePreference || 'en');
-    const transcriptText = await transcribeUploadedAudio(req.file, { languagePreference });
+    const transcriptText = await transcribeWithOpenRouter(req.file.buffer, {
+      language: languagePreference,
+      format: req.file.mimetype?.includes('wav') ? 'wav' : 'mp3',
+    });
 
     if (!transcriptText) {
       return res.status(400).json({ error: 'The recording did not produce any transcript text' });
@@ -52,12 +55,12 @@ router.post('/sessions', authMiddleware, upload.single('audio'), async (req, res
     await saveCallCosts(callRecord.id, req.user.userId, [
       {
         pricingTier: 'tier1',
-        provider: 'google',
+        provider: 'openrouter',
         service: 'speech_to_text',
         quantity: Number((listenDurationSeconds / 60).toFixed(2)),
         unit: 'minutes',
-        vendorCostUsd: Number(((listenDurationSeconds / 60) * 0.016).toFixed(6)),
-        billableCostUsd: Number(((listenDurationSeconds / 60) * 0.016).toFixed(6)),
+        vendorCostUsd: Number(((listenDurationSeconds / 60) * 0.0015).toFixed(6)),
+        billableCostUsd: Number(((listenDurationSeconds / 60) * 0.0015).toFixed(6)),
         measurementSource: 'estimated',
         costSource: 'rate_card',
         metadata: { language: languagePreference }
