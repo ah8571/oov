@@ -533,7 +533,12 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
               </View>
             ) : (
               recordings.map((entry) => (
-                <RecordingCard key={entry.id || entry.savedAudioId} entry={entry} colors={colors} />
+                <RecordingCard
+                  key={entry.id || entry.savedAudioId}
+                  entry={entry}
+                  colors={colors}
+                  onRefresh={() => loadRecordings({ silent: true })}
+                />
               ))
             )}
           </View>
