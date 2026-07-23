@@ -198,12 +198,12 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
             activeOpacity={0.85}
           >
             <Text style={[styles.upgradeButtonText, { color: colors.text }]}>
-              {purchaseLoading ? 'Processing...' : offeringPackage ? `Purchase 100 credits — ${offeringPackage?.product?.priceString || '$9.99'}` : 'IAP unavailable in dev builds'}
+              {purchaseLoading ? 'Processing...' : offeringPackage ? `Purchase 100 credits — ${offeringPackage?.product?.priceString || '$9.99'}` : 'Purchase 100 credits — unavailable in dev'}
             </Text>
           </TouchableOpacity>
           {!offeringPackage && (
             <Text style={[styles.helperText, { color: colors.mutedText, marginTop: 8, textAlign: 'center', fontSize: 12 }]}>
-              In-app purchases require a preview or production build.
+              IAP requires a preview or production build — your credits will be available on App Store / Play Store builds.
             </Text>
           )}
         </View>

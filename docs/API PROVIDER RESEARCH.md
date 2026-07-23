@@ -100,7 +100,7 @@ Compare providers on:
 Rename product thinking from live call to voice mode.
 
 Recommended evaluation order:
-1. OpenAI Realtime API (current implementation — WebRTC)
+1. OpenAI Realtime API (current implementation — WebRTC) (18 per hr higher models)
 2. xAI Grok Voice Agent API (WebSocket — API-compatible, ~half the cost)
 3. Inworld
 5. Gemini 3.1 Flash Live 
@@ -112,6 +112,9 @@ Recommended evaluation order:
 
 For more voice affordability look into: 
 https://openrouter.ai/openai/gpt-audio-mini
+
+assembly ai 4.5 per hr (from their website: https://www.assemblyai.com/blog/assemblyai-voice-agent-api-vs-openai-realtime-api)
+
 
 ### Natural Voices (TTS)
 Recommended evaluation order:
