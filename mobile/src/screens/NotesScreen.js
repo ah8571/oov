@@ -16,7 +16,7 @@ import NoteCard from '../components/NoteCard';
 import RecordingCard from '../components/RecordingCard';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
-import { getNoteTextScalePreference } from '../utils/secureStorage.js';
+import { getNoteTextScalePreference, getDashboardSections, saveDashboardSections } from '../utils/secureStorage.js';
 import { setOnNotesChanged } from '../services/voiceService.js';
 
 /**
@@ -46,9 +46,29 @@ const getTranscriptModeLabel = (callRecord) => {
 const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const [notesExpanded, setNotesExpanded] = useState(true);
-  const [transcriptsExpanded, setTranscriptsExpanded] = useState(true);
-  const [recordingsExpanded, setRecordingsExpanded] = useState(true);
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  const [transcriptsExpanded, setTranscriptsExpanded] = useState(false);
+  const [recordingsExpanded, setRecordingsExpanded] = useState(false);
+
+  // Load saved section preferences on mount
+  useEffect(() => {
+    getDashboardSections().then((saved) => {
+      if (saved) {
+        setNotesExpanded(Boolean(saved.notes));
+        setTranscriptsExpanded(Boolean(saved.transcripts));
+        setRecordingsExpanded(Boolean(saved.recordings));
+      }
+    });
+  }, []);
+
+  // Persist section state whenever it changes
+  useEffect(() => {
+    saveDashboardSections({
+      notes: notesExpanded,
+      transcripts: transcriptsExpanded,
+      recordings: recordingsExpanded
+    });
+  }, [notesExpanded, transcriptsExpanded, recordingsExpanded]);
   const [notes, setNotes] = useState([]);
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(false);

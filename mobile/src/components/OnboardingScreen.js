@@ -6,17 +6,14 @@ const { width, height } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    icon: 'document-text',
     title: 'Notes & Reader',
     description: 'Free features — create and organize notes anytime. Tap the ☰ menu to find your notes, then listen to them read back with natural voice.',
   },
   {
-    icon: 'volume-high',
     title: 'Transcriptions & Natural Voice Reader',
     description: 'Tap the 🔊, then Listen mode to generate transcriptions of your audio. Use the Reader option from the ☰ menu to listen to text with natural voices.',
   },
   {
-    icon: 'mic',
     title: 'Voice Mode',
     description: 'Have real-time conversations with oov in 8 languages. Switch your speaking language anytime in ☰ → Settings.',
   },
@@ -45,9 +42,6 @@ const OnboardingScreen = ({ onComplete }) => {
 
   const renderSlide = ({ item }) => (
     <View style={styles.slide}>
-      <View style={styles.iconWrap}>
-        <Ionicons name={item.icon} size={72} color="#ffffff" />
-      </View>
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
     </View>

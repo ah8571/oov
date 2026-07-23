@@ -266,6 +266,26 @@ export const saveNoteTextScalePreference = async (noteTextScale) => {
   return savePreferences({ noteTextScale: normalized });
 };
 
+const DASHBOARD_SECTIONS_KEY = 'ali_dashboard_sections';
+
+export const getDashboardSections = async () => {
+  try {
+    const raw = await SecureStore.getItemAsync(DASHBOARD_SECTIONS_KEY);
+    if (!raw) return { notes: false, transcripts: false, recordings: false };
+    return JSON.parse(raw);
+  } catch {
+    return { notes: false, transcripts: false, recordings: false };
+  }
+};
+
+export const saveDashboardSections = async (sections) => {
+  try {
+    await SecureStore.setItemAsync(DASHBOARD_SECTIONS_KEY, JSON.stringify(sections));
+  } catch {
+    // Non-critical — silently ignore persistence failures
+  }
+};
+
 /**
  * Logout - clear all auth data
  */
