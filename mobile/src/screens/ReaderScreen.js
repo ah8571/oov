@@ -307,6 +307,7 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
   const speechStartTimeoutRef = useRef(null);
   const readAloudFallbackSoundRef = useRef(null);
   const readAloudFallbackUriRef = useRef(null);
+  const preparingReadAloudRef = useRef(false);
   const savedAudioSoundRef = useRef(null);
   const savedAudioSeekTrackWidthsRef = useRef({});
   const savedAudioEntriesRef = useRef([]);
@@ -316,6 +317,10 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
   useEffect(() => {
     savedAudioEntriesRef.current = savedAudioEntries;
   }, [savedAudioEntries]);
+
+  useEffect(() => {
+    preparingReadAloudRef.current = isPreparingReadAloudFallback;
+  }, [isPreparingReadAloudFallback]);
 
   const refreshSavedAudioEntries = useCallback(async ({ hydrateLocal = false } = {}) => {
     let existingEntries = savedAudioEntriesRef.current;
@@ -335,6 +340,9 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
     });
 
     const refreshIntervalId = setInterval(() => {
+      if (preparingReadAloudRef.current) {
+        return;
+      }
       refreshSavedAudioEntries().catch((error) => {
         console.error('Error refreshing saved reader audio:', error);
       });
