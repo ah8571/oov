@@ -179,16 +179,20 @@ const handleCompleteRealtimeCall = async (req, res) => {
     const audioOutputCostUsd = Number((outputMinutes * 0.024).toFixed(6));
     const totalVendorCostUsd = Number((audioInputCostUsd + audioOutputCostUsd).toFixed(6));
 
-    const call = await saveCall(userId, {
-      type: 'voice_realtime',
-      status: 'completed',
-      duration: durationSeconds,
-      startedAt: new Date(Date.now() - durationSeconds * 1000).toISOString(),
-      endedAt: new Date().toISOString(),
-      metadata: { voice, model, provider: 'openai-realtime' }
-    });
+    const call = process.env.SAVE_VOICE_CALLS === 'true'
+      ? await saveCall(userId, {
+          type: 'voice_realtime',
+          status: 'completed',
+          duration: durationSeconds,
+          startedAt: new Date(Date.now() - durationSeconds * 1000).toISOString(),
+          endedAt: new Date().toISOString(),
+          metadata: { voice, model, provider: 'openai-realtime' }
+        })
+      : null;
 
-    await saveCallCosts(call.id, userId, [
+    if (call) {
+      if (call) {
+      await saveCallCosts(call.id, userId, [
       {
         pricingTier: 'tier1',
         provider: 'openai',
@@ -226,6 +230,7 @@ const handleCompleteRealtimeCall = async (req, res) => {
         metadata: { voice, model }
       }
     ]);
+    }
 
     const billingStatus = await getUserVoiceBillingStatus(userId);
 
@@ -235,7 +240,7 @@ const handleCompleteRealtimeCall = async (req, res) => {
       creditResult = await consumeCredits(userId, 'voice_mode', durationSeconds, {
         voice,
         model,
-        callId: call.id
+        callId: call?.id || null
       });
     } catch (creditError) {
       // Credit deduction is non-fatal — the call already happened.
@@ -244,7 +249,7 @@ const handleCompleteRealtimeCall = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      callId: call.id,
+      callId: call?.id || null,
       durationSeconds,
       estimatedCostUsd: Number(totalVendorCostUsd.toFixed(4)),
       billing: billingStatus,
