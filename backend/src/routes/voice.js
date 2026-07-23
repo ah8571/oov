@@ -191,7 +191,6 @@ const handleCompleteRealtimeCall = async (req, res) => {
       : null;
 
     if (call) {
-      if (call) {
       await saveCallCosts(call.id, userId, [
       {
         pricingTier: 'tier1',
