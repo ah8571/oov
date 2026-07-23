@@ -14,7 +14,7 @@ import { consumeCredits } from '../services/creditService.js';
 
 const router = express.Router();
 const MAX_AUDIO_EXPORT_CHARACTERS = 50000;
-const MAX_AUDIO_CHUNK_LENGTH = 1600;
+const MAX_AUDIO_CHUNK_LENGTH = 4000;
 const DEFAULT_READER_PROVIDER = String(process.env.READER_TTS_PROVIDER || process.env.TTS_PROVIDER || 'google').trim().toLowerCase();
 const DEFAULT_RESEMBLE_VOICE_PROFILE = String(process.env.READER_RESEMBLE_VOICE_PROFILE || 'lucy').trim().toLowerCase();
 const RESEMBLE_MODEL = process.env.RESEMBLE_MODEL || 'chatterbox-turbo';
