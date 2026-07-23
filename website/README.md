@@ -33,7 +33,7 @@ BACKEND_URL=http://localhost:3000
 
 When deployed to DigitalOcean, set:
 ```env
-BACKEND_URL=https://emmaline.app
+BACKEND_URL=https://oov.digital
 ```
 
 ### Adding Background Video
@@ -92,8 +92,8 @@ When deployed to DigitalOcean App Platform:
 2. Run command: `npm start`
 3. Port: `3000` (can be configured with `PORT` env var)
 
-The landing page will be available at `https://emmaline.app`
-And the backend API at `https://emmaline.app/api/`
+The landing page will be available at `https://oov.digital`
+And the backend API at `https://api.oov.digital/api/`
 
 ## License
 
