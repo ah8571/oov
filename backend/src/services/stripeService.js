@@ -48,13 +48,17 @@ export const createStripeCheckout = async (userId, email, tierKey, successUrl, c
   const sessionConfig = {
     mode: 'subscription',
     line_items: [{ price: tier.priceId, quantity: 1 }],
-    customer_email: email,
     client_reference_id: userId,
     metadata: { userId, tier: tierKey, promoCode: promoCode || '' },
     success_url: successUrl || 'https://oov.digital/subscribe/success',
     cancel_url: cancelUrl || 'https://oov.digital/subscribe',
     allow_promotion_codes: true
   };
+
+  // Only include customer_email if a valid email is provided
+  if (email && typeof email === 'string' && email.includes('@')) {
+    sessionConfig.customer_email = email;
+  }
 
   // Preserve promo code in metadata so webhook can grant bonus credits
   // The actual discount is handled by Stripe's own promotion code input on the checkout page
