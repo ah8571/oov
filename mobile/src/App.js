@@ -227,6 +227,11 @@ const AppContent = () => {
 
   useEffect(() => {
     const checkOnboarding = async () => {
+      // Always show onboarding in dev builds for testing
+      if (__DEV__) {
+        setShowOnboarding(true);
+        return;
+      }
       const { getOnboardingComplete } = require('./utils/secureStorage.js');
       const complete = await getOnboardingComplete();
       if (!complete) {
