@@ -1,4 +1,4 @@
-﻿package com.emmaline.pcmcapture;
+package com.emmaline.pcmcapture;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
