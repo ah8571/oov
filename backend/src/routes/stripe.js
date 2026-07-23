@@ -86,8 +86,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.get('/subscribe', async (req, res) => {
   try {
     const { tier, code, email } = req.query || {};
+    console.log('[Stripe] Subscribe redirect:', { tier, code: code ? '***' : null, email });
 
     if (!tier || !STRIPE_TIERS[tier]) {
+      console.log('[Stripe] Invalid tier:', tier, 'Available:', Object.keys(STRIPE_TIERS));
       return res.redirect('https://oov.digital/subscribe?error=invalid_tier');
     }
 
@@ -101,13 +103,16 @@ router.get('/subscribe', async (req, res) => {
     );
 
     if (result.checkoutUrl) {
+      console.log('[Stripe] Redirecting to checkout:', result.checkoutId);
       return res.redirect(result.checkoutUrl);
     }
 
+    console.log('[Stripe] No checkout URL returned');
     return res.redirect('https://oov.digital/subscribe?error=checkout_failed');
   } catch (error) {
-    console.error('[Stripe] Subscribe redirect error:', error.message);
-    return res.redirect('https://oov.digital/subscribe?error=unavailable');
+    console.error('[Stripe] Subscribe redirect error:', error.message, error.stack?.split('\n')[1]);
+    const errMsg = encodeURIComponent(error.message || 'unavailable');
+    return res.redirect(`https://oov.digital/subscribe?error=${errMsg}`);
   }
 });
 
