@@ -823,7 +823,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       safeBottomInset={safeBottomInset}
     />
   </>);
-  );
 };
 
 const styles = StyleSheet.create({
