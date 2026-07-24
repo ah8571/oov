@@ -89,11 +89,11 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    // react-native-executorch bundles its own libjsi.so which conflicts
-    // with React Native's copy. Pick the RN version to avoid linker errors.
+    // react-native-executorch bundles native libs that conflict with RN's.
+    // Use pickFirsts to let RN win all duplicates rather than failing the build.
     packaging {
         jniLibs {
-            pickFirsts += ['**/libjsi.so']
+            pickFirsts += ['**/libjsi.so', '**/libreactnativejni.so', '**/libreact_nativemodule_core.so', '**/libhermes.so', '**/libfolly_runtime.so']
         }
     }
 
