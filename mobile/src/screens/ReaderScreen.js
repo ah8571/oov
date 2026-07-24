@@ -670,7 +670,8 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
-        shouldPlay: true
+        shouldPlay: true,
+        playThroughEarpieceAndroid: false
       });
     } catch {
       // Audio mode is best-effort — don't block speech.
