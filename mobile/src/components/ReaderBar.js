@@ -57,14 +57,12 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     }
   }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice]);
 
-  // ── Styles (inline for simplicity) ──────────────────────────
-  const barHeight = 52;
-
+  // ── Styles ──────────────────────────────────────────────────
   const s = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      height: barHeight,
+      height: 56,
       paddingBottom: safeBottomInset,
       paddingHorizontal: 12,
       backgroundColor: barBg,
@@ -74,23 +72,34 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     btn: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 14,
+      paddingHorizontal: 10,
       paddingVertical: 8,
-      borderRadius: 8,
-      backgroundColor: barBg
+      borderRadius: 8
     },
-    btnText: { color: textColor, fontSize: 14, fontWeight: '600', marginLeft: 6 },
-    divider: { width: 1, height: 28, backgroundColor: borderColor, marginHorizontal: 8 },
+    btnIcon: { fontSize: 16 },
+    btnText: { color: mutedColor, fontSize: 13, fontWeight: '600', marginLeft: 4 },
+    divider: { width: 1, height: 24, backgroundColor: borderColor, marginHorizontal: 6 },
+    readerLabel: { color: mutedColor, fontSize: 11, fontWeight: '500', marginRight: 6 },
+    playBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 20,
+      backgroundColor: accentColor + '22'
+    },
+    playBtnActive: { backgroundColor: accentColor },
+    playBtnIcon: { fontSize: 12, marginRight: 4 },
+    playBtnText: { color: accentColor, fontSize: 13, fontWeight: '700' },
     voiceChip: {
       marginLeft: 'auto',
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 6,
-      backgroundColor: isSpeaking ? accentColor : 'transparent',
       borderWidth: 1,
       borderColor: accentColor
     },
-    voiceChipText: { color: isSpeaking ? '#fff' : accentColor, fontSize: 12, fontWeight: '600' },
+    voiceChipText: { color: accentColor, fontSize: 12, fontWeight: '600' },
 
     // Modal
     backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
@@ -122,16 +131,24 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     <View style={s.container}>
       {/* Import */}
       <TouchableOpacity style={s.btn} onPress={() => setShowImportOptions(true)}>
-        <Text style={{ fontSize: 16 }}>📎</Text>
+        <Text style={s.btnIcon}>📎</Text>
         <Text style={s.btnText}>Import</Text>
       </TouchableOpacity>
 
       <View style={s.divider} />
 
-      {/* Read */}
-      <TouchableOpacity style={s.btn} onPress={handleRead}>
-        <Text style={{ fontSize: 16 }}>{isSpeaking ? '⏹' : '🔊'}</Text>
-        <Text style={s.btnText}>{isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : 'Read'}</Text>
+      {/* Reader label */}
+      <Text style={s.readerLabel}>Reader</Text>
+
+      {/* Play/Stop button */}
+      <TouchableOpacity
+        style={[s.playBtn, isSpeaking && s.playBtnActive]}
+        onPress={handleRead}
+      >
+        <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
+        <Text style={[s.playBtnText, isSpeaking && { color: '#fff' }]}>
+          {isPreparing ? 'Wait' : isSpeaking ? 'Stop' : 'Read'}
+        </Text>
       </TouchableOpacity>
 
       {/* Voice chip */}

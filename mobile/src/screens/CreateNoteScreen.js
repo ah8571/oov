@@ -613,9 +613,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     : (editorFocused ? 'box-none' : 'auto');
 
   return (
+    <>
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: colors.background, flex: 1 }]}
     >
       <FloatingBackButton onPress={() => navigation.goBack()} />
       <ScrollView
@@ -812,15 +813,16 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           </View>
         </View>
       ) : null}
-
-      <ReaderBar
-        text={stripNoteContentToPlainText(content)}
-        title={title}
-        onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
-        onTitleChange={setTitle}
-        safeBottomInset={safeBottomInset}
-      />
     </KeyboardAvoidingView>
+
+    <ReaderBar
+      text={stripNoteContentToPlainText(content)}
+      title={title}
+      onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
+      onTitleChange={setTitle}
+      safeBottomInset={safeBottomInset}
+    />
+  </>);
   );
 };
 
