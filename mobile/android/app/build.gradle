@@ -89,6 +89,14 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // react-native-executorch bundles its own libjsi.so which conflicts
+    // with React Native's copy. Pick the RN version to avoid linker errors.
+    packaging {
+        jniLibs {
+            pickFirsts += ['**/libjsi.so']
+        }
+    }
+
     namespace 'com.emmaline.app.dev'
     defaultConfig {
         applicationId 'com.emmaline.app.dev'
