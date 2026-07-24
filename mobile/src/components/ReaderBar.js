@@ -147,8 +147,10 @@ export const ReaderBar = ({ text, title, selectedVoice, onTextChange, onTitleCha
         </Text>
       </TouchableOpacity>
 
-      {/* Voice chip moved to top right of CreateNoteScreen */}
-      <View style={{ flex: 1 }} />
+      {/* Voice chip */}
+      <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>
+        <Text style={s.voiceChipText}>{currentVoice?.label || 'Voice'}</Text>
+      </TouchableOpacity>
 
       {/* ── Import options modal ─────────────────────────────── */}
       <Modal visible={showImportOptions} transparent animationType="slide" onRequestClose={() => setShowImportOptions(false)}>

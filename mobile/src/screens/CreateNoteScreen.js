@@ -9,8 +9,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
-  Pressable,
-  Modal
+  Pressable
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';
@@ -19,7 +18,6 @@ import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 import FloatingBackButton from '../components/FloatingBackButton';
 import { ReaderBar } from '../components/ReaderBar.js';
-import { READER_VOICE_OPTIONS } from '../hooks/useReaderTts.js';
 import { normalizeNoteContentToHtml, stripNoteContentToPlainText } from '../utils/noteContent.js';
 import { getNoteTextScalePreference, saveNoteTextScalePreference } from '../utils/secureStorage.js';
 
@@ -44,8 +42,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const [topics, setTopics] = useState([]);
   const [saveState, setSaveState] = useState(existingNote?.id ? 'Saved' : 'Idle');
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState(READER_VOICE_OPTIONS[0]?.id || 'kokoro');
-  const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [editorFocused, setEditorFocused] = useState(false);
   const [noteTextScale, setNoteTextScale] = useState(1);
@@ -623,20 +619,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       style={[styles.container, { backgroundColor: colors.background, flex: 1 }]}
     >
       <FloatingBackButton onPress={() => navigation.goBack()} />
-      {/* Voice selector — top right */}
-      <View style={{ position: 'absolute', top: insets.top + 8, right: 16, zIndex: 10 }}>
-        <TouchableOpacity
-          onPress={() => setShowVoicePicker(true)}
-          style={{
-            paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
-            backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.primary
-          }}
-        >
-          <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '600' }}>
-            {READER_VOICE_OPTIONS.find(v => v.id === selectedVoice)?.label || 'Voice'}
-          </Text>
-        </TouchableOpacity>
-      </View>
       <ScrollView
         style={styles.content}
         contentContainerStyle={[
@@ -836,32 +818,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     <ReaderBar
       text={stripNoteContentToPlainText(content)}
       title={title}
-      selectedVoice={selectedVoice}
       onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
       onTitleChange={setTitle}
       safeBottomInset={safeBottomInset}
     />
-
-    {/* Voice picker modal */}
-    <Modal visible={showVoicePicker} transparent animationType="slide" onRequestClose={() => setShowVoicePicker(false)}>
-      <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setShowVoicePicker(false)} activeOpacity={1}>
-        <View style={{ backgroundColor: colors.cardBackground, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: insets.bottom + 20 }}>
-          <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', padding: 16, borderBottomWidth: 1, borderBottomColor: colors.borderColor }}>Choose voice</Text>
-          {READER_VOICE_OPTIONS.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={{ paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.borderColor }}
-              onPress={() => { setSelectedVoice(item.id); setShowVoicePicker(false); }}
-            >
-              <Text style={{ color: colors.text, fontSize: 15 }}>{item.label}</Text>
-              <Text style={{ color: colors.mutedText, fontSize: 12, marginTop: 2 }}>
-                {item.provider === 'kokoro-runpod' ? 'Free · GPU fast' : item.provider === 'resemble' ? 'Premium · Natural' : item.provider === 'device' ? 'On-device · Basic' : ''}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </TouchableOpacity>
-    </Modal>
   </>);
   );
 };

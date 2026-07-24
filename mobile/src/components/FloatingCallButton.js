@@ -479,7 +479,7 @@ const FloatingCallButton = ({
       <Animated.View
         style={[
           styles.floatingContainer,
-          { bottom: floatingBottom },
+          { top: overlayTop },
           {
             transform: [{ scale: scaleAnim }]
           }
@@ -511,7 +511,7 @@ const FloatingCallButton = ({
 
       {showCallControls && !isExpanded ? (
         <TouchableOpacity
-          style={[styles.expandButton, { bottom: floatingBottom + 74, backgroundColor: colors.surface, borderColor: colors.border }]}
+          style={[styles.expandButton, { top: overlayTop + controlSize + 16, backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => setIsExpanded(true)}
           activeOpacity={0.84}
         >
@@ -521,7 +521,7 @@ const FloatingCallButton = ({
       ) : null}
 
       {statusLabel && !showCallControls ? (
-        <View style={[styles.statusIndicator, { bottom: statusBottom, backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.statusIndicator, { top: overlayTop + controlSize + 8, backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.statusText, { color: colors.text }]}>{statusLabel}</Text>
         </View>
       ) : null}
