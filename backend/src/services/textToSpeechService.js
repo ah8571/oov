@@ -148,7 +148,8 @@ const textToAudioRunPodKokoro = async (text, options = {}) => {
     throw new Error('RunPod Kokoro is not configured. Set RUNPOD_KOKORO_ENDPOINT and RUNPOD_KEY.');
   }
 
-  const voice = options.voice || 'af_heart';
+  // Use Kokoro voice names (not the provider-agnostic config voice)
+  const voice = 'af_heart';
   const response = await axios.post(
     `https://api.runpod.ai/v2/${RUNPOD_KOKORO_ENDPOINT}/runsync`,
     { input: { text, voice } },
