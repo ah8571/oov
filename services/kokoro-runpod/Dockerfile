@@ -1,11 +1,8 @@
 # Kokoro-FastAPI Queue handler for RunPod Serverless
 FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 
-# Base image already has uv (no need for apt-get/python3-pip).
-# Install runpod to an isolated directory to avoid venv write conflicts.
-RUN uv pip install --target=/tmp/runpod-pkgs runpod
-
-ENV PYTHONPATH=/tmp/runpod-pkgs
+# Install runpod into venv — uv is the base image's native package manager
+RUN uv pip install runpod
 
 COPY handler.py /handler.py
 
