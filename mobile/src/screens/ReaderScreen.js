@@ -664,21 +664,19 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
     let callbackFired = false;
 
-    // Ensure audio routes to speaker on Android (expo-speech callbacks are
-    // unreliable on some devices, but the utterance itself needs speaker output).
+    // Route audio to speaker on Android
     try {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
-        shouldPlay: true,
         playThroughEarpieceAndroid: false
       });
     } catch {
-      // Audio mode is best-effort — don't block speech.
+      // Best-effort
     }
 
     Speech.speak(nextChunk, {
-      language,
+      // Let the device pick the default language — 'en-US' may not be supported
       rate,
       pitch: 1.0,
       onStart: () => {
