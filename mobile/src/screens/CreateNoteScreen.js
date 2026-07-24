@@ -17,6 +17,7 @@ import { createNote, getNote, getTopics, updateNote } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 import FloatingBackButton from '../components/FloatingBackButton';
+import { ReaderBar } from '../components/ReaderBar.js';
 import { normalizeNoteContentToHtml, stripNoteContentToPlainText } from '../utils/noteContent.js';
 import { getNoteTextScalePreference, saveNoteTextScalePreference } from '../utils/secureStorage.js';
 
@@ -811,6 +812,14 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           </View>
         </View>
       ) : null}
+
+      <ReaderBar
+        text={stripNoteContentToPlainText(content)}
+        title={title}
+        onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
+        onTitleChange={setTitle}
+        safeBottomInset={safeBottomInset}
+      />
     </KeyboardAvoidingView>
   );
 };

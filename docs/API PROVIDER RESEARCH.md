@@ -123,7 +123,7 @@ Livekit 50 per month paired with another model above like grok could be more aff
 Recommended evaluation order:
 1. ElevenLabs
 Alternatives to Elevanlabs
-2. Chatterbox
+2. Chatterbox w/ Resemble [need usage estimate]
 3. Google TTS / Vertex AI
 2. Fish Audio
 3. PlayHT
