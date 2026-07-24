@@ -283,9 +283,12 @@ export const isOAuthRedirectUrl = (redirectUrl) => {
 };
 
 export const startOAuthSignIn = async ({ provider, scopes, queryParams } = {}) => {
+  // On Android use the app scheme directly so the browser redirects back to
+  // the app without going through oov.digital/auth/callback (which can fail
+  // during backend deploys or if the website route is misconfigured).
   const redirectTo = Platform.OS === 'android'
-    ? getOAuthBrowserRedirectUrl()
-    : getOAuthRedirectUrl();
+    ? getOAuthRedirectUrl()
+    : getOAuthBrowserRedirectUrl();
   console.log('[AuthFlow] startOAuthSignIn:redirectTo', { provider, redirectTo });
 
   const { data, error } = await getClient().auth.signInWithOAuth({
