@@ -937,6 +937,17 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
     // Basic voice uses device TTS — no backend call, no credits.
     if (isBasicVoice) {
+      // Diagnostic: check if device TTS is functional
+      try {
+        const voices = await Speech.getAvailableVoicesAsync();
+        logReaderTts('handleReadAloud:basicVoiceDiagnostic', {
+          voiceCount: voices?.length || 0,
+          voices: voices?.slice(0, 3).map(v => ({ id: v.identifier, lang: v.language, name: v.name }))
+        });
+      } catch (e) {
+        logReaderTts('handleReadAloud:basicVoiceDiagnosticFailed', { error: e?.message });
+      }
+
       const language = resolveSpeechLanguage(languagePreference);
       const chunks = splitTextIntoSpeechChunks(normalizedText);
       speechChunksRef.current = chunks;
