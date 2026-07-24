@@ -2,7 +2,7 @@
 FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 
 # Install RunPod SDK into the existing venv at /app/.venv
-RUN uv pip install runpod requests
+RUN uv pip install runpod
 
 COPY handler.py /handler.py
 
