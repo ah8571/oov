@@ -198,6 +198,145 @@ Best future Twilio use cases:
 ### Grok Voice Agent (xAI) — Alternative to OpenAI Realtime
 
 - **Docs:** https://docs.x.ai/developers/model-capabilities/audio/voice
+
+---
+
+# Kokoro TTS (On-Device + Self-Hosted)
+
+*Last updated: 2026-07-24*
+
+## Overview
+
+Kokoro-82M is an open-source TTS model (~82M params, Apache 2.0) from Hugging Face. It runs on-device via `react-native-executorch` (XNNPACK/CPU only) and can also be self-hosted on GPU for near real-time performance.
+
+## Performance
+
+| Mode | Speed (paragraph) | Speed (20k chars) | Cost |
+|---|---|---|---|
+| On-device (phone CPU) | ~80-90s (~250ms/char) | ~83 min | $0 |
+| Self-hosted GPU (RunPod) | ~2-5s | ~15-20s | ~$0.0006/paragraph |
+
+## Voice Catalog — 9 Languages, 20 Voices
+
+### American English (`en-us`) — 6 voices
+| Voice | Gender | File |
+|---|---|---|
+| heart | Female | `af_heart.bin` |
+| river | Female | `af_river.bin` |
+| sarah | Female | `af_sarah.bin` |
+| adam | Male | `am_adam.bin` |
+| michael | Male | `am_michael.bin` |
+| santa | Male | `am_santa.bin` |
+
+### British English (`en-gb`) — 2 voices
+| Voice | Gender | File |
+|---|---|---|
+| emma | Female | `bf_emma.bin` |
+| daniel | Male | `bm_daniel.bin` |
+
+### French (`fr`) — 1 voice
+| Voice | Gender | File |
+|---|---|---|
+| siwis | Female | `ff_siwis.bin` |
+
+### Spanish (`es`) — 2 voices
+| Voice | Gender | File |
+|---|---|---|
+| dora | Female | `ef_dora.bin` |
+| alex | Male | `em_alex.bin` |
+
+### Italian (`it`) — 2 voices
+| Voice | Gender | File |
+|---|---|---|
+| sara | Female | `if_sara.bin` |
+| nicola | Male | `im_nicola.bin` |
+
+### Portuguese (`pt`) — 2 voices
+| Voice | Gender | File |
+|---|---|---|
+| dora | Female | `pf_dora.bin` |
+| santa | Male | `pm_santa.bin` |
+
+### Hindi (`hi`) — 3 voices
+| Voice | Gender | File |
+|---|---|---|
+| alpha | Female | `hf_alpha.bin` |
+| omega | Male | `hm_omega.bin` |
+| psi | Male | `hm_psi.bin` |
+
+### Polish (`pl`) — 1 voice (fine-tuned model)
+| Voice | Gender | File |
+|---|---|---|
+| mateusz | Male | `pm_mateusz.bin` |
+
+### German (`de`) — 1 voice (fine-tuned model)
+| Voice | Gender | File |
+|---|---|---|
+| anna | Female | `df_anna.bin` |
+
+## Self-Hosting: RunPod Serverless Integration Plan
+
+### Why RunPod Serverless
+- Pay per GPU-second, zero idle costs
+- Cheapest 24GB GPU: $0.69/hr ($0.00019/sec)
+- Kokoro-82M only needs ~3GB VRAM → minimal GPU time
+- Estimated cost: ~$0.0006 per paragraph, ~$5-10/month for modest usage
+
+### Architecture
+```
+Mobile App → DO Backend (proxy) → RunPod Serverless (Kokoro-FastAPI worker)
+                                           ↓
+                                   GPU inference (~3 sec)
+                                           ↓
+                                   Return WAV/MP3
+```
+
+### Deployment Steps (Kokoro-FastAPI on RunPod)
+
+1. **Use Kokoro-FastAPI** (`remsky/Kokoro-FastAPI` on GitHub) — prebuilt Dockerized FastAPI wrapper with OpenAI-compatible speech endpoint, streaming, multi-language, voice mixing.
+
+2. **Create Dockerfile** — based on `nvidia/cuda` image with PyTorch:
+   ```dockerfile
+   FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+   # Install Python, clone Kokoro-FastAPI, install deps
+   # Entry: uvicorn or python handler
+   ```
+
+3. **Create RunPod handler** (`handler.py`):
+   ```python
+   import runpod
+   # Load Kokoro model at module level (cached between requests)
+   # handler(event): extract text from event['input'], generate audio, return base64
+   runpod.serverless.start({'handler': handler})
+   ```
+
+4. **Deploy to RunPod**:
+   - Push Docker image to Docker Hub or use GitHub integration
+   - Create Serverless endpoint (Queue type)
+   - Select GPU: 24GB tier (L4/A5000/3090 at $0.69/hr)
+   - Set `workersMin: 0`, `workersMax: 3`, `idleTimeout: 60`
+   - Enable FlashBoot for faster cold starts if using cached models
+
+5. **Backend proxy** (in `backend/src/routes/reader.js`):
+   - Add `kokoro-server` provider option
+   - POST text to RunPod endpoint URL
+   - Stream or return audio to mobile client
+
+### Cold Start Strategy
+- Cold start: ~10-15s (container boot + model load)
+- Warm requests: ~2-5s
+- Option: keep 1 warm worker ($0.69/hr = ~$16/day) if traffic warrants
+- Or: use RunPod's model caching to reduce cold start to ~5s
+
+### Comparison to Other Options
+
+| Option | Speed | Cost | Complexity |
+|---|---|---|---|
+| On-device Kokoro | ~80s/para | $0 | ✅ Done |
+| RunPod Kokoro | ~3s/para | ~$0.0006/para | Medium |
+| Resemble API | ~12s/para | ~2 credits/min | ✅ Done |
+| DO GPU droplet | ~3s/para | ~$2.50/hr always | High |
+| Fly.io GPU | N/A | Deprecated | ❌
 - **Voice Agent API:** https://docs.x.ai/developers/model-capabilities/audio/voice-agent
 - **LiveKit Integration:** https://docs.livekit.io/agents/integrations/xai/
 - **Pricing:** ~$0.06 input + ~$0.18 output per minute (~half of OpenAI)
