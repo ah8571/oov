@@ -680,6 +680,11 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
     Speech.speak(nextChunk, {
       language,
       rate,
+      pitch: 1.0,
+      onStart: () => {
+        callbackFired = true;
+        logReaderTts('speakNextChunk:onStart', { chunkIndex: speechIndexRef.current });
+      },
       onDone: () => {
         callbackFired = true;
         logReaderTts('speakNextChunk:onDone', {
