@@ -1,10 +1,11 @@
 # Kokoro-FastAPI Queue handler for RunPod Serverless
 FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 
-# Install runpod into an isolated environment so the base app venv stays untouched
-RUN uv venv /tmp/runpod-env \
- && uv pip install --python /tmp/runpod-env/bin/python runpod \
- && ln -s /tmp/runpod-env/lib/python3.10/site-packages /tmp/runpod-site-packages
+# Install runpod to isolated dir (venv is read-only during build)
+RUN python3 -m pip install --target=/tmp/runpod-pkgs --no-cache-dir runpod 2>/dev/null \
+ || (python3 -m ensurepip && python3 -m pip install --target=/tmp/runpod-pkgs --no-cache-dir runpod)
+
+ENV PYTHONPATH=/tmp/runpod-pkgs
 
 COPY handler.py /handler.py
 

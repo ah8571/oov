@@ -4,12 +4,6 @@ Receives text → generates speech → returns base64 audio.
 """
 import base64
 import io
-import sys
-
-RUNPOD_SITE_PACKAGES = "/tmp/runpod-site-packages"
-if RUNPOD_SITE_PACKAGES not in sys.path:
-    sys.path.insert(0, RUNPOD_SITE_PACKAGES)
-
 import runpod
 import uvicorn
 import requests
