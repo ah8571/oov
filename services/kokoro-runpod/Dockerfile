@@ -1,9 +1,9 @@
 # Kokoro-FastAPI Queue handler for RunPod Serverless
 FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 
-# Install RunPod SDK — base image manages deps with uv
-RUN uv pip install --system runpod requests
+# Install RunPod SDK — base image has externally-managed Python
+RUN python3 -m pip install --break-system-packages --no-cache-dir runpod requests
 
 COPY handler.py /handler.py
 
-CMD ["python", "-u", "/handler.py"]
+CMD ["python3", "-u", "/handler.py"]
