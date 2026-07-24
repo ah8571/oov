@@ -140,6 +140,36 @@ const textToAudioResemble = async (text, options = {}) => {
   return Buffer.from(response.data.audio_content, 'base64');
 };
 
+const RUNPOD_KOKORO_ENDPOINT = process.env.RUNPOD_KOKORO_ENDPOINT || '';
+const RUNPOD_API_KEY = process.env.RUNPOD_KEY || '';
+
+const textToAudioRunPodKokoro = async (text, options = {}) => {
+  if (!RUNPOD_KOKORO_ENDPOINT || !RUNPOD_API_KEY) {
+    throw new Error('RunPod Kokoro is not configured. Set RUNPOD_KOKORO_ENDPOINT and RUNPOD_KEY.');
+  }
+
+  const voice = options.voice || 'af_heart';
+  const response = await axios.post(
+    `https://api.runpod.ai/v2/${RUNPOD_KOKORO_ENDPOINT}/runsync`,
+    { input: { text, voice } },
+    {
+      headers: {
+        Authorization: `Bearer ${RUNPOD_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 120000
+    }
+  );
+
+  const audioBase64 = response.data?.output?.audio_base64;
+  if (!audioBase64) {
+    const errorMsg = response.data?.output?.error || 'RunPod Kokoro did not return audio.';
+    throw new Error(errorMsg);
+  }
+
+  return Buffer.from(audioBase64, 'base64');
+};
+
 const textToAudioOpenRouter = async (text, options = {}) => {
   if (!isOpenRouterConfigured()) {
     throw new Error('OpenRouter is not configured. Set OPENROUTER_CODING_KEY.');
@@ -183,6 +213,8 @@ export const textToAudio = async (
       audioBuffer = await textToAudioOpenAI(text, options);
     } else if (provider === 'resemble') {
       audioBuffer = await textToAudioResemble(text, options);
+    } else if (provider === 'kokoro-runpod') {
+      audioBuffer = await textToAudioRunPodKokoro(text, options);
     } else if (provider === 'openrouter') {
       audioBuffer = await textToAudioOpenRouter(text, options);
     } else {

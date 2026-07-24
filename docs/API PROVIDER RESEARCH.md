@@ -135,8 +135,9 @@ Alternatives to Elevanlabs
 low cost models
 
 Self-hosted providers
-Faster Whisper Large-v3 / Insanely Fast Whisper (.2 per hour of transcription potentially) - open-source
-StyleTTS 2
+
+podtts (need to find the correct name)
+StyleTTS 2 [for long form content]
 ChatTTS
 XTTS v2 by Coqui
 RunPod hosting 
@@ -165,6 +166,9 @@ qwen/qwen3-asr-flash-2026-02-10 .126 per hour
 nvidia/parakeet-tdt-0.6b-v3 .09 per hour
 deepgram/nova-3 .258 per hour
 mistralai/voxtral-mini-transcribe .18 per hour
+
+Self hosted models
+Faster Whisper Large-v3 / Insanely Fast Whisper 
 
 Groq's Whisper
 Assembly (.0025 per minute)
@@ -328,31 +332,7 @@ Mobile App → DO Backend (proxy) → RunPod Serverless (Kokoro-FastAPI worker)
 - Option: keep 1 warm worker ($0.69/hr = ~$16/day) if traffic warrants
 - Or: use RunPod's model caching to reduce cold start to ~5s
 
-### Comparison to Other Options
 
-| Option | Speed | Cost | Complexity |
-|---|---|---|---|
-| On-device Kokoro | ~80s/para | $0 | ✅ Done |
-| RunPod Kokoro | ~3s/para | ~$0.0006/para | Medium |
-| Resemble API | ~12s/para | ~2 credits/min | ✅ Done |
-| DO GPU droplet | ~3s/para | ~$2.50/hr always | High |
-| Fly.io GPU | N/A | Deprecated | ❌
-- **Voice Agent API:** https://docs.x.ai/developers/model-capabilities/audio/voice-agent
-- **LiveKit Integration:** https://docs.livekit.io/agents/integrations/xai/
-- **Pricing:** ~$0.06 input + ~$0.18 output per minute (~half of OpenAI)
-- **Login/ Credits** https://console.x.ai/home
-- **Model:** `grok-voice-latest` (currently `grok-voice-think-fast-1.0`)
-- **Protocol:** WebSocket (primary), WebRTC via LiveKit
-- **Event compatibility:** OpenAI Realtime API-compatible — same `session.update`, `response.create`, function calling schema
-- **Key differences from OpenAI:**
-  - `server_vad` built-in (no client-side VAD needed)
-  - `reasoning.effort` toggle (high/none) for complex queries
-  - `resumption` for reconnecting sessions
-  - `replace` for pronunciation fixes
-  - `force_message` for scripted TTS utterances
-  - Event name: `input_audio_transcription.updated` (cumulative) vs OpenAI's `delta`
-- **Languages:** 20+ with native accents, including Spanish (es-MX, es-ES)
-- **Our integration effort:** Medium — event protocol identical, but we need a WebSocket transport layer alongside our current WebRTC implementation. Feature-flag behind settings.
 
 ### Gemini Live (Google) — WebSocket Voice + LiveKit Plugin
 

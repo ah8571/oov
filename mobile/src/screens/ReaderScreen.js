@@ -51,7 +51,7 @@ const READER_AUDIO_VOICE_OPTIONS = [
   {
     id: 'kokoro',
     label: 'Free voice',
-    provider: 'kokoro-on-device'
+    provider: 'kokoro-runpod'
   },
   {
     id: 'basic',

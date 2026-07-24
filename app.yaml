@@ -60,6 +60,12 @@ services:
         value: wss://api.oov.digital/api/ws/media-stream
       - key: API_URL
         value: https://api.oov.digital
+      - key: RUNPOD_KOKORO_ENDPOINT
+        scope: RUN_AND_BUILD_TIME
+        value: ${RUNPOD_KOKORO_ENDPOINT}
+      - key: RUNPOD_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: ${RUNPOD_KEY}
     routes:
       - path: /
 
