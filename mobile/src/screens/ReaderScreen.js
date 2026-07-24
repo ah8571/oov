@@ -723,8 +723,15 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
       speed: speechRate,
       phonemize: true,
       stopAutomatically: true,
-      onNext: (pcmBuffer) => {
-        pcmChunks.push(new Uint8Array(pcmBuffer));
+      onNext: (float32Audio) => {
+        // Convert Float32Array PCM (-1.0..1.0) → Int16 PCM bytes for WAV
+        const float32 = float32Audio;
+        const int16 = new Int16Array(float32.length);
+        for (let i = 0; i < float32.length; i++) {
+          const s = Math.max(-1, Math.min(1, float32[i]));
+          int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        pcmChunks.push(new Uint8Array(int16.buffer));
       }
     });
 
