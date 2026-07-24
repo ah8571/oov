@@ -77,20 +77,20 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       borderRadius: 8
     },
     btnIcon: { fontSize: 16 },
-    btnText: { color: mutedColor, fontSize: 13, fontWeight: '600', marginLeft: 4 },
-    divider: { width: 1, height: 24, backgroundColor: borderColor, marginHorizontal: 6 },
-    readerLabel: { color: mutedColor, fontSize: 11, fontWeight: '500', marginRight: 6 },
+    btnText: { color: textColor, fontSize: 13, fontWeight: '600', marginLeft: 4 },
+    divider: { width: 1, height: 24, backgroundColor: borderColor, marginHorizontal: 8 },
+    readerLabel: { color: mutedColor, fontSize: 11, fontWeight: '500', marginRight: 8 },
     playBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: 20,
+      paddingHorizontal: 18,
+      paddingVertical: 9,
+      borderRadius: 22,
       backgroundColor: accentColor + '22'
     },
     playBtnActive: { backgroundColor: accentColor },
-    playBtnIcon: { fontSize: 12, marginRight: 4 },
-    playBtnText: { color: accentColor, fontSize: 13, fontWeight: '700' },
+    playBtnIcon: { fontSize: 13, marginRight: 5 },
+    playBtnText: { color: accentColor, fontSize: 14, fontWeight: '700' },
     voiceChip: {
       marginLeft: 'auto',
       paddingHorizontal: 10,
