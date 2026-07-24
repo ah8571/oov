@@ -2,6 +2,12 @@
 RunPod Serverless Queue handler for Kokoro-FastAPI.
 Receives text → generates speech → returns base64 audio.
 """
+import subprocess
+import sys
+
+# Install runpod SDK at startup (base image's venv has permission issues at build time)
+subprocess.run(["uv", "pip", "install", "runpod"], check=True)
+
 import base64
 import io
 import runpod
