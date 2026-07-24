@@ -1,7 +1,9 @@
-# Thin wrapper for Kokoro-FastAPI — adds /ping health check for RunPod load balancers
+# Kokoro-FastAPI Queue handler for RunPod Serverless
 FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 
-COPY runpod_start.py /app/runpod_start.py
+# Install RunPod SDK for queue handler
+RUN pip install --no-cache-dir runpod requests
 
-# Override entrypoint — RunPod sets PORT, we add /ping route then start the real server
-CMD ["python", "/app/runpod_start.py"]
+COPY handler.py /handler.py
+
+CMD ["python", "-u", "/handler.py"]
