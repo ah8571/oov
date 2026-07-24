@@ -10,9 +10,11 @@ import { importReaderDocument } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
-export const ReaderBar = ({ text, title, selectedVoice, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions } = useReaderTts();  const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
-  const [showVoicePicker, setShowVoicePicker] = useState(false);  const [showImportOptions, setShowImportOptions] = useState(false);
+export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
+  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions } = useReaderTts();
+  const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [showImportOptions, setShowImportOptions] = useState(false);
 
   const { colors } = useAppTheme();
   const barBg = colors.cardBackground || '#1a1a2e';
