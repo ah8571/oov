@@ -3,27 +3,23 @@
  * Import (URL/PDF/Photo) on the left, Read aloud (voice picker) on the right.
  */
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useReaderTts, READER_VOICE_OPTIONS } from '../hooks/useReaderTts';
 import { importReaderDocument } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
-export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions } = useReaderTts();
-  const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
-  const [showVoicePicker, setShowVoicePicker] = useState(false);
+export const ReaderBar = ({ text, title, selectedVoice, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
+  const { isSpeaking, isPreparing, readAloud, stopReading } = useReaderTts();
   const [showImportOptions, setShowImportOptions] = useState(false);
 
   const { colors } = useAppTheme();
   const barBg = colors.cardBackground || '#1a1a2e';
   const borderColor = colors.borderColor || '#333';
   const accentColor = colors.primary || '#6c63ff';
-  const textColor = colors.text || '#fff';
   const mutedColor = colors.mutedText || '#999';
-
-  const currentVoice = voiceOptions.find(v => v.id === selectedVoice);
+  const textColor = colors.text || '#fff';
 
   // ── Import ──────────────────────────────────────────────────
   const handleImportFile = useCallback(async () => {
@@ -151,36 +147,8 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
         </Text>
       </TouchableOpacity>
 
-      {/* Voice chip */}
-      <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>
-        <Text style={s.voiceChipText}>{currentVoice?.label || 'Voice'}</Text>
-      </TouchableOpacity>
-
-      {/* ── Voice picker modal ──────────────────────────────── */}
-      <Modal visible={showVoicePicker} transparent animationType="slide" onRequestClose={() => setShowVoicePicker(false)}>
-        <TouchableOpacity style={s.backdrop} onPress={() => setShowVoicePicker(false)} activeOpacity={1}>
-          <View style={s.modalSheet}>
-            <Text style={s.modalTitle}>Choose voice</Text>
-            <FlatList
-              data={voiceOptions}
-              keyExtractor={i => i.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[s.voiceOption, item.id === selectedVoice && { backgroundColor: accentColor + '22' }]}
-                  onPress={() => { setSelectedVoice(item.id); setShowVoicePicker(false); }}
-                >
-                  <Text style={s.voiceLabel}>{item.label}</Text>
-                  <Text style={s.voiceMeta}>
-                    {item.provider === 'kokoro-runpod' ? 'Free · GPU fast' :
-                     item.provider === 'resemble' ? 'Premium · Natural' :
-                     item.provider === 'device' ? 'On-device · Basic' : ''}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Voice chip moved to top right of CreateNoteScreen */}
+      <View style={{ flex: 1 }} />
 
       {/* ── Import options modal ─────────────────────────────── */}
       <Modal visible={showImportOptions} transparent animationType="slide" onRequestClose={() => setShowImportOptions(false)}>
