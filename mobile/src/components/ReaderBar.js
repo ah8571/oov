@@ -11,8 +11,8 @@ import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
 export const ReaderBar = ({ text, title, selectedVoice, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading } = useReaderTts();
-  const [showImportOptions, setShowImportOptions] = useState(false);
+  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions } = useReaderTts();  const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
+  const [showVoicePicker, setShowVoicePicker] = useState(false);  const [showImportOptions, setShowImportOptions] = useState(false);
 
   const { colors } = useAppTheme();
   const barBg = colors.cardBackground || '#1a1a2e';
@@ -20,6 +20,8 @@ export const ReaderBar = ({ text, title, selectedVoice, onTextChange, onTitleCha
   const accentColor = colors.primary || '#6c63ff';
   const mutedColor = colors.mutedText || '#999';
   const textColor = colors.text || '#fff';
+
+  const currentVoice = voiceOptions.find(v => v.id === selectedVoice) || voiceOptions[0];
 
   // ── Import ──────────────────────────────────────────────────
   const handleImportFile = useCallback(async () => {
