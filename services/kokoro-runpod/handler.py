@@ -2,6 +2,8 @@
 RunPod Serverless Queue handler for Kokoro-FastAPI.
 Receives text → generates speech → returns base64 audio.
 """
+print("BOOT: handler.py starting", flush=True)
+
 import traceback
 import sys
 import os
