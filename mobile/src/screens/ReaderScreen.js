@@ -659,10 +659,13 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
       rate
     });
 
+    let callbackFired = false;
+
     Speech.speak(nextChunk, {
       language,
       rate,
       onDone: () => {
+        callbackFired = true;
         logReaderTts('speakNextChunk:onDone', {
           chunkIndex: speechIndexRef.current
         });
@@ -677,12 +680,14 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
         speakNextChunk(language, rate);
       },
       onStopped: () => {
+        callbackFired = true;
         logReaderTts('speakNextChunk:onStopped', {
           chunkIndex: speechIndexRef.current
         });
         setIsSpeaking(false);
       },
       onError: (error) => {
+        callbackFired = true;
         logReaderTts('speakNextChunk:onError', {
           chunkIndex: speechIndexRef.current,
           error: error ? String(error) : null
@@ -691,6 +696,38 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
         Alert.alert('Reader error', 'The device could not read this text aloud.');
       }
     });
+
+    // Android TTS callbacks (onDone/onError) are unreliable on some devices.
+    // Poll isSpeakingAsync as a fallback so speech doesn't hang forever.
+    const pollUntilDone = async () => {
+      let polls = 0;
+      while (!callbackFired && !speechCancelledRef.current && polls < 30) {
+        await new Promise((r) => setTimeout(r, 500));
+        polls += 1;
+        try {
+          const speaking = await Speech.isSpeakingAsync();
+          if (!speaking && !callbackFired) {
+            logReaderTts('speakNextChunk:pollDetectedDone', {
+              chunkIndex: speechIndexRef.current
+            });
+            speechIndexRef.current += 1;
+
+            if (speechIndexRef.current >= speechChunksRef.current.length) {
+              logReaderTts('speakNextChunk:finishedAllChunks');
+              setIsSpeaking(false);
+              return;
+            }
+
+            speakNextChunk(language, rate);
+            return;
+          }
+        } catch {
+          // isSpeakingAsync may throw if no utterance is active — ignore.
+        }
+      }
+    };
+
+    pollUntilDone().catch(() => {});
   }, []);
 
   // On-device Kokoro TTS — model downloads once (~300 MB) on first use, then works offline with zero cost.
