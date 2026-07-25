@@ -94,9 +94,6 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
               console.log('[Stripe] Skipping credit grant for', userId, '(same tier, within period)');
             }
           }
-              console.log('[Stripe] Skipping credit grant for', userId, '(same tier, within period)');
-            }
-          }
 
           // Grant bonus credits if a promo code was used at checkout
           const couponCode = session?.discounts?.[0]?.coupon?.name
