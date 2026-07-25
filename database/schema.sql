@@ -74,6 +74,74 @@ ALTER TABLE users
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS auto_recharge_amount_seconds INTEGER NOT NULL DEFAULT 300;
 
+-- Stripe billing (consolidated from user_billing_entitlements)
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS is_pro_active BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT,
+  ADD COLUMN IF NOT EXISTS stripe_tier TEXT,
+  ADD COLUMN IF NOT EXISTS stripe_status TEXT DEFAULT 'inactive',
+  ADD COLUMN IF NOT EXISTS stripe_updated_at TIMESTAMPTZ;
+
+-- Promo/affiliate tracking (consolidated from promo_redemptions)
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS last_promo_code TEXT,
+  ADD COLUMN IF NOT EXISTS last_promo_credits INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS last_promo_redeemed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS signup_promo_code TEXT,
+  ADD COLUMN IF NOT EXISTS signup_promo_redeemed_at TIMESTAMPTZ;
+
+-- Commission ledger
+CREATE TABLE IF NOT EXISTS commission_ledger (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  promo_code TEXT NOT NULL,
+  user_id UUID NOT NULL,
+  stripe_invoice_id TEXT,
+  stripe_subscription_id TEXT,
+  invoice_amount_cents INTEGER NOT NULL,
+  commission_rate NUMERIC(5,4) NOT NULL,
+  commission_cents INTEGER NOT NULL,
+  period_start TIMESTAMPTZ,
+  period_end TIMESTAMPTZ,
+  status TEXT DEFAULT 'pending',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Monthly commission report view
+CREATE OR REPLACE VIEW monthly_commission_report
+WITH (security_invoker = true) AS
+SELECT
+  cl.promo_code,
+  pc.influencer_label,
+  date_trunc('month', cl.created_at)::DATE AS month,
+  COUNT(*) AS renewal_count,
+  SUM(cl.invoice_amount_cents) AS total_invoice_cents,
+  AVG(cl.commission_rate) AS avg_commission_rate,
+  SUM(cl.commission_cents) AS total_owed_cents,
+  COUNT(*) FILTER (WHERE cl.status = 'paid') AS paid_count,
+  SUM(cl.commission_cents) FILTER (WHERE cl.status = 'pending') AS pending_cents,
+  SUM(cl.commission_cents) FILTER (WHERE cl.status = 'paid') AS paid_cents
+FROM commission_ledger cl
+LEFT JOIN promo_codes pc ON pc.code = cl.promo_code
+GROUP BY cl.promo_code, pc.influencer_label, date_trunc('month', cl.created_at)
+ORDER BY month DESC, total_owed_cents DESC;
+
+-- RLS: only @plantingmoon.com admins can read commission data
+ALTER TABLE commission_ledger ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins can read commission ledger" ON commission_ledger;
+CREATE POLICY "Admins can read commission ledger"
+  ON commission_ledger
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid()
+        AND users.email LIKE '%@plantingmoon.com'
+    )
+  );
+
 CREATE OR REPLACE FUNCTION public.upsert_user_profile_from_auth(
   auth_user_id UUID,
   auth_email TEXT,

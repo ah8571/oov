@@ -89,7 +89,6 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    // react-native-executorch bundles native libs that duplicate RN's.
     // Use pickFirsts with a catch-all so Gradle picks one copy of each .so.
     packaging {
         jniLibs {

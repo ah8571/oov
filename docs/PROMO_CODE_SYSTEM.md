@@ -1,3 +1,7 @@
+# API Promo code addition
+
+Affiliate applies → POST /promo_codes (Stripe API) → code appears on checkout immediately
+
 # Promo Code System Plan
 
 This document outlines the recommended promo code architecture for Emmaline across iOS and Android.

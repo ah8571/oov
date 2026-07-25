@@ -3,8 +3,6 @@ import { StyleSheet, Alert, View, Text, TouchableOpacity, Platform } from 'react
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
-import { initExecutorch } from 'react-native-executorch';
-import { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';
 import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
 import OnboardingScreen from './components/OnboardingScreen';
@@ -1104,11 +1102,6 @@ const AppContent = () => {
     </AppThemeProvider>
   );
 };
-
-// Initialize on-device AI runtime (Kokoro TTS, etc.)
-initExecutorch({
-  resourceFetcher: ExpoResourceFetcher,
-});
 
 function App() {
   return (

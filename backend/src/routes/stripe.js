@@ -125,6 +125,75 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
         }
         break;
       }
+
+      case 'invoice.paid': {
+        // Affiliate commission tracking — fires on every renewal payment.
+        // Resolve userId from the subscription (invoice.paid doesn't carry metadata).
+        const invoiceSubId = session?.subscription;
+        const amountPaid = session?.amount_paid || 0; // cents
+        const periodStart = session?.period_start ? new Date(session.period_start * 1000).toISOString() : null;
+        const periodEnd = session?.period_end ? new Date(session.period_end * 1000).toISOString() : null;
+
+        console.log('[Stripe] invoice.paid — sub:', invoiceSubId, 'amount:', amountPaid, 'cents');
+
+        if (!invoiceSubId || amountPaid <= 0) {
+          console.log('[Stripe] invoice.paid — skipping (no subscription or zero amount)');
+          break;
+        }
+
+        // Find the user by their Stripe subscription ID
+        const { data: subUser } = await supabase
+          .from('users')
+          .select('id, signup_promo_code')
+          .eq('stripe_subscription_id', invoiceSubId)
+          .maybeSingle();
+
+        const signupCode = subUser?.signup_promo_code;
+        if (!signupCode) {
+          console.log('[Stripe] invoice.paid — no signup promo code for sub:', invoiceSubId);
+          break;
+        }
+
+        // Look up commission rate from promo_codes
+        const { data: promoRecord } = await supabase
+          .from('promo_codes')
+          .select('commission_rate')
+          .eq('code', signupCode)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        const rate = promoRecord?.commission_rate || 0;
+        if (rate <= 0) {
+          console.log('[Stripe] invoice.paid — promo', signupCode, 'has no commission rate');
+          break;
+        }
+
+        const commissionCents = Math.round(amountPaid * rate);
+
+        // Insert into ledger
+        const { error: ledgerError } = await supabase
+          .from('commission_ledger')
+          .insert({
+            promo_code: signupCode,
+            user_id: subUser.id,
+            stripe_invoice_id: session.id,
+            stripe_subscription_id: invoiceSubId,
+            invoice_amount_cents: amountPaid,
+            commission_rate: rate,
+            commission_cents: commissionCents,
+            period_start: periodStart,
+            period_end: periodEnd,
+            status: 'pending'
+          });
+
+        if (ledgerError) {
+          console.error('[Stripe] Commission ledger insert error:', ledgerError.message);
+        } else {
+          console.log('[Stripe] Commission recorded:', commissionCents, 'cents for', signupCode,
+            '(rate:', rate, 'invoice:', session.id, ')');
+        }
+        break;
+      }
     }
 
     return res.json({ received: true });

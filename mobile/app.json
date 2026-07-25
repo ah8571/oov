@@ -25,7 +25,7 @@
     "splash": {
       "image": "./assets/new oov app icon (v3).png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FFFFFF"
     },
     "android": {
       "adaptiveIcon": {
@@ -46,7 +46,7 @@
     },
     "plugins": [
       "expo-secure-store",
-      ["expo-build-properties", { "ios": { "deploymentTarget": "18.0" } }]
+      ["expo-build-properties", { "ios": { "deploymentTarget": "16.0" } }]
     ],
     "extra": {
       "eas": {

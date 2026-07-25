@@ -1,7 +1,7 @@
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import { Buffer } from 'buffer';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/src/legacy';
 import InCallManager from 'react-native-incall-manager';
 import { startPcmCapture } from './pcmCapture.js';
 import { createGeminiVoiceSession } from './api.js';

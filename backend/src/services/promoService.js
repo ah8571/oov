@@ -32,7 +32,9 @@ export const validatePromoCode = async (code) => {
       id: data.id,
       code: data.code,
       credits: data.credits,
-      label: data.label
+      label: data.label,
+      commissionRate: data.commission_rate || 0,
+      influencerLabel: data.influencer_label || null
     }
   };
 };
@@ -49,7 +51,7 @@ export const redeemPromoCode = async (userId, code) => {
   // Check if user already redeemed this code (stored on users table)
   const { data: userRecord } = await supabase
     .from('users')
-    .select('last_promo_code')
+    .select('last_promo_code, signup_promo_code')
     .eq('id', userId)
     .maybeSingle();
 
@@ -57,15 +59,24 @@ export const redeemPromoCode = async (userId, code) => {
     return { success: false, error: 'You have already redeemed this promo code.' };
   }
 
-  // Record redemption on users table
+  // Record redemption on users table.
+  // signup_promo_code is first-touch — only set if currently null.
+  const now = new Date().toISOString();
+  const userUpdate = {
+    last_promo_code: promo.code,
+    last_promo_credits: promo.credits,
+    last_promo_redeemed_at: now,
+    updated_at: now
+  };
+
+  if (!userRecord?.signup_promo_code) {
+    userUpdate.signup_promo_code = promo.code;
+    userUpdate.signup_promo_redeemed_at = now;
+  }
+
   const { error: redeemError } = await supabase
     .from('users')
-    .update({
-      last_promo_code: promo.code,
-      last_promo_credits: promo.credits,
-      last_promo_redeemed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    .update(userUpdate)
     .eq('id', userId);
 
   if (redeemError) {

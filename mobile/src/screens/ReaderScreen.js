@@ -13,12 +13,11 @@ import {
   View
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/src/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Speech from 'expo-speech';
 import { Audio } from 'expo-av';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTextToSpeech, models } from 'react-native-executorch';
 import { Buffer } from 'buffer';
 import {
   deleteSavedReaderAudio,
@@ -361,9 +360,6 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
   useEffect(() => {
     preparingReadAloudRef.current = isPreparingReadAloudFallback;
-    if (!isPreparingReadAloudFallback) {
-      setKokoroEta(null);
-    }
   }, [isPreparingReadAloudFallback]);
 
   const refreshSavedAudioEntries = useCallback(async ({ hydrateLocal = false } = {}) => {
@@ -749,167 +745,6 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
     pollUntilDone().catch(() => {});
   }, []);
 
-  // On-device Kokoro TTS — model downloads once (~300 MB) on first use, then works offline with zero cost.
-  const [kokoroLoadRequested, setKokoroLoadRequested] = useState(false);
-  const [kokoroEta, setKokoroEta] = useState(null); // estimated time string for on-device synthesis
-  const kokoroTts = useTextToSpeech(
-    models.text_to_speech.kokoro.en_us.heart(),
-    { preventLoad: !kokoroLoadRequested }
-  );
-
-  // Keep refs in sync so the streaming callback reads fresh values
-  const kokoroTtsRef = useRef(kokoroTts);
-  kokoroTtsRef.current = kokoroTts;
-
-  const handleKokoroOnDevice = useCallback(async (text, title, speechRate) => {
-    const tts = kokoroTtsRef.current;
-
-    if (tts.error) {
-      throw new Error(tts.error.message || 'Kokoro model failed to load');
-    }
-
-    if (!tts.isReady) {
-      throw new Error('Voice model is still downloading. Please wait and try again.');
-    }
-
-    logReaderTts('kokoroOnDevice:streamStart', { textLength: text.length });
-
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false
-    });
-    await ensureReaderAudioDirectory();
-
-    const fileStem = sanitizeAudioFileName((title || 'reader-audio').replace(/\.mp3$|\.wav$/i, ''));
-
-    // Collect PCM chunks as the model streams them. Play the first one immediately.
-    const allPcmChunks = [];
-    const wavQueue = [];
-    let streamDone = false;
-
-    // Don't fire up too early — buffer a few chunks so playback is continuous.
-    const MIN_BUFFERED_CHUNKS = 3;
-
-    // Kick off streaming synthesis in the background
-    const streamPromise = tts.stream({
-      text,
-      speed: speechRate,
-      phonemize: true,
-      stopAutomatically: true,
-      onNext: (float32Audio) => {
-        // Convert Float32Array PCM → Int16 → WAV bytes
-        const int16 = new Int16Array(float32Audio.length);
-        for (let i = 0; i < float32Audio.length; i++) {
-          const s = Math.max(-1, Math.min(1, float32Audio[i]));
-          int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-        }
-        const pcmBytes = new Uint8Array(int16.buffer);
-        allPcmChunks.push(pcmBytes);
-
-        // Build a standalone WAV for this chunk
-        const wavHeader = buildWavHeader(pcmBytes.length);
-        const wavBuffer = new Uint8Array(wavHeader.length + pcmBytes.length);
-        wavBuffer.set(wavHeader, 0);
-        wavBuffer.set(pcmBytes, wavHeader.length);
-        const uri = `${READER_AUDIO_DIRECTORY}/kokoro-${Date.now()}-${wavQueue.length}-${fileStem}.wav`;
-        FileSystem.writeAsStringAsync(uri, Buffer.from(wavBuffer).toString('base64'), {
-          encoding: FileSystem.EncodingType.Base64
-        }).then(() => {
-          wavQueue.push(uri);
-        }).catch(() => {});
-      }
-    });
-
-    // Wait until we have enough buffered chunks or the stream finishes.
-    while (wavQueue.length < MIN_BUFFERED_CHUNKS && !streamDone) {
-      // Check if stream has completed in the background
-      const settled = await Promise.race([
-        streamPromise.then(() => true),
-        new Promise((r) => setTimeout(r, 200))
-      ]);
-      if (settled) {
-        streamDone = true;
-        try { await streamPromise; } catch { /* errors surface via onNext */ }
-      }
-    }
-
-    logReaderTts('kokoroOnDevice:firstChunkReady', { queueDepth: wavQueue.length, streamDone });
-
-    let chunkIndex = 0;
-    // Playback loop — drains the queue while the model keeps producing chunks
-    while (!speechCancelledRef.current) {
-      if (wavQueue.length === 0) {
-        if (streamDone) break;
-        // Wait for more chunks
-        await new Promise((r) => setTimeout(r, 150));
-        continue;
-      }
-
-      const uri = wavQueue.shift();
-      await new Promise((resolve) => {
-        Audio.Sound.createAsync(
-          { uri },
-          { shouldPlay: true },
-          (status) => {
-            if (status.didJustFinish) resolve();
-          }
-        ).then(({ sound }) => {
-          readAloudFallbackSoundRef.current = sound;
-          logReaderTts('kokoroOnDevice:playing', { chunkIndex, queueRemaining: wavQueue.length });
-        });
-      });
-
-      FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
-      chunkIndex += 1;
-    }
-
-    // Ensure stream has finished
-    try { await streamPromise; } catch { /* errors surfaced via onNext */ }
-    streamDone = true;
-
-    setIsSpeaking(false);
-
-    // Auto-save the full concatenated audio for future listening.
-    if (!speechCancelledRef.current && allPcmChunks.length > 0) {
-      try {
-        const totalPcm = allPcmChunks.reduce((sum, c) => sum + c.length, 0);
-        const fullPcm = new Uint8Array(totalPcm);
-        let off = 0;
-        for (const c of allPcmChunks) {
-          fullPcm.set(c, off);
-          off += c.length;
-        }
-        const fullWavHeader = buildWavHeader(totalPcm);
-        const fullWav = Buffer.concat([Buffer.from(fullWavHeader), Buffer.from(fullPcm)]);
-        const fullBase64 = fullWav.toString('base64');
-
-        saveReaderAudio({
-          text,
-          title,
-          provider: 'device',
-          voiceProfile: 'kokoro-on-device',
-          audioBase64: fullBase64
-        }).then((result) => {
-          if (result.success) {
-            logReaderTts('kokoroOnDevice:saved', { savedAudioId: result.savedAudioId });
-            refreshSavedAudioEntries().catch(() => {});
-          } else {
-            logReaderTts('kokoroOnDevice:saveFailed', { error: result.error });
-          }
-        }).catch((e) => {
-          logReaderTts('kokoroOnDevice:saveFailed', { error: e?.message });
-        });
-      } catch (e) {
-        logReaderTts('kokoroOnDevice:saveFailed', { error: e?.message });
-      }
-    }
-
-    // Clean up any leftover WAV files
-    for (const uri of wavQueue) {
-      FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
-    }
-  }, [refreshSavedAudioEntries]);
-
   const handleReadAloud = useCallback(async () => {
     const normalizedText = String(readerText || '').trim();
 
@@ -927,7 +762,6 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
 
     const voiceOption = READER_AUDIO_VOICE_OPTIONS.find((o) => o.id === selectedReaderVoiceId);
     const isBasicVoice = voiceOption?.provider === 'device';
-    const isKokoroOnDevice = voiceOption?.provider === 'kokoro-on-device';
 
     const [languagePreference, savedSpeechRate] = await Promise.all([
       getCallLanguagePreference(),
@@ -959,61 +793,6 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
       return;
     }
 
-    // On-device Kokoro — no backend call, no network, zero cost.
-    if (isKokoroOnDevice) {
-      logReaderTts('handleReadAloud:kokoroOnDevice', {
-        speechRate,
-        textLength: normalizedText.length,
-        modelReady: kokoroTtsRef.current.isReady
-      });
-
-      // Trigger model download on first use
-      if (!kokoroLoadRequested) {
-        setKokoroLoadRequested(true);
-      }
-
-      // If model isn't ready yet, show progress and wait for it
-      if (!kokoroTtsRef.current.isReady) {
-        const estimatedSecs = Math.ceil(normalizedText.length * 0.25);
-        const mins = Math.floor(estimatedSecs / 60);
-        const secs = estimatedSecs % 60;
-        setKokoroEta(mins > 0 ? `~${mins}m ${secs}s` : `~${secs}s`);
-        setIsPreparingReadAloudFallback(true);
-        // Re-check when the model finishes loading via a simple timeout retry
-        const waitForModel = async () => {
-          const tts = kokoroTtsRef.current;
-          if (tts.isReady) {
-            setIsPreparingReadAloudFallback(false);
-            speechCancelledRef.current = false;
-            setIsSpeaking(true);
-            try {
-              await handleKokoroOnDevice(normalizedText, documentTitle, speechRate);
-            } catch (error) {
-              logReaderTts('handleReadAloud:kokoroFailed', { error: error?.message || String(error) });
-              setIsSpeaking(false);
-              Alert.alert('Reader error', error?.message || 'Unable to use on-device voice. Try again.');
-            }
-          } else if (tts.error) {
-            setIsPreparingReadAloudFallback(false);
-            Alert.alert('Reader error', tts.error.message || 'Voice model failed to load.');
-          } else {
-            setTimeout(waitForModel, 1000);
-          }
-        };
-        waitForModel();
-        return;
-      }
-
-      speechCancelledRef.current = false;
-      setIsSpeaking(true);
-      handleKokoroOnDevice(normalizedText, documentTitle, speechRate).catch((error) => {
-        logReaderTts('handleReadAloud:kokoroFailed', { error: error?.message || String(error) });
-        setIsSpeaking(false);
-        Alert.alert('Reader error', error?.message || 'Unable to use on-device voice. Try again.');
-      });
-      return;
-    }
-
     const fallbackConfig = {
       text: normalizedText,
       title: documentTitle,
@@ -1039,7 +818,7 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
       setIsSpeaking(false);
       Alert.alert('Reader error', error?.message || 'Unable to play the selected voice right now.');
     });
-  }, [documentTitle, handleKokoroOnDevice, kokoroLoadRequested, playReadAloudFallbackAudio, readerText, selectedReaderVoiceId, stopReading]);
+  }, [documentTitle, playReadAloudFallbackAudio, readerText, selectedReaderVoiceId, stopReading]);
 
   const handleImportDocument = async () => {
     try {
@@ -1548,9 +1327,7 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
               activeOpacity={0.85}
             >
               <Text style={[styles.primaryButtonText, { color: primaryButtonTextColor }]}>
-                {isPreparingReadAloudFallback && kokoroEta
-                  ? `Preparing (${kokoroEta})...`
-                  : isPreparingReadAloudFallback
+                {isPreparingReadAloudFallback
                     ? 'Preparing audio...'
                     : isSpeaking
                       ? 'Reading...'
@@ -1755,9 +1532,7 @@ const ReaderScreen = ({ onAppHeaderScroll }) => {
           ) : null}
 
           <Text style={[styles.helpText, { color: colors.mutedText }]}>
-            {isPreparingReadAloudFallback && kokoroEta
-              ? `Free voice processing — estimated ${kokoroEta}. Keep the app open.`
-              : isPreparingReadAloudFallback
+            {isPreparingReadAloudFallback
                 ? 'Preparing the selected voice audio. Keep the app open for a few seconds.'
                 : 'Read aloud now uses the selected voice. Save audio below to keep an MP3 on this screen, then download it whenever you want.'}
           </Text>

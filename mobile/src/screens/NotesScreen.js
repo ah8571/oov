@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { deleteCall, deleteNote, getCalls, getNotes, getTopics, getSavedReaderAudio, getSavedReaderAudioById } from '../services/api.js';
 import { loadLocalAudioRecordings, persistLocalAudioRecordings } from '../utils/localAudioStorage.js';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/src/legacy';
 import NoteCard from '../components/NoteCard';
 import RecordingCard from '../components/RecordingCard';
 import { useAppTheme } from '../theme/appTheme.js';
