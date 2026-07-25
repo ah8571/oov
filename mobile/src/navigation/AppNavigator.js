@@ -128,7 +128,7 @@ const AppHome = ({ onLogout }) => {
   const { colors, isDarkMode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, 8);
-  const floatingButtonBottom = 16;
+  const floatingButtonBottom = Math.max(insets.bottom + 72, 84);
   const floatingButtonSize = designTokens.chrome.menuButtonSize;
   const contentTopInset = topInset + 6;
   const controlBackgroundColor = isDarkMode ? '#000000' : '#ffffff';

@@ -597,6 +597,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const titleFontSize = Math.round(36 * noteTextScale);
   const titleLineHeight = Math.round(titleFontSize * 1.15);
   const safeBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? BOTTOM_SAFE_ZONE : 12);
+  const readerBarBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 10 : 12);
   const effectiveKeyboardHeight = keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0;
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
     ? Math.max(effectiveKeyboardHeight - safeBottomInset, 0)
@@ -820,7 +821,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       title={title}
       onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
       onTitleChange={setTitle}
-      safeBottomInset={safeBottomInset}
+      safeBottomInset={readerBarBottomInset}
     />
   </>);
 };

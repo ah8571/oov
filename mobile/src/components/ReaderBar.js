@@ -93,7 +93,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       flexDirection: 'row',
       alignItems: 'center',
       minHeight: 56 + Math.max(safeBottomInset, 0),
-      paddingTop: 8,
+      paddingTop: 4,
       paddingBottom: safeBottomInset,
       paddingHorizontal: 12,
       backgroundColor: barBg,
