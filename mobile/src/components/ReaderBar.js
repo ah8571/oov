@@ -224,7 +224,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             />
           )}
           <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-            {isPreparing ? (timeEstimate ? `Stop · ~${timeEstimate}` : 'Stop') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
+            {isPreparing ? (timeEstimate ? `Preparing ~${timeEstimate}` : 'Preparing') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
           </Text>
         </TouchableOpacity>
 

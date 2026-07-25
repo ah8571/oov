@@ -108,12 +108,6 @@ const NotesStack = ({ onAppHeaderScroll, notesResetToken, stackKey }) => {
       >
         {(screenProps) => <CallDetailScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} />}
       </Stack.Screen>
-      <Stack.Screen
-        name="Reader"
-        options={{ headerShown: false }}
-      >
-        {(screenProps) => <ReaderScreen {...screenProps} onAppHeaderScroll={onAppHeaderScroll} />}
-      </Stack.Screen>
     </Stack.Navigator>
   );
 };
@@ -256,13 +250,6 @@ const AppHome = ({ onLogout }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => openScreen('reader')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.menuItemText, { color: colors.text }]}>Reader</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
               onPress={() => openScreen('upgrade')}
               activeOpacity={0.8}
             >
@@ -304,9 +291,7 @@ const AppHome = ({ onLogout }) => {
       >
         {activeScreen === 'notes'
           ? <NotesStack stackKey={`notes-${notesStackVersion}`} onAppHeaderScroll={handleAppHeaderScroll} notesResetToken={notesResetToken} />
-          : activeScreen === 'reader'
-              ? <ReaderScreen onAppHeaderScroll={handleAppHeaderScroll} />
-              : activeScreen === 'support'
+          : activeScreen === 'support'
                 ? <SupportScreen />
                 : activeScreen === 'privacy'
                   ? <LegalDocumentScreen documentKey="privacyPolicy" />
