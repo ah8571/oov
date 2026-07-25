@@ -517,8 +517,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       setKeyboardHeight(event?.endCoordinates?.height || Keyboard.metrics?.()?.height || 0);
     });
     const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      pendingEditorFocusRef.current = false;
       setKeyboardVisible(false);
       setKeyboardHeight(0);
+
+      if (Platform.OS === 'android') {
+        setEditorFocused(false);
+      }
     });
 
     return () => {
@@ -676,6 +681,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           placeholderTextColor={colors.mutedText}
           value={title}
           onChangeText={setTitle}
+          onFocus={() => {
+            pendingEditorFocusRef.current = false;
+            setEditorFocused(false);
+          }}
           multiline
           scrollEnabled={false}
           blurOnSubmit={false}
