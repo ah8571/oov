@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { deleteCall, deleteNote, getCalls, getNotes, getTopics } from '../services/api.js';
-import { loadLocalAudioRecordings } from '../utils/localAudioStorage.js';
+import { deleteCall, deleteNote, getCalls, getNotes, getTopics, getSavedReaderAudio, getSavedReaderAudioById } from '../services/api.js';
+import { loadLocalAudioRecordings, persistLocalAudioRecordings } from '../utils/localAudioStorage.js';
+import * as FileSystem from 'expo-file-system/legacy';
 import NoteCard from '../components/NoteCard';
 import RecordingCard from '../components/RecordingCard';
 import { useAppTheme } from '../theme/appTheme.js';
@@ -286,7 +287,52 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   const loadRecordings = useCallback(async (options = {}) => {
     if (!options.silent) setRecordingsLoading(true);
     try {
-      const entries = await loadLocalAudioRecordings();
+      let entries = await loadLocalAudioRecordings();
+
+      // Sync with backend — recordings generated via ReaderBar are saved
+      // server-side and need to be downloaded to appear in the dashboard.
+      try {
+        const response = await getSavedReaderAudio();
+        if (response?.success && response.entries?.length) {
+          const dir = `${FileSystem.documentDirectory}reader-audio`;
+          const dirInfo = await FileSystem.getInfoAsync(dir);
+          if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+
+          const remoteEntries = [];
+          for (const entry of response.entries) {
+            const existing = entries.find(e => e.savedAudioId === entry.id);
+            if (existing) { remoteEntries.push(existing); continue; }
+
+            const stem = String(entry.fileName || entry.title || 'recording').replace(/\.mp3$/i, '');
+            const uri = `${dir}/${entry.id}-${stem}.mp3`;
+
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            if (!fileInfo.exists) {
+              const fetchResult = await getSavedReaderAudioById(entry.id);
+              if (fetchResult?.success && fetchResult.audioBase64) {
+                await FileSystem.writeAsStringAsync(uri, fetchResult.audioBase64, { encoding: FileSystem.EncodingType.Base64 });
+              } else continue;
+            }
+
+            remoteEntries.push({
+              id: entry.id,
+              savedAudioId: entry.id,
+              title: entry.title || 'Recording',
+              uri,
+              fileName: `${entry.id}-${stem}.mp3`,
+              voiceLabel: entry.metadata?.voiceProfile || 'Kokoro',
+              createdAt: entry.createdAt || new Date().toISOString()
+            });
+          }
+
+          const localOnly = entries.filter(e => !e.savedAudioId);
+          entries = [...remoteEntries, ...localOnly];
+          await persistLocalAudioRecordings(entries);
+        }
+      } catch (syncError) {
+        console.error('Backend sync failed, using local only:', syncError?.message);
+      }
+
       setRecordings(entries);
     } catch (error) {
       console.error('Error loading recordings:', error);
