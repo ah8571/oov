@@ -34,11 +34,15 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Long diagonal arrow from card corner to bottom-right */}
+        {/* Long chevron trail pointing down to the speaker button */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="chevron-forward" size={28} color="#ffffff" style={styles.arrow1} />
-          <Ionicons name="chevron-forward" size={28} color="#ffffff" style={styles.arrow2} />
-          <Ionicons name="chevron-forward" size={32} color="#ffffff" style={styles.arrow3} />
+          <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.3)" />
+          <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.4)" />
+          <Ionicons name="chevron-down" size={24} color="rgba(255,255,255,0.5)" />
+          <Ionicons name="chevron-down" size={26} color="rgba(255,255,255,0.6)" />
+          <Ionicons name="chevron-down" size={28} color="rgba(255,255,255,0.7)" />
+          <Ionicons name="chevron-down" size={30} color="rgba(255,255,255,0.85)" />
+          <Ionicons name="caret-down" size={36} color="#ffffff" />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -48,43 +52,27 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 24,
+    alignItems: 'center',
     zIndex: 1000,
   },
   content: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 80,
   },
   arrowWrap: {
-    marginRight: -8,
-    marginTop: -4,
-    alignItems: 'flex-end',
-  },
-  arrow1: {
-    transform: [{ rotate: '45deg' }],
-    marginRight: 22,
-    marginBottom: -10,
-    opacity: 0.4,
-  },
-  arrow2: {
-    transform: [{ rotate: '45deg' }],
-    marginRight: 14,
-    marginBottom: -8,
-    opacity: 0.6,
-  },
-  arrow3: {
-    transform: [{ rotate: '45deg' }],
-    marginRight: 2,
+    alignItems: 'center',
+    marginTop: -6,
+    gap: -4,
   },
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
     padding: 24,
-    maxWidth: 280,
+    maxWidth: 300,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
   },
   title: {
