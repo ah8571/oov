@@ -46,6 +46,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [editorFocused, setEditorFocused] = useState(false);
+  const [androidToolbarArmed, setAndroidToolbarArmed] = useState(false);
   const [noteTextScale, setNoteTextScale] = useState(1);
   const isEditing = useMemo(() => Boolean(noteId || existingNote?.id), [existingNote?.id, noteId]);
   const richTextRef = useRef(null);
@@ -65,6 +66,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const lastNotesResetTokenRef = useRef(notesResetToken);
   const titleInputRef = useRef(null);
   const pendingEditorFocusRef = useRef(false);
+  const editorFocusedRef = useRef(false);
 
   const updateSaveState = (nextValue) => {
     if (isMountedRef.current) {
@@ -532,6 +534,11 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         eventHeight: event?.endCoordinates?.height || 0,
         metricsHeight: Keyboard.metrics?.()?.height || 0
       });
+
+      if (Platform.OS === 'android' && (editorFocusedRef.current || pendingEditorFocusRef.current)) {
+        setAndroidToolbarArmed(true);
+      }
+
       setKeyboardVisible(true);
       setKeyboardHeight(event?.endCoordinates?.height || Keyboard.metrics?.()?.height || 0);
     });
@@ -668,7 +675,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       : Math.max(effectiveKeyboardHeight - insets.bottom, 0)
     : safeBottomInset;
   const toolbarVisible = Platform.OS === 'android'
-    ? editorFocused
+    ? editorFocused && androidToolbarArmed
     : keyboardVisible && editorFocused;
   const editorContentBottomPadding = toolbarVisible ? toolbarVisualHeight + 96 : safeBottomInset + 44;
   const contentBottomPadding = toolbarVisible
@@ -723,7 +730,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           onChangeText={setTitle}
           onFocus={() => {
             pendingEditorFocusRef.current = false;
+            editorFocusedRef.current = false;
             setEditorFocused(false);
+            setAndroidToolbarArmed(false);
           }}
           multiline
           scrollEnabled={false}
@@ -789,9 +798,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
                 pendingEditorFocus: pendingEditorFocusRef.current
               });
               pendingEditorFocusRef.current = false;
+              editorFocusedRef.current = true;
               setEditorFocused(true);
               const metricsHeight = Keyboard.metrics?.()?.height || 0;
               if (metricsHeight > 0) {
+                if (Platform.OS === 'android') {
+                  setAndroidToolbarArmed(true);
+                }
                 setKeyboardVisible(true);
                 setKeyboardHeight(metricsHeight);
               }
@@ -799,7 +812,11 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             onBlur={() => {
               logNoteEditorEvent('blur', { keyboardVisible });
               pendingEditorFocusRef.current = false;
+              editorFocusedRef.current = false;
               setEditorFocused(false);
+              if (Platform.OS === 'android') {
+                setAndroidToolbarArmed(false);
+              }
             }}
             onChange={(nextContent) => {
               logNoteEditorEvent('change', { contentLength: (nextContent || '').length });
