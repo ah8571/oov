@@ -79,19 +79,23 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
           }
 
           if (credits > 0) {
-            // Only grant credits on first subscription — re-activations
-            // after cancel just restore access without double-crediting.
+            // Grant credits only if the previous allocation has expired
             const { data: existingUser } = await supabase
               .from('users')
               .select('last_credit_allocation_date')
               .eq('id', userId)
               .maybeSingle();
 
-            if (!existingUser?.last_credit_allocation_date) {
-              console.log('[Stripe] First subscription — granting', credits, 'credits to', userId);
+            const lastAllocation = existingUser?.last_credit_allocation_date;
+            const periodDays = tier === 'monthly' ? 30 : 7;
+            const periodExpired = !lastAllocation
+              || (Date.now() - new Date(lastAllocation).getTime()) > (periodDays * 24 * 60 * 60 * 1000);
+
+            if (periodExpired) {
+              console.log('[Stripe] Granting', credits, 'credits to', userId, '(period expired)');
               await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
             } else {
-              console.log('[Stripe] Re-activation — skipping credit grant for', userId);
+              console.log('[Stripe] Skipping credit grant for', userId, '(within current period)');
             }
           }
 
