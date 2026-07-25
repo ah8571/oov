@@ -90,6 +90,7 @@ export const useReaderTts = () => {
   const [isPreparing, setIsPreparing] = useState(false);
   const [savedAudioEntries, setSavedAudioEntries] = useState([]);
   const [estimatedTime, setEstimatedTime] = useState(null);
+  const [justCompletedTs, setJustCompletedTs] = useState(0);
 
   const speechChunksRef = useRef([]);
   const speechIndexRef = useRef(0);
@@ -144,9 +145,13 @@ export const useReaderTts = () => {
       const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true }, (status) => {
         if (status.didJustFinish) {
           setIsSpeaking(false);
+          setEstimatedTime(null);
+          setJustCompletedTs(Date.now());
           sound.unloadAsync().catch(() => {});
           activeSoundRef.current = null;
           FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+          // Refresh saved list so the "Saved" indicator appears
+          refreshSavedAudio();
         }
       });
       activeSoundRef.current = sound;
@@ -155,9 +160,10 @@ export const useReaderTts = () => {
     } catch (error) {
       setIsPreparing(false);
       setIsSpeaking(false);
+      setEstimatedTime(null);
       Alert.alert('Reader error', error?.message || 'Unable to play audio');
     }
-  }, []);
+  }, [refreshSavedAudio]);
 
   // ── On-device Kokoro playback ───────────────────────────────
   const playKokoroOnDevice = useCallback(async (text, title, speechRate) => {
@@ -246,6 +252,7 @@ export const useReaderTts = () => {
     }
     setIsSpeaking(false);
     setEstimatedTime(null);
+    setJustCompletedTs(Date.now());
     for (const uri of wavQueue) { FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {}); }
   }, []);
 
@@ -331,6 +338,7 @@ export const useReaderTts = () => {
     stopReading,
     refreshSavedAudio,
     estimatedTime,
+    justCompletedTs,
     voiceOptions: READER_VOICE_OPTIONS
   };
 };

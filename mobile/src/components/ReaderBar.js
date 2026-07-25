@@ -2,7 +2,7 @@
  * ReaderBar — Bottom bar for CreateNoteScreen.
  * Import (URL/PDF/Photo) on the left, Read aloud (voice picker) on the right.
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useReaderTts } from '../hooks/useReaderTts';
@@ -10,7 +10,7 @@ import { importReaderDocument } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
 
 export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions, savedAudioEntries } = useReaderTts();
+  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions, savedAudioEntries, justCompletedTs } = useReaderTts();
   const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [showImportOptions, setShowImportOptions] = useState(false);
@@ -43,6 +43,18 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       entry => entry.title === title && (entry.text || '').trim() === t
     );
   }, [text, title, savedAudioEntries]);
+
+  // ── Saved confirmation toast ────────────────────────────────
+  const [showSavedToast, setShowSavedToast] = useState(false);
+  const savedToastTimer = useRef(null);
+  useEffect(() => {
+    if (justCompletedTs > 0) {
+      setShowSavedToast(true);
+      clearTimeout(savedToastTimer.current);
+      savedToastTimer.current = setTimeout(() => setShowSavedToast(false), 4000);
+    }
+    return () => clearTimeout(savedToastTimer.current);
+  }, [justCompletedTs]);
 
   // ── Import ──────────────────────────────────────────────────
   const handleImportFile = useCallback(async () => {
@@ -164,11 +176,28 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       paddingVertical: 14,
       paddingHorizontal: 20
     },
-    importOptionText: { color: textColor, fontSize: 15, marginLeft: 10 }
+    importOptionText: { color: textColor, fontSize: 15, marginLeft: 10 },
+    savedToast: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      alignItems: 'center'
+    },
+    savedToastText: {
+      color: '#fff',
+      fontSize: 13,
+      fontWeight: '700'
+    }
   });
 
   return (
     <View style={s.container}>
+      {/* Saved confirmation toast */}
+      {showSavedToast && (
+        <View style={[s.savedToast, { backgroundColor: '#4caf50' }]}>
+          <Text style={s.savedToastText}>✓ Saved to Recordings</Text>
+        </View>
+      )}
+
       <View style={s.contentRow}>
       {/* Import */}
       <TouchableOpacity style={s.btn} onPress={() => setShowImportOptions(true)}>
