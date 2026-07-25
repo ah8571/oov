@@ -252,7 +252,7 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
           </View>
           <View style={styles.creditRow}>
             <Text style={[styles.creditMode, { color: colors.text }]}>Listen Mode</Text>
-            <Text style={[styles.creditRate, { color: colors.accent }]}>1 credit/min</Text>
+            <Text style={[styles.creditRate, { color: colors.mutedText }]}>Free</Text>
           </View>
           <View style={styles.creditRow}>
             <Text style={[styles.creditMode, { color: colors.text }]}>Reader</Text>

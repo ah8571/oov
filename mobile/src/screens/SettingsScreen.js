@@ -291,6 +291,26 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
       </View>
 
       <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Credit rates</Text>
+        <View style={[styles.ratesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.rateRow}>
+            <Text style={[styles.rateMode, { color: colors.text }]}>Voice Mode</Text>
+            <Text style={[styles.rateValue, { color: colors.accent }]}>2 credits/min</Text>
+          </View>
+          <View style={[styles.rateDivider, { borderColor: colors.border }]} />
+          <View style={styles.rateRow}>
+            <Text style={[styles.rateMode, { color: colors.text }]}>Listen Mode</Text>
+            <Text style={[styles.rateValue, { color: colors.mutedText }]}>Free</Text>
+          </View>
+          <View style={[styles.rateDivider, { borderColor: colors.border }]} />
+          <View style={styles.rateRow}>
+            <Text style={[styles.rateMode, { color: colors.text }]}>Reader</Text>
+            <Text style={[styles.rateValue, { color: colors.mutedText }]}>Free</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
         <Text style={[styles.sectionDescription, { color: colors.mutedText }]}>Keep the quick theme icon in the header, or switch modes here with a little more context.</Text>
 
@@ -589,6 +609,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#495057',
     lineHeight: 18
+  },
+  ratesCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16
+  },
+  rateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4
+  },
+  rateDivider: {
+    borderTopWidth: 1,
+    marginVertical: 8
+  },
+  rateMode: {
+    fontSize: 15,
+    fontWeight: '600'
+  },
+  rateValue: {
+    fontSize: 15,
+    fontWeight: '600'
   },
   usageFootnote: {
     fontSize: 13,

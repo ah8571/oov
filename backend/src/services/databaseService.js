@@ -376,7 +376,6 @@ export const deleteCallForUser = async (userId, callId) => {
 
 // Deprecated — note_revisions table dropped
 const persistNoteRevision = async () => null;
-};
 
 export const getNotesForUser = async (userId, options = {}) => {
   const topicId = options.topicId || null;
