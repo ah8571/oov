@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -178,6 +179,17 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   }, [loadNotes, loadTopics, navigation, selectedTopic]);
 
   useEffect(() => {
+    const handleAppStateChange = (nextState) => {
+      if (nextState === 'active') {
+        loadNotes(selectedTopic, { silent: true });
+        loadTopics();
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [loadNotes, loadTopics, selectedTopic]);
+
+  useEffect(() => {
     setSelectedNoteIds((currentSelection) => currentSelection.filter((noteId) => notes.some((note) => note.id === noteId)));
   }, [notes]);
 
@@ -203,6 +215,16 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
     });
     return () => unsubscribeFocus();
   }, [loadTranscripts, navigation]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextState) => {
+      if (nextState === 'active') {
+        loadTranscripts({ silent: true });
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [loadTranscripts]);
 
   useEffect(() => {
     setSelectedTranscriptIds((current) =>
@@ -281,6 +303,17 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
     });
     return () => unsubscribeFocus();
   }, [loadRecordings, navigation]);
+
+  // Auto-refresh recordings when app comes to foreground
+  useEffect(() => {
+    const handleAppStateChange = (nextState) => {
+      if (nextState === 'active') {
+        loadRecordings({ silent: true });
+      }
+    };
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [loadRecordings]);
 
   const handleCreateNote = () => {
     navigation.navigate('CreateNote');
