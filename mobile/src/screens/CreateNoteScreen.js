@@ -596,7 +596,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const titleFontSize = Math.round(36 * noteTextScale);
   const titleLineHeight = Math.round(titleFontSize * 1.15);
   const safeBottomInset = Math.max(insets.bottom, 12);
-  const readerBarBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 10 : 12);
+  const readerBarBottomInset = 0;
   const effectiveKeyboardHeight = keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0;
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
     ? Math.max(effectiveKeyboardHeight - safeBottomInset, 0)
