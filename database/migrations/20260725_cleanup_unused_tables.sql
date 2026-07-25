@@ -7,15 +7,20 @@ ALTER TABLE transcripts
   ADD COLUMN IF NOT EXISTS sentiment VARCHAR(50),
   ADD COLUMN IF NOT EXISTS action_items TEXT[];
 
--- Migrate data from summaries into transcripts
-UPDATE transcripts t
-SET
-  summary_text = s.summary_text,
-  key_points = s.key_points,
-  sentiment = s.sentiment,
-  action_items = s.action_items
-FROM summaries s
-WHERE t.call_id = s.call_id;
+-- Migrate data from summaries into transcripts (if table still exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'summaries') THEN
+    UPDATE transcripts t
+    SET
+      summary_text = s.summary_text,
+      key_points = s.key_points,
+      sentiment = s.sentiment,
+      action_items = s.action_items
+    FROM summaries s
+    WHERE t.call_id = s.call_id;
+  END IF;
+END $$;
 
 -- Drop unused tables
 DROP TABLE IF EXISTS summaries;
