@@ -81,16 +81,8 @@ router.post('/sessions', authMiddleware, upload.single('audio'), async (req, res
 
     await saveTranscript(callRecord.id, req.user.userId, transcriptText);
 
-    // Deduct credits for listen mode (1 credit/min)
+    // Listen mode is free — credit deduction disabled.
     let creditResult = null;
-    try {
-      creditResult = await consumeCredits(req.user.userId, 'listen_mode', listenDurationSeconds, {
-        language: languagePreference,
-        callId: callRecord.id
-      });
-    } catch (creditError) {
-      console.error('Credit deduction failed for listen session:', creditError.message);
-    }
 
     const summary = await summarizeTranscript(transcriptText, {
       languagePreference

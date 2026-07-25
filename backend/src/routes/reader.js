@@ -302,20 +302,9 @@ router.post('/audio', authMiddleware, async (req, res) => {
     const requestData = normalizeReaderAudioRequest(req.body);
     const audioResponse = await buildReaderAudioResponse(requestData);
 
-    // Deduct credits for reader
-    const creditMode = requestData.provider === 'resemble' || requestData.provider === 'openrouter'
-      ? 'reader_natural'
-      : 'reader_basic';
-    const estimatedDurationSeconds = Math.ceil((audioResponse.metadata.characterCount / 900) * 60);
+    // Reader is free — credit deduction disabled.
+    // Credits tracked for cost analysis via saveCallCosts below.
     let creditResult = null;
-    try {
-      creditResult = await consumeCredits(req.user.userId, creditMode, estimatedDurationSeconds, {
-        provider: requestData.provider,
-        characterCount: audioResponse.metadata.characterCount
-      });
-    } catch (creditError) {
-      console.error('Credit deduction failed for reader audio:', creditError.message);
-    }
 
     // Auto-save for non-basic voices
     let savedAudio = null;
@@ -377,20 +366,8 @@ router.post('/audio/save', authMiddleware, async (req, res) => {
       audioResponse = await buildReaderAudioResponse(requestData);
     }
 
-    // Deduct credits for reader (2/min for natural voice, 0 for basic)
-    const creditMode = requestData.provider === 'resemble' || requestData.provider === 'openrouter'
-      ? 'reader_natural'
-      : 'reader_basic';
-    const estimatedDurationSeconds = Math.ceil((audioResponse.metadata.characterCount / 900) * 60);
+    // Reader is free — credit deduction disabled.
     let creditResult = null;
-    try {
-      creditResult = await consumeCredits(req.user.userId, creditMode, estimatedDurationSeconds, {
-        provider: requestData.provider,
-        characterCount: audioResponse.metadata.characterCount
-      });
-    } catch (creditError) {
-      console.error('Credit deduction failed for saved reader audio:', creditError.message);
-    }
 
     const savedAudio = await saveReaderAudioRecord(req.user.userId, {
       title: requestData.title || 'Reader audio',
