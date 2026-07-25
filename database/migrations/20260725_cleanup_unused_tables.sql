@@ -27,4 +27,5 @@ DROP TABLE IF EXISTS user_phone_numbers;
 DROP TABLE IF EXISTS waitlist_subscribers;
 DROP TABLE IF EXISTS api_keys;
 DROP TABLE IF EXISTS audit_logs;
+DROP TABLE IF EXISTS account_deletion_requests;
 DROP TABLE IF EXISTS note_revisions;

@@ -213,18 +213,20 @@ export const logAccountDeletionRequest = async ({
   }
 
   const { data, error } = await supabase
-    .from('account_deletion_requests')
+    .from('support_requests')
     .insert({
       user_id: userId,
+      account_email: email,
       email,
-      reason: String(reason || '').trim() || null,
+      name: email,
+      subject: 'Account deletion request',
+      message: reason || 'User requested account deletion',
+      category: 'account_deletion',
       source,
-      user_agent: userAgent,
-      requested_at: new Date().toISOString(),
-      completed_at: new Date().toISOString(),
-      status: 'completed'
+      status: 'completed',
+      user_agent: userAgent
     })
-    .select('id, email, requested_at, completed_at, status')
+    .select('id, email, created_at, status')
     .single();
 
   if (error) {
