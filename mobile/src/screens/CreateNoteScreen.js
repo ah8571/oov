@@ -43,6 +43,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [editorFocused, setEditorFocused] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(320);
   const [noteTextScale, setNoteTextScale] = useState(1);
   const isEditing = useMemo(() => Boolean(noteId || existingNote?.id), [existingNote?.id, noteId]);
   const richTextRef = useRef(null);
@@ -745,8 +746,12 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               pendingContentRef.current = nextContent || '';
               setContent(nextContent || '');
             }}
-            style={styles.richEditor}
-            useContainer={Platform.OS !== 'android'}
+            onHeightChange={(height) => {
+              const nextHeight = Math.max(320, Math.ceil(Number(height) || 0));
+              setEditorHeight((currentHeight) => (currentHeight === nextHeight ? currentHeight : nextHeight));
+            }}
+            style={[styles.richEditor, { minHeight: editorHeight, height: editorHeight }]}
+            useContainer
             initialHeight={320}
             disabled={false}
             editorStyle={{

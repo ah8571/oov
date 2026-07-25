@@ -176,25 +176,23 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
         <Text style={s.btnText}>Import</Text>
       </TouchableOpacity>
 
-      <View style={s.divider} />
-
-      {/* Play/Stop button */}
-      <TouchableOpacity
-        style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
-        onPress={handleRead}
-      >
-        <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
-        <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-          {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
-        </Text>
-      </TouchableOpacity>
-
       {/* Saved indicator */}
       {alreadySaved && !isSpeaking && !isPreparing && (
         <Text style={{ color: '#4caf50', fontSize: 11, fontWeight: '600', marginLeft: 6 }}>✓ Saved</Text>
       )}
 
       <View style={s.metaGroup}>
+        {/* Play/Stop button */}
+        <TouchableOpacity
+          style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
+          onPress={handleRead}
+        >
+          <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
+          <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
+            {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
+          </Text>
+        </TouchableOpacity>
+
         {timeEstimate && !isPreparing && !isSpeaking ? (
           <Text style={s.estimateText}>~{timeEstimate}</Text>
         ) : null}
