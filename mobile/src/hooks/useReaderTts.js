@@ -123,7 +123,6 @@ export const useReaderTts = () => {
   const speechCancelledRef = useRef(false);
   const activeSoundRef = useRef(null);
   const activeSoundUriRef = useRef(null);
-  const isSpeakingRef = useRef(false);
 
   // On-device Kokoro hook (deferred load)
   const [kokoroLoadRequested, setKokoroLoadRequested] = useState(false);
@@ -142,7 +141,6 @@ export const useReaderTts = () => {
     speechIndexRef.current = 0;
     setIsPreparing(false);
     setIsSpeaking(false);
-    isSpeakingRef.current = false;
     setEstimatedTime(null);
     if (wasSpeaking) setJustCompletedTs(Date.now());
     try { await Speech.stop(); } catch {}
@@ -178,33 +176,8 @@ export const useReaderTts = () => {
         shouldDuckAndroid: false
       });
 
-      // Load silently first — shouldPlay:true can fire didJustFinish in a
-      // microtask before setIsSpeaking(true) takes effect, which hides Stop.
-      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: false });
-      activeSoundRef.current = sound;
-
-      const initialStatus = await sound.getStatusAsync();
-      console.log('[ReaderTTS] Sound loaded:', { isLoaded: initialStatus.isLoaded, durationMs: initialStatus.durationMillis, uri });
-      if (!initialStatus.isLoaded || (initialStatus.durationMillis || 0) <= 0) {
-        await sound.unloadAsync().catch(() => {});
-        activeSoundRef.current = null;
-        throw new Error('Audio failed to decode. The format may not be supported on this device.');
-      }
-
-      await sound.setVolumeAsync(1.0);
-
-      // Set up the finish callback after we know the sound is valid.
-      // Use a ref guard so a premature didJustFinish (from a microtask
-      // racing ahead of React's setIsSpeaking) doesn't hide the Stop button.
-      sound.setOnPlaybackStatusUpdate((status) => {
+      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true, volume: 1.0 }, (status) => {
         if (status.didJustFinish) {
-          if (!isSpeakingRef.current) {
-            console.log('[ReaderTTS] Premature didJustFinish ignored (isSpeakingRef is false)');
-            return;
-          }
-          console.log('[ReaderTTS] Playback finished naturally');
-          isSpeakingRef.current = false;
-          isSpeakingRef.current = false;
           setIsSpeaking(false);
           setEstimatedTime(null);
           setJustCompletedTs(Date.now());
@@ -214,10 +187,7 @@ export const useReaderTts = () => {
           refreshSavedAudio();
         }
       });
-
-      await sound.playAsync();
-      console.log('[ReaderTTS] playAsync resolved, setting isSpeaking=true');
-      isSpeakingRef.current = true;
+      activeSoundRef.current = sound;
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {
