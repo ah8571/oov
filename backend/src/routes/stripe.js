@@ -179,6 +179,7 @@ router.post('/checkout', async (req, res) => {
 router.post('/cancel', authMiddleware, async (req, res) => {
   try {
     const { userId } = req;
+    console.log('[Stripe] Cancel requested by user:', userId);
 
     // Look up the Stripe subscription ID from users table
     const supabase = getSupabaseClient();
