@@ -34,15 +34,14 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Long chevron trail pointing down to the speaker button */}
+        {/* Chevron trail pointing diagonally down-right to the speaker button */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.3)" />
-          <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.4)" />
-          <Ionicons name="chevron-down" size={24} color="rgba(255,255,255,0.5)" />
-          <Ionicons name="chevron-down" size={26} color="rgba(255,255,255,0.6)" />
-          <Ionicons name="chevron-down" size={28} color="rgba(255,255,255,0.7)" />
-          <Ionicons name="chevron-down" size={30} color="rgba(255,255,255,0.85)" />
-          <Ionicons name="caret-down" size={36} color="#ffffff" />
+          <Ionicons name="chevron-down" size={18} color="rgba(255,255,255,0.25)" style={styles.arr1} />
+          <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.35)" style={styles.arr2} />
+          <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.45)" style={styles.arr3} />
+          <Ionicons name="chevron-down" size={24} color="rgba(255,255,255,0.55)" style={styles.arr4} />
+          <Ionicons name="chevron-down" size={26} color="rgba(255,255,255,0.65)" style={styles.arr5} />
+          <Ionicons name="caret-down" size={32} color="#ffffff" style={styles.arr6} />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -63,9 +62,15 @@ const styles = StyleSheet.create({
   },
   arrowWrap: {
     alignItems: 'center',
-    marginTop: -6,
-    gap: -4,
+    marginTop: -8,
+    marginLeft: 60,
   },
+  arr1: { transform: [{ rotate: '315deg' }], marginLeft: 8, marginBottom: -10 },
+  arr2: { transform: [{ rotate: '315deg' }], marginLeft: 16, marginBottom: -10 },
+  arr3: { transform: [{ rotate: '315deg' }], marginLeft: 24, marginBottom: -10 },
+  arr4: { transform: [{ rotate: '315deg' }], marginLeft: 32, marginBottom: -10 },
+  arr5: { transform: [{ rotate: '315deg' }], marginLeft: 40, marginBottom: -10 },
+  arr6: { transform: [{ rotate: '315deg' }], marginLeft: 48 },
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
