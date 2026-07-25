@@ -9,5 +9,8 @@
     "build:mobile:dev": "npm --prefix mobile run build:dev",
     "build:backend": "npm --prefix backend run build",
     "lint": "npm --prefix backend run lint && npm --prefix mobile run lint"
+  },
+  "devDependencies": {
+    "eas-cli": "^20.2.0"
   }
 }
