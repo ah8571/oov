@@ -127,11 +127,14 @@ const RecordingCard = ({ entry, colors, onRefresh }) => {
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      {/* Title row */}
+      {/* Title row — minimal when collapsed */}
       <View style={styles.titleRow}>
         <TouchableOpacity
           style={[styles.playButton, { borderColor: colors.border, backgroundColor: isPlaying ? colors.accent : colors.surface }]}
-          onPress={togglePlayback}
+          onPress={() => {
+            if (!menuOpen) { setMenuOpen(true); }
+            togglePlayback();
+          }}
           activeOpacity={0.7}
         >
           <Ionicons
@@ -168,97 +171,100 @@ const RecordingCard = ({ entry, colors, onRefresh }) => {
           onPress={() => setMenuOpen((v) => !v)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.menuButtonText, { color: colors.text }]}>⋮</Text>
+          <Text style={[styles.menuButtonText, { color: colors.text }]}>{menuOpen ? '−' : '⋮'}</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Progress + time (shown when loaded) */}
-      {isLoaded && (
-        <View style={styles.progressRow}>
-          <Text style={[styles.timeText, { color: colors.mutedText }]}>{formatTime(positionMillis)}</Text>
-          <TouchableOpacity
-            style={[styles.progressTrack, { backgroundColor: colors.surfaceAlt || colors.background }]}
-            onPress={handleProgressSeek}
-            onLayout={(e) => { progressTrackWidthRef.current = e.nativeEvent.layout.width; }}
-            activeOpacity={1}
-          >
-            <View style={[styles.progressFill, { width: `${progressRatio * 100}%`, backgroundColor: colors.accent }]} />
-          </TouchableOpacity>
-          <Text style={[styles.timeText, { color: colors.mutedText }]}>{formatTime(durationMillis)}</Text>
-        </View>
-      )}
-
-      {/* Playback controls (shown when menu is open and loaded) */}
-      {isLoaded && menuOpen && (
-        <View style={styles.controlsRow}>
-          <TouchableOpacity
-            style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            onPress={() => jumpBack(15000)}
-          >
-            <Text style={[styles.controlText, { color: colors.text }]}>-15s</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            onPress={() => seekTo(0)}
-          >
-            <Text style={[styles.controlText, { color: colors.text }]}>Restart</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            onPress={() => jumpForward(15000)}
-          >
-            <Text style={[styles.controlText, { color: colors.text }]}>+15s</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Action menu (rename / download / delete) */}
+      {/* Expanded content — shown only when menu is open */}
       {menuOpen && (
-        <View style={styles.actionsRow}>
-          {editing ? (
-            <>
+        <>
+          {/* Progress + time (shown when loaded) */}
+          {isLoaded && (
+            <View style={styles.progressRow}>
+              <Text style={[styles.timeText, { color: colors.mutedText }]}>{formatTime(positionMillis)}</Text>
               <TouchableOpacity
-                style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface, opacity: updating ? 0.7 : 1 }]}
-                onPress={handleSaveTitle}
-                disabled={updating}
-                activeOpacity={0.85}
+                style={[styles.progressTrack, { backgroundColor: colors.surfaceAlt || colors.background }]}
+                onPress={handleProgressSeek}
+                onLayout={(e) => { progressTrackWidthRef.current = e.nativeEvent.layout.width; }}
+                activeOpacity={1}
               >
-                <Text style={[styles.actionText, { color: colors.text }]}>{updating ? 'Saving...' : 'Save name'}</Text>
+                <View style={[styles.progressFill, { width: `${progressRatio * 100}%`, backgroundColor: colors.accent }]} />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                onPress={handleCancelEdit}
-                activeOpacity={0.85}
-              >
-                <Text style={[styles.actionText, { color: colors.text }]}>Cancel</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <TouchableOpacity
-              style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-              onPress={handleStartEdit}
-              activeOpacity={0.85}
-            >
-              <Text style={[styles.actionText, { color: colors.text }]}>Rename</Text>
-            </TouchableOpacity>
+              <Text style={[styles.timeText, { color: colors.mutedText }]}>{formatTime(durationMillis)}</Text>
+            </View>
           )}
 
-          <TouchableOpacity
-            style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            onPress={handleShare}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.actionText, { color: colors.text }]}>Download</Text>
-          </TouchableOpacity>
+          {/* Playback controls (shown when loaded) */}
+          {isLoaded && (
+            <View style={styles.controlsRow}>
+              <TouchableOpacity
+                style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                onPress={() => jumpBack(15000)}
+              >
+                <Text style={[styles.controlText, { color: colors.text }]}>-15s</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                onPress={() => seekTo(0)}
+              >
+                <Text style={[styles.controlText, { color: colors.text }]}>Restart</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.controlButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                onPress={() => jumpForward(15000)}
+              >
+                <Text style={[styles.controlText, { color: colors.text }]}>+15s</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-          <TouchableOpacity
-            style={[styles.deleteButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            onPress={handleDelete}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.deleteText, { color: colors.text }]}>×</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Action menu (rename / download / delete) */}
+          <View style={styles.actionsRow}>
+            {editing ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface, opacity: updating ? 0.7 : 1 }]}
+                  onPress={handleSaveTitle}
+                  disabled={updating}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.actionText, { color: colors.text }]}>{updating ? 'Saving...' : 'Save name'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                  onPress={handleCancelEdit}
+                  activeOpacity={0.85}
+                >
+                  <Text style={[styles.actionText, { color: colors.text }]}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                onPress={handleStartEdit}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.actionText, { color: colors.text }]}>Rename</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.actionButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              onPress={handleShare}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.actionText, { color: colors.text }]}>Download</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.deleteButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+              onPress={handleDelete}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.deleteText, { color: colors.text }]}>×</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );

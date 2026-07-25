@@ -357,7 +357,7 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: bottomContentInset + 24 }}
+        contentContainerStyle={{ paddingTop: 12, paddingBottom: bottomContentInset + 24 }}
         onScroll={handleListScroll}
         scrollEventThrottle={16}
       >

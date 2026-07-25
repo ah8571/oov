@@ -130,8 +130,7 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
           <View style={styles.tierBenefits}>
             {[
               '100 credits per week',
-              '~50 min Voice Mode or 100 min Reader',
-              'Credits are mix-and-match across features',
+              '~1 hour of Voice Mode',
               'Unused credits roll over',
               'Cancel anytime'
             ].map((item) => (
@@ -157,8 +156,7 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
           <View style={styles.tierBenefits}>
             {[
               '500 credits per month',
-              '~250 min Voice Mode or 500 min Reader',
-              'Credits are mix-and-match across features',
+              '~5 hours of Voice Mode',
               'Unused credits roll over',
               'Cancel anytime'
             ].map((item) => (
@@ -217,15 +215,11 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
             <Text style={[styles.creditRate, { color: colors.accent }]}>2 credits/min</Text>
           </View>
           <View style={styles.creditRow}>
-            <Text style={[styles.creditMode, { color: colors.text }]}>Reader — Natural Voice</Text>
-            <Text style={[styles.creditRate, { color: colors.accent }]}>1 credit/min</Text>
-          </View>
-          <View style={styles.creditRow}>
             <Text style={[styles.creditMode, { color: colors.text }]}>Listen Mode</Text>
             <Text style={[styles.creditRate, { color: colors.accent }]}>1 credit/min</Text>
           </View>
           <View style={styles.creditRow}>
-            <Text style={[styles.creditMode, { color: colors.text }]}>Reader — Basic</Text>
+            <Text style={[styles.creditMode, { color: colors.text }]}>Reader</Text>
             <Text style={[styles.creditRate, { color: colors.mutedText }]}>Free</Text>
           </View>
         </View>
