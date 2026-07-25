@@ -346,9 +346,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     const nextEditorStyle = {
       backgroundColor: colors.background,
       color: colors.text,
-      contentCSSText: `font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; padding: 0 0 ${editorContentBottomPadding}px 0; background-color: ${colors.background};`,
+      contentCSSText: `font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; padding: 0 14px ${editorContentBottomPadding}px 14px; background-color: ${colors.background}; width: 100%;`,
       placeholderColor: colors.mutedText,
-      cssText: `body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: ${colors.background}; color: ${colors.text}; margin: 0; padding: 0; } #editor, .pell-content { font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; background-color: ${colors.background}; } p, div, li, span { margin: 0 0 12px 0; font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; } ul, ol { padding-left: 22px; margin: 0 0 12px 0; } h1 { margin: 0 0 12px 0; font-size: ${heading1Size}px; line-height: ${Math.round(heading1Size * 1.2)}px; } h2 { margin: 0 0 12px 0; font-size: ${heading2Size}px; line-height: ${Math.round(heading2Size * 1.25)}px; } h3 { margin: 0 0 12px 0; font-size: ${heading3Size}px; line-height: ${Math.round(heading3Size * 1.3)}px; }`
+      cssText: `html, body { width: 100%; } body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: ${colors.background}; color: ${colors.text}; margin: 0; padding: 0; } .content, #editor, .pell, .pell-content { width: 100%; } #editor, .pell-content { font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; background-color: ${colors.background}; } p, div, li, span { margin: 0 0 12px 0; font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; } ul, ol { padding-left: 22px; margin: 0 0 12px 0; } h1 { margin: 0 0 12px 0; font-size: ${heading1Size}px; line-height: ${Math.round(heading1Size * 1.2)}px; } h2 { margin: 0 0 12px 0; font-size: ${heading2Size}px; line-height: ${Math.round(heading2Size * 1.25)}px; } h3 { margin: 0 0 12px 0; font-size: ${heading3Size}px; line-height: ${Math.round(heading3Size * 1.3)}px; }`
     };
 
     const typographyStyleSheet = [
@@ -359,10 +359,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       `line-height: ${editorLineHeight}px;`,
       '}',
       '.pell-content, #editor {',
+      'width: 100%;',
       `background-color: ${colors.background};`,
       `color: ${colors.text};`,
       `font-size: ${editorFontSize}px;`,
       `line-height: ${editorLineHeight}px;`,
+      'padding-left: 14px;',
+      'padding-right: 14px;',
       `padding-bottom: ${editorContentBottomPadding}px;`,
       '}',
       'p, div, li, span {',
@@ -422,11 +425,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       var contentShell = $('.content');
       if (contentShell) {
         contentShell.style.backgroundColor = ${escapedBackground};
+        contentShell.style.width = '100%';
       }
       var editorRoot = $('#editor');
       if (editorRoot) {
         editorRoot.style.backgroundColor = ${escapedBackground};
         editorRoot.style.color = ${escapedText};
+        editorRoot.style.width = '100%';
       }
       var editableSurface = document.querySelector('.pell-content');
       if (editableSurface) {
@@ -434,6 +439,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         editableSurface.style.color = ${escapedText};
         editableSurface.style.fontSize = ${escapedBodyFontSize};
         editableSurface.style.lineHeight = ${escapedBodyLineHeight};
+        editableSurface.style.width = '100%';
+        editableSurface.style.paddingLeft = '14px';
+        editableSurface.style.paddingRight = '14px';
         editableSurface.style.paddingBottom = ${escapedBottomPadding};
       }
       var existingTypographyStyle = document.getElementById('emmaline-note-scale-style');
@@ -752,9 +760,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             editorStyle={{
               backgroundColor: colors.background,
               color: colors.text,
-              contentCSSText: `font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; padding: 0 0 ${editorContentBottomPadding}px 0; background-color: ${colors.background};`,
+              contentCSSText: `font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; padding: 0 14px ${editorContentBottomPadding}px 14px; background-color: ${colors.background}; width: 100%;`,
               placeholderColor: colors.mutedText,
-              cssText: `body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: ${colors.background}; color: ${colors.text}; margin: 0; padding: 0; } #editor, .pell-content { font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; background-color: ${colors.background}; } p, div, li, span { margin: 0 0 12px 0; font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; } ul, ol { padding-left: 22px; margin: 0 0 12px 0; } h1 { margin: 0 0 12px 0; font-size: ${heading1Size}px; line-height: ${Math.round(heading1Size * 1.2)}px; } h2 { margin: 0 0 12px 0; font-size: ${heading2Size}px; line-height: ${Math.round(heading2Size * 1.25)}px; } h3 { margin: 0 0 12px 0; font-size: ${heading3Size}px; line-height: ${Math.round(heading3Size * 1.3)}px; }`
+              cssText: `html, body { width: 100%; } body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: ${colors.background}; color: ${colors.text}; margin: 0; padding: 0; } .content, #editor, .pell, .pell-content { width: 100%; } #editor, .pell-content { font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; background-color: ${colors.background}; } p, div, li, span { margin: 0 0 12px 0; font-size: ${editorFontSize}px; line-height: ${editorLineHeight}px; color: ${colors.text}; } ul, ol { padding-left: 22px; margin: 0 0 12px 0; } h1 { margin: 0 0 12px 0; font-size: ${heading1Size}px; line-height: ${Math.round(heading1Size * 1.2)}px; } h2 { margin: 0 0 12px 0; font-size: ${heading2Size}px; line-height: ${Math.round(heading2Size * 1.25)}px; } h3 { margin: 0 0 12px 0; font-size: ${heading3Size}px; line-height: ${Math.round(heading3Size * 1.3)}px; }`
             }}
           />
         </Pressable>
