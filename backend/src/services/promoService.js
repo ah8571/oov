@@ -46,30 +46,30 @@ export const redeemPromoCode = async (userId, code) => {
   const supabase = getSupabaseClient();
   const { promo } = validation;
 
-  // Check if user already redeemed this code
-  const { data: existing } = await supabase
-    .from('promo_redemptions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('promo_code_id', promo.id)
+  // Check if user already redeemed this code (stored on users table)
+  const { data: userRecord } = await supabase
+    .from('users')
+    .select('last_promo_code')
+    .eq('id', userId)
     .maybeSingle();
 
-  if (existing) {
+  if (userRecord?.last_promo_code === promo.code) {
     return { success: false, error: 'You have already redeemed this promo code.' };
   }
 
-  // Record redemption and increment usage
+  // Record redemption on users table
   const { error: redeemError } = await supabase
-    .from('promo_redemptions')
-    .insert({
-      promo_code_id: promo.id,
-      user_id: userId,
-      code: promo.code,
-      credits_granted: promo.credits
-    });
+    .from('users')
+    .update({
+      last_promo_code: promo.code,
+      last_promo_credits: promo.credits,
+      last_promo_redeemed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', userId);
 
   if (redeemError) {
-    console.error('[Promo] Redemption record error:', redeemError.message);
+    console.error('[Promo] User update error:', redeemError.message);
     return { success: false, error: 'Failed to redeem code.' };
   }
 

@@ -22,24 +22,6 @@ export const getStripeProStatus = async (userId) => {
   };
 };
 
-export const getPaddleProStatus = async (userId) => {
-  if (!userId) return { isProActive: false };
-
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('users')
-    .select('paddle_status, paddle_tier, is_pro_active')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error || !data) return { isProActive: false };
-
-  return {
-    isProActive: data.paddle_status === 'active' && data.is_pro_active === true,
-    tier: data.paddle_tier || null
-  };
-};
-
 export const getUserVoiceBillingStatus = async (userId) => {
   const [billingProfile, creditStatus, stripeStatus] = await Promise.all([
     getUserBillingProfile(userId).catch(() => ({})),
