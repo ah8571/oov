@@ -195,6 +195,10 @@ export const saveSummary = async (callId, userId, summaryData) => {
 
 export const saveReaderAudio = async (userId, readerAudio) => {
   const client = getSupabaseClient();
+  const metadata = { ...(readerAudio.metadata || {}) };
+  if (readerAudio.voiceLabel) metadata.voiceLabel = readerAudio.voiceLabel;
+  if (readerAudio.voiceProfile) metadata.voiceProfile = readerAudio.voiceProfile;
+
   const { data, error } = await client
     .from('reader_saved_audio')
     .insert({
@@ -207,7 +211,7 @@ export const saveReaderAudio = async (userId, readerAudio) => {
       character_count: readerAudio.characterCount,
       chunk_count: readerAudio.chunkCount,
       language_code: readerAudio.languageCode,
-      metadata: readerAudio.metadata || {}
+      metadata
     })
     .select()
     .single();

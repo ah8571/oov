@@ -323,7 +323,7 @@ router.post('/audio', authMiddleware, async (req, res) => {
           languageCode: audioResponse.metadata.languageCode,
           provider: audioResponse.metadata.provider,
           voiceProfile: audioResponse.metadata.voiceProfile,
-          voiceLabel: voiceLabel || null,
+          voiceLabel: requestData.voiceLabel || null,
         });
       } catch (saveError) {
         console.error('Auto-save failed for reader audio:', saveError.message);
