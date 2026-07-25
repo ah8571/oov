@@ -673,7 +673,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const contentTopPadding = Platform.OS === 'android' && toolbarVisible
     ? floatingBackInset + toolbarVisualHeight + 12
     : floatingBackInset;
-  const editorWrapperPointerEvents = editorFocused ? 'box-none' : 'auto';
+  const shouldUseEditorShellPress = Platform.OS !== 'android';
+  const editorWrapperPointerEvents = shouldUseEditorShellPress
+    ? (editorFocused ? 'box-none' : 'auto')
+    : 'box-none';
 
   return (
     <>
@@ -732,10 +735,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         />
 
         <Pressable
-          disabled={editorFocused}
+          disabled={!shouldUseEditorShellPress || editorFocused}
           style={[styles.editorShell, { borderTopColor: colors.border }]}
           pointerEvents={editorWrapperPointerEvents}
-          onPress={() => {
+          onPress={shouldUseEditorShellPress ? () => {
             logNoteEditorEvent('shell_press', { editorFocused, keyboardVisible });
             if (editorFocused) {
               return;
@@ -745,15 +748,15 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             requestAnimationFrame(() => {
               richTextRef.current?.focusContentEditor?.();
             });
-          }}
-          onPressIn={() => {
+          } : undefined}
+          onPressIn={shouldUseEditorShellPress ? () => {
             logNoteEditorEvent('shell_press_in', { editorFocused, keyboardVisible });
             if (editorFocused) {
               return;
             }
 
             pendingEditorFocusRef.current = true;
-          }}
+          } : undefined}
         >
           <RichEditor
             key={existingNote?.id || noteId || 'new-note'}
