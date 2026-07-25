@@ -21,6 +21,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   const borderColor = colors.borderColor || '#333';
   const mutedColor = colors.mutedText || '#999';
   const textColor = colors.text || '#fff';
+  const bgColor = colors.background || '#050607';
 
   const currentVoice = voiceOptions.find(v => v.id === selectedVoice) || voiceOptions[0];
 
@@ -135,6 +136,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     },
     playBtnActive: { backgroundColor: textColor },
     playBtnText: { color: textColor, fontSize: 14, fontWeight: '700' },
+    playBtnTextActive: { color: bgColor, fontSize: 14, fontWeight: '700' },
     metaGroup: {
       marginLeft: 'auto',
       flexDirection: 'row',
@@ -218,11 +220,11 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             <Ionicons
               name={isSpeaking ? 'stop' : 'play'}
               size={14}
-              color={isSpeaking ? '#fff' : textColor}
+              color={isSpeaking ? bgColor : textColor}
               style={{ marginRight: 4 }}
             />
           )}
-          <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
+          <Text style={[(isSpeaking || isPreparing) ? s.playBtnTextActive : s.playBtnText]}>
             {isPreparing ? (timeEstimate ? `Preparing ~${timeEstimate}` : 'Preparing') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
           </Text>
         </TouchableOpacity>

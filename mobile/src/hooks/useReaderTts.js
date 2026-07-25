@@ -179,6 +179,7 @@ export const useReaderTts = () => {
       activeSoundRef.current = sound;
 
       const initialStatus = await sound.getStatusAsync();
+      console.log('[ReaderTTS] Sound loaded:', { isLoaded: initialStatus.isLoaded, durationMs: initialStatus.durationMillis, uri });
       if (!initialStatus.isLoaded || (initialStatus.durationMillis || 0) <= 0) {
         await sound.unloadAsync().catch(() => {});
         activeSoundRef.current = null;
@@ -189,7 +190,13 @@ export const useReaderTts = () => {
       // Use a ref guard so a premature didJustFinish (from a microtask
       // racing ahead of React's setIsSpeaking) doesn't hide the Stop button.
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish && isSpeakingRef.current) {
+        if (status.didJustFinish) {
+          if (!isSpeakingRef.current) {
+            console.log('[ReaderTTS] Premature didJustFinish ignored (isSpeakingRef is false)');
+            return;
+          }
+          console.log('[ReaderTTS] Playback finished naturally');
+          isSpeakingRef.current = false;
           isSpeakingRef.current = false;
           setIsSpeaking(false);
           setEstimatedTime(null);
@@ -202,10 +209,12 @@ export const useReaderTts = () => {
       });
 
       await sound.playAsync();
+      console.log('[ReaderTTS] playAsync resolved, setting isSpeaking=true');
       isSpeakingRef.current = true;
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {
+      console.log('[ReaderTTS] Playback error:', error?.message);
       setIsPreparing(false);
       setIsSpeaking(false);
       setEstimatedTime(null);
