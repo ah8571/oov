@@ -545,8 +545,14 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     const hideSubscription = Keyboard.addListener(hideEvent, () => {
       logNoteEditorEvent('keyboard_hide', {
         metricsHeight: Keyboard.metrics?.()?.height || 0,
-        editorFocused
+        editorFocused: editorFocusedRef.current,
+        pendingEditorFocus: pendingEditorFocusRef.current
       });
+
+      if (Platform.OS === 'android' && !editorFocusedRef.current && !pendingEditorFocusRef.current) {
+        setAndroidToolbarArmed(false);
+      }
+
       pendingEditorFocusRef.current = false;
       setKeyboardVisible(false);
       setKeyboardHeight(0);
