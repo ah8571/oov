@@ -54,9 +54,16 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
           const credits = tierConfig?.credits || 0;
           console.log('[Stripe] Tier config:', tier, '→', credits, 'credits');
 
+          // Snapshot old values before updating
+          const { data: oldUser } = await supabase
+            .from('users')
+            .select('last_credit_allocation_date, stripe_tier')
+            .eq('id', userId)
+            .maybeSingle();
+
           // Update users with Stripe subscription data
           const billingState = tier ? `pro_stripe:${tier}` : 'pro_stripe';
-          const { error: userUpdateErr } = await supabase.from('users').update({
+          await supabase.from('users').update({
             billing_state: billingState,
             is_pro_active: true,
             stripe_subscription_id: subscriptionId,
@@ -68,34 +75,26 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
             updated_at: new Date().toISOString()
           }).eq('id', userId);
 
-          if (userUpdateErr) {
-            console.error('[Stripe] User update error:', userUpdateErr.message);
-          } else {
-            console.log('[Stripe] User updated for', userId, 'tier:', tier);
-          }
-
-          if (userUpdateErr) {
-            console.error('[Stripe] User billing_state update error:', userUpdateErr.message);
-          }
+          console.log('[Stripe] User updated for', userId, 'tier:', tier);
 
           if (credits > 0) {
-            // Grant credits only if the previous allocation has expired
-            const { data: existingUser } = await supabase
-              .from('users')
-              .select('last_credit_allocation_date')
-              .eq('id', userId)
-              .maybeSingle();
+            const oldTier = oldUser?.stripe_tier;
+            const lastAllocation = oldUser?.last_credit_allocation_date;
+            const tierChanged = oldTier && oldTier !== tier;
 
-            const lastAllocation = existingUser?.last_credit_allocation_date;
-            const periodDays = tier === 'monthly' ? 30 : 7;
-            const periodExpired = !lastAllocation
+            const periodDays = oldTier === 'monthly' ? 30 : oldTier === 'weekly' ? 7 : 0;
+            const periodExpired = !lastAllocation || tierChanged
               || (Date.now() - new Date(lastAllocation).getTime()) > (periodDays * 24 * 60 * 60 * 1000);
 
             if (periodExpired) {
-              console.log('[Stripe] Granting', credits, 'credits to', userId, '(period expired)');
+              console.log('[Stripe] Granting', credits, 'credits to', userId,
+                tierChanged ? `(upgraded from ${oldTier})` : '(period expired)');
               await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
             } else {
-              console.log('[Stripe] Skipping credit grant for', userId, '(within current period)');
+              console.log('[Stripe] Skipping credit grant for', userId, '(same tier, within period)');
+            }
+          }
+              console.log('[Stripe] Skipping credit grant for', userId, '(same tier, within period)');
             }
           }
 
