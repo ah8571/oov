@@ -33,14 +33,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         const credits = tierConfig?.credits || 0;
 
         if (userId) {
-          await supabase.from('user_billing_entitlements').upsert({
-            user_id: userId,
+          await supabase.from('users').update({
+            is_pro_active: true,
             paddle_subscription_id: subscriptionId,
             paddle_tier: tier,
             paddle_status: event?.data?.status || 'active',
-            is_pro_active: true,
-            paddle_updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
+            updated_at: new Date().toISOString()
+          }).eq('id', userId);
 
           if (credits > 0) {
             await ensureCreditEntitlement(userId, credits, `paddle_${tier}`);
@@ -52,13 +51,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       case 'subscription.canceled':
       case 'subscription.past_due': {
         if (userId) {
-          await supabase.from('user_billing_entitlements').upsert({
-            user_id: userId,
+          await supabase.from('users').update({
+            is_pro_active: false,
             paddle_subscription_id: subscriptionId,
             paddle_status: event?.data?.status || 'inactive',
-            is_pro_active: false,
-            paddle_updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
+            updated_at: new Date().toISOString()
+          }).eq('id', userId);
         }
         break;
       }

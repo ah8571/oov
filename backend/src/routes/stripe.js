@@ -54,29 +54,25 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
           const credits = tierConfig?.credits || 0;
           console.log('[Stripe] Tier config:', tier, '→', credits, 'credits');
 
-          const { error: upsertErr } = await supabase.from('user_billing_entitlements').upsert({
-            user_id: userId,
-            stripe_subscription_id: subscriptionId,
-            stripe_tier: tier,
-            stripe_status: 'active',
-            is_pro_active: true,
-            stripe_updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
-
-          if (upsertErr) {
-            console.error('[Stripe] Upsert entitlements error:', upsertErr.message);
-          } else {
-            console.log('[Stripe] Entitlements upserted for', userId, 'tier:', tier);
-          }
-
-          // Keep users.billing_state in sync with tier for transparency
+          // Update users with Stripe subscription data
           const billingState = tier ? `pro_stripe:${tier}` : 'pro_stripe';
           const { error: userUpdateErr } = await supabase.from('users').update({
             billing_state: billingState,
+            is_pro_active: true,
+            stripe_subscription_id: subscriptionId,
+            stripe_tier: tier,
+            stripe_status: 'active',
+            stripe_updated_at: new Date().toISOString(),
             monthly_credit_allocation: credits,
             last_credit_allocation_date: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }).eq('id', userId);
+
+          if (userUpdateErr) {
+            console.error('[Stripe] User update error:', userUpdateErr.message);
+          } else {
+            console.log('[Stripe] User updated for', userId, 'tier:', tier);
+          }
 
           if (userUpdateErr) {
             console.error('[Stripe] User billing_state update error:', userUpdateErr.message);
@@ -105,15 +101,10 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
       case 'customer.subscription.deleted': {
         const subStatus = session?.status;
         if (userId) {
-          await supabase.from('user_billing_entitlements').upsert({
-            user_id: userId,
-            stripe_subscription_id: subscriptionId || session?.id,
-            stripe_status: subStatus === 'active' ? 'active' : 'inactive',
-            is_pro_active: subStatus === 'active',
-            stripe_updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
-
           await supabase.from('users').update({
+            is_pro_active: subStatus === 'active',
+            stripe_status: subStatus === 'active' ? 'active' : 'inactive',
+            stripe_updated_at: new Date().toISOString(),
             billing_state: subStatus === 'active' ? `pro_stripe:${tier || 'unknown'}` : 'trial',
             monthly_credit_allocation: subStatus === 'active' ? (STRIPE_TIERS[tier]?.credits || 0) : 0,
             last_credit_allocation_date: subStatus === 'active' ? new Date().toISOString() : null,
@@ -189,30 +180,26 @@ router.post('/cancel', authMiddleware, async (req, res) => {
   try {
     const { userId } = req;
 
-    // Look up the Stripe subscription ID from entitlements
+    // Look up the Stripe subscription ID from users table
     const supabase = getSupabaseClient();
-    const { data: entitlement } = await supabase
-      .from('user_billing_entitlements')
+    const { data: userRecord } = await supabase
+      .from('users')
       .select('stripe_subscription_id')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle();
 
-    const subscriptionId = entitlement?.stripe_subscription_id;
+    const subscriptionId = userRecord?.stripe_subscription_id;
     if (!subscriptionId) {
       return res.status(404).json({ error: 'No active Stripe subscription found' });
     }
 
     await cancelStripeSubscription(subscriptionId);
 
-    // Mark entitlements as inactive
-    await supabase.from('user_billing_entitlements').upsert({
-      user_id: userId,
-      stripe_status: 'canceled',
-      is_pro_active: false,
-      stripe_updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-
+    // Mark as canceled on users table
     await supabase.from('users').update({
+      is_pro_active: false,
+      stripe_status: 'canceled',
+      stripe_updated_at: new Date().toISOString(),
       billing_state: 'trial',
       monthly_credit_allocation: 0,
       last_credit_allocation_date: null,

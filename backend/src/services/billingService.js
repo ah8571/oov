@@ -9,9 +9,9 @@ export const getStripeProStatus = async (userId) => {
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('user_billing_entitlements')
+    .from('users')
     .select('stripe_status, stripe_tier, is_pro_active')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .maybeSingle();
 
   if (error || !data) return { isProActive: false };
@@ -27,9 +27,9 @@ export const getPaddleProStatus = async (userId) => {
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('user_billing_entitlements')
+    .from('users')
     .select('paddle_status, paddle_tier, is_pro_active')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .maybeSingle();
 
   if (error || !data) return { isProActive: false };
