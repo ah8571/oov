@@ -25,7 +25,6 @@ const AUTO_SAVE_DELAY_MS = 900;
 const UNTITLED_NOTE_TITLE = 'Untitled note';
 const NOTE_TEXT_SCALE_OPTIONS = [0.95, 1, 1.15, 1.3];
 const TOOLBAR_DOCK_HEIGHT = 58;
-const BOTTOM_SAFE_ZONE = 44;
 
 /**
  * CreateNoteScreen
@@ -596,7 +595,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const heading3Size = Math.round(20 * noteTextScale);
   const titleFontSize = Math.round(36 * noteTextScale);
   const titleLineHeight = Math.round(titleFontSize * 1.15);
-  const safeBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? BOTTOM_SAFE_ZONE : 12);
+  const safeBottomInset = Math.max(insets.bottom, 12);
   const readerBarBottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 10 : 12);
   const effectiveKeyboardHeight = keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0;
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
@@ -840,10 +839,10 @@ const styles = StyleSheet.create({
     paddingTop: 10
   },
   contentContainer: {
-    paddingBottom: BOTTOM_SAFE_ZONE + 8
+    paddingBottom: 20
   },
   contentContainerWithKeyboard: {
-    paddingBottom: TOOLBAR_DOCK_HEIGHT + BOTTOM_SAFE_ZONE + 44
+    paddingBottom: TOOLBAR_DOCK_HEIGHT + 56
   },
   titleInput: {
     fontSize: 20,
