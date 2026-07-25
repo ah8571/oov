@@ -159,8 +159,7 @@ const RecordingCard = ({ entry, colors, onRefresh }) => {
                 {entry.title || 'Recording'}
               </Text>
               <Text style={[styles.meta, { color: colors.mutedText }]}>
-                {entry.voiceLabel || entry.voiceName || 'Audio'}
-                {entry.createdAt ? ` · ${new Date(entry.createdAt).toLocaleDateString()}` : ''}
+                {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}
               </Text>
             </>
           )}
