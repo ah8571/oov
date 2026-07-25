@@ -156,17 +156,20 @@ export const useReaderTts = () => {
   // ── Fallback audio playback (Resemble / backend TTS) ────────
   const playFallbackAudio = useCallback(async ({ text, title, provider, voiceProfile, voiceLabel, languagePreference, speechRate }) => {
     setIsPreparing(true);
+    console.log('[ReaderTTS] Starting playback for:', title, 'voice:', voiceProfile);
     try {
       const response = await generateReaderAudio({ text, title, provider, voiceProfile, voiceLabel, languagePreference, speechRate });
+      console.log('[ReaderTTS] API response success:', response?.success, 'hasAudio:', !!response?.audioBase64);
       if (!response?.success || !response.audioBase64) {
         throw new Error(response?.error || 'Unable to generate audio');
       }
-      if (speechCancelledRef.current) return;
+      if (speechCancelledRef.current) { console.log('[ReaderTTS] Cancelled before playback'); return; }
 
       await ensureReaderAudioDirectory();
       const fileName = sanitizeAudioFileName(title || response.fileName || 'reader');
       const uri = `${READER_AUDIO_DIRECTORY}/preview-${Date.now()}-${fileName}.mp3`;
       await FileSystem.writeAsStringAsync(uri, response.audioBase64, { encoding: FileSystem.EncodingType.Base64 });
+      console.log('[ReaderTTS] File written:', uri);
       activeSoundUriRef.current = uri;
 
       await Audio.setAudioModeAsync({
@@ -174,8 +177,10 @@ export const useReaderTts = () => {
         staysActiveInBackground: false
       });
 
+      console.log('[ReaderTTS] Creating sound...');
       const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: false }, (status) => {
         if (status.didJustFinish) {
+          console.log('[ReaderTTS] didJustFinish fired');
           setIsSpeaking(false);
           setEstimatedTime(null);
           setJustCompletedTs(Date.now());
@@ -186,8 +191,14 @@ export const useReaderTts = () => {
         }
       });
       activeSoundRef.current = sound;
+
+      const status = await sound.getStatusAsync();
+      console.log('[ReaderTTS] Sound status — loaded:', status.isLoaded, 'duration:', status.durationMillis);
+
       await sound.setVolumeAsync(1.0);
+      console.log('[ReaderTTS] Calling playAsync...');
       await sound.playAsync();
+      console.log('[ReaderTTS] playAsync resolved, setting isSpeaking');
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {
