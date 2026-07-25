@@ -501,7 +501,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-          var html = '<p>' + escapedText.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+          var html = '<p>' + escapedText.replace(/\\r\\n/g, '\\n').replace(/\\n{2,}/g, '</p><p>').replace(/\\n/g, '<br>') + '</p>';
           document.execCommand('insertHTML', false, html);
         });
       }
