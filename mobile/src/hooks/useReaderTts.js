@@ -170,7 +170,21 @@ export const useReaderTts = () => {
       activeSoundUriRef.current = uri;
 
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true }, (status) => {
+
+      // Load silently first — shouldPlay:true can fire didJustFinish in a
+      // microtask before setIsSpeaking(true) takes effect, which hides Stop.
+      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: false });
+      activeSoundRef.current = sound;
+
+      const initialStatus = await sound.getStatusAsync();
+      if (!initialStatus.isLoaded || (initialStatus.durationMillis || 0) <= 0) {
+        await sound.unloadAsync().catch(() => {});
+        activeSoundRef.current = null;
+        throw new Error('Audio failed to decode. The format may not be supported on this device.');
+      }
+
+      // Set up the finish callback after we know the sound is valid
+      sound.setOnPlaybackStatusUpdate((status) => {
         if (status.didJustFinish) {
           setIsSpeaking(false);
           setEstimatedTime(null);
@@ -181,7 +195,8 @@ export const useReaderTts = () => {
           refreshSavedAudio();
         }
       });
-      activeSoundRef.current = sound;
+
+      await sound.playAsync();
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {
