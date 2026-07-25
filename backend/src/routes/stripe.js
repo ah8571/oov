@@ -18,13 +18,29 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     const eventType = event.type;
     const session = event.data.object;
     const metadata = session?.metadata || {};
-    const userId = metadata?.userId || session?.client_reference_id;
+    let userId = metadata?.userId || session?.client_reference_id;
     const tier = metadata?.tier || '';
     const subscriptionId = session?.subscription || session?.id;
+    const customerEmail = session?.customer_details?.email || session?.customer_email || '';
 
     console.log('[Stripe] Webhook:', eventType, { userId, subscriptionId, tier });
 
     const supabase = getSupabaseClient();
+
+    // Website flow uses a synthetic ID — resolve to real user via email
+    if (userId && (String(userId).startsWith('web_') || String(userId).startsWith('anon_'))) {
+      if (customerEmail) {
+        const { data: user } = await supabase.from('users').select('id').eq('email', customerEmail).maybeSingle();
+        if (user?.id) {
+          console.log('[Stripe] Resolved web checkout to user:', user.id, 'via email:', customerEmail);
+          userId = user.id;
+        }
+      }
+      if (!userId || String(userId).startsWith('web_')) {
+        console.log('[Stripe] Cannot resolve web checkout — no matching email:', customerEmail);
+        return res.json({ received: true, skipped: 'no_user_match' });
+      }
+    }
 
     switch (eventType) {
       case 'checkout.session.completed': {
