@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
-import { deleteAccount, getBillingStatus } from '../services/api.js';
+import { deleteAccount, getBillingStatus, cancelStripeSubscription } from '../services/api.js';
 import {
   getCallLanguagePreference,
   getCallVoicePreference,
@@ -207,6 +207,28 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
           text: 'Log out',
           style: 'destructive',
           onPress: () => onLogout?.()
+        }
+      ]
+    );
+  };
+
+  const handleCancelSubscription = () => {
+    Alert.alert(
+      'Cancel subscription',
+      'Your credits and Pro access will remain active until the end of the current billing period.',
+      [
+        { text: 'Keep subscription', style: 'cancel' },
+        {
+          text: 'Cancel', style: 'destructive',
+          onPress: async () => {
+            const result = await cancelStripeSubscription();
+            if (result.success) {
+              Alert.alert('Canceled', 'Your subscription has been canceled.');
+              loadBillingSummary();
+            } else {
+              Alert.alert('Error', result.error || 'Unable to cancel subscription.');
+            }
+          }
         }
       ]
     );
@@ -448,6 +470,16 @@ const SettingsScreen = ({ onLogout, onOpenUpgrade, onOpenScreen, onAccountDelete
           <Text style={[styles.upgradeCardButtonText, { color: colors.surface }]}>Upgrade to Pro</Text>
         </TouchableOpacity>
 
+        {billingSummary.isProActive && (
+          <TouchableOpacity
+            style={[styles.cancelButton, { borderColor: colors.border }]}
+            onPress={handleCancelSubscription}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.cancelButtonText, { color: colors.mutedText }]}>Cancel subscription</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={[styles.logoutButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={handleLogout}
@@ -650,6 +682,19 @@ const styles = StyleSheet.create({
   upgradeCardButtonText: {
     fontSize: 16,
     fontWeight: '700'
+  },
+  cancelButton: {
+    marginTop: 12,
+    minHeight: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600'
   },
   logoutButtonText: {
     fontSize: 16,
