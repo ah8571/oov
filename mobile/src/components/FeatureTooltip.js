@@ -36,18 +36,18 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
 
         {/* Chevron trail pointing diagonally down-right to the speaker button */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.2)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={17} color="rgba(255,255,255,0.25)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.3)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={19} color="rgba(255,255,255,0.35)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.4)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={21} color="rgba(255,255,255,0.5)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={22} color="rgba(255,255,255,0.55)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={23} color="rgba(255,255,255,0.6)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={24} color="rgba(255,255,255,0.65)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={25} color="rgba(255,255,255,0.7)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="arrow-forward" size={26} color="rgba(255,255,255,0.75)" style={[styles.arr, { transform: [{ rotate: '45deg' }] }]} />
-          <Ionicons name="caret-forward" size={30} color="#ffffff" style={{ transform: [{ rotate: '45deg' }] }} />
+          <Ionicons name="arrow-forward" size={14} color="rgba(255,255,255,0.2)" style={[styles.arr, styles.a1]} />
+          <Ionicons name="arrow-forward" size={15} color="rgba(255,255,255,0.25)" style={[styles.arr, styles.a2]} />
+          <Ionicons name="arrow-forward" size={16} color="rgba(255,255,255,0.3)" style={[styles.arr, styles.a3]} />
+          <Ionicons name="arrow-forward" size={17} color="rgba(255,255,255,0.35)" style={[styles.arr, styles.a4]} />
+          <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.4)" style={[styles.arr, styles.a5]} />
+          <Ionicons name="arrow-forward" size={19} color="rgba(255,255,255,0.5)" style={[styles.arr, styles.a6]} />
+          <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.55)" style={[styles.arr, styles.a7]} />
+          <Ionicons name="arrow-forward" size={21} color="rgba(255,255,255,0.6)" style={[styles.arr, styles.a8]} />
+          <Ionicons name="arrow-forward" size={22} color="rgba(255,255,255,0.65)" style={[styles.arr, styles.a9]} />
+          <Ionicons name="arrow-forward" size={23} color="rgba(255,255,255,0.7)" style={[styles.arr, styles.a10]} />
+          <Ionicons name="arrow-forward" size={24} color="rgba(255,255,255,0.75)" style={[styles.arr, styles.a11]} />
+          <Ionicons name="caret-forward" size={28} color="#ffffff" style={styles.acaret} />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -71,7 +71,19 @@ const styles = StyleSheet.create({
     marginTop: -4,
     marginLeft: 80,
   },
-  arr: { marginBottom: -10, marginLeft: 4 },
+  arr: { transform: [{ rotate: '45deg' }], marginBottom: -12 },
+  a1:  { marginLeft: 0 },
+  a2:  { marginLeft: 10 },
+  a3:  { marginLeft: 20 },
+  a4:  { marginLeft: 30 },
+  a5:  { marginLeft: 40 },
+  a6:  { marginLeft: 50 },
+  a7:  { marginLeft: 60 },
+  a8:  { marginLeft: 70 },
+  a9:  { marginLeft: 80 },
+  a10: { marginLeft: 90 },
+  a11: { marginLeft: 100 },
+  acaret: { transform: [{ rotate: '45deg' }], marginLeft: 110 },
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
