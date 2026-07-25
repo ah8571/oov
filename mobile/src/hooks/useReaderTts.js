@@ -123,6 +123,7 @@ export const useReaderTts = () => {
   const speechCancelledRef = useRef(false);
   const activeSoundRef = useRef(null);
   const activeSoundUriRef = useRef(null);
+  const isSpeakingRef = useRef(false);
 
   // On-device Kokoro hook (deferred load)
   const [kokoroLoadRequested, setKokoroLoadRequested] = useState(false);
@@ -141,6 +142,7 @@ export const useReaderTts = () => {
     speechIndexRef.current = 0;
     setIsPreparing(false);
     setIsSpeaking(false);
+    isSpeakingRef.current = false;
     setEstimatedTime(null);
     if (wasSpeaking) setJustCompletedTs(Date.now());
     try { await Speech.stop(); } catch {}
@@ -183,9 +185,12 @@ export const useReaderTts = () => {
         throw new Error('Audio failed to decode. The format may not be supported on this device.');
       }
 
-      // Set up the finish callback after we know the sound is valid
+      // Set up the finish callback after we know the sound is valid.
+      // Use a ref guard so a premature didJustFinish (from a microtask
+      // racing ahead of React's setIsSpeaking) doesn't hide the Stop button.
       sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
+        if (status.didJustFinish && isSpeakingRef.current) {
+          isSpeakingRef.current = false;
           setIsSpeaking(false);
           setEstimatedTime(null);
           setJustCompletedTs(Date.now());
@@ -197,6 +202,7 @@ export const useReaderTts = () => {
       });
 
       await sound.playAsync();
+      isSpeakingRef.current = true;
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {

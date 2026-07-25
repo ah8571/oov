@@ -19,7 +19,6 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   const { colors } = useAppTheme();
   const barBg = colors.cardBackground || '#1a1a2e';
   const borderColor = colors.borderColor || '#333';
-  const accentColor = colors.primary || '#6c63ff';
   const mutedColor = colors.mutedText || '#999';
   const textColor = colors.text || '#fff';
 
@@ -132,10 +131,10 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       paddingHorizontal: 18,
       paddingVertical: 9,
       borderRadius: 22,
-      backgroundColor: accentColor + '22'
+      backgroundColor: textColor + '15'
     },
-    playBtnActive: { backgroundColor: accentColor },
-    playBtnText: { color: accentColor, fontSize: 14, fontWeight: '700' },
+    playBtnActive: { backgroundColor: textColor },
+    playBtnText: { color: textColor, fontSize: 14, fontWeight: '700' },
     metaGroup: {
       marginLeft: 'auto',
       flexDirection: 'row',
@@ -148,9 +147,9 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       paddingVertical: 6,
       borderRadius: 6,
       borderWidth: 1,
-      borderColor: accentColor
+      borderColor: borderColor
     },
-    voiceChipText: { color: accentColor, fontSize: 12, fontWeight: '600' },
+    voiceChipText: { color: textColor, fontSize: 12, fontWeight: '600' },
 
     // Modal
     backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
@@ -219,7 +218,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             <Ionicons
               name={isSpeaking ? 'stop' : 'play'}
               size={14}
-              color={isSpeaking ? '#fff' : accentColor}
+              color={isSpeaking ? '#fff' : textColor}
               style={{ marginRight: 4 }}
             />
           )}
@@ -274,7 +273,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             {voiceOptions.map(voice => (
               <TouchableOpacity
                 key={voice.id}
-                style={[s.voiceOption, selectedVoice === voice.id && { backgroundColor: accentColor + '11' }]}
+                style={[s.voiceOption, selectedVoice === voice.id && { backgroundColor: textColor + '10' }]}
                 onPress={() => { setSelectedVoice(voice.id); setShowVoicePicker(false); }}
               >
                 <Text style={s.voiceLabel}>
