@@ -36,12 +36,18 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
 
         {/* Chevron trail pointing diagonally down-right to the speaker button */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="chevron-down" size={18} color="rgba(255,255,255,0.25)" style={styles.arr1} />
-          <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.35)" style={styles.arr2} />
-          <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.45)" style={styles.arr3} />
-          <Ionicons name="chevron-down" size={24} color="rgba(255,255,255,0.55)" style={styles.arr4} />
-          <Ionicons name="chevron-down" size={26} color="rgba(255,255,255,0.65)" style={styles.arr5} />
-          <Ionicons name="caret-down" size={32} color="#ffffff" style={styles.arr6} />
+          <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.2)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={17} color="rgba(255,255,255,0.25)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={18} color="rgba(255,255,255,0.3)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={19} color="rgba(255,255,255,0.35)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={20} color="rgba(255,255,255,0.4)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={21} color="rgba(255,255,255,0.5)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.55)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={23} color="rgba(255,255,255,0.6)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={24} color="rgba(255,255,255,0.65)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={25} color="rgba(255,255,255,0.7)" style={styles.arr} />
+          <Ionicons name="chevron-down" size={26} color="rgba(255,255,255,0.75)" style={styles.arr} />
+          <Ionicons name="caret-down" size={30} color="#ffffff" />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -62,15 +68,10 @@ const styles = StyleSheet.create({
   },
   arrowWrap: {
     alignItems: 'center',
-    marginTop: -8,
-    marginLeft: 60,
+    marginTop: -4,
+    marginLeft: 80,
   },
-  arr1: { transform: [{ rotate: '315deg' }], marginLeft: 8, marginBottom: -10 },
-  arr2: { transform: [{ rotate: '315deg' }], marginLeft: 16, marginBottom: -10 },
-  arr3: { transform: [{ rotate: '315deg' }], marginLeft: 24, marginBottom: -10 },
-  arr4: { transform: [{ rotate: '315deg' }], marginLeft: 32, marginBottom: -10 },
-  arr5: { transform: [{ rotate: '315deg' }], marginLeft: 40, marginBottom: -10 },
-  arr6: { transform: [{ rotate: '315deg' }], marginLeft: 48 },
+  arr: { transform: [{ rotate: '315deg' }], marginBottom: -10, marginLeft: 4 },
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
