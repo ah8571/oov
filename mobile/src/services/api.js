@@ -983,6 +983,16 @@ export const getBillingStatus = async () => {
   }
 };
 
+export const cancelStripeSubscription = async () => {
+  try {
+    await addTokenToHeaders();
+    const response = await apiClient.post('/stripe/cancel');
+    return { success: true, ...response.data };
+  } catch (error) {
+    return { success: false, error: formatApiError(error, 'Failed to cancel subscription') };
+  }
+};
+
 export const importReaderDocument = async (fileAsset) => {
   try {
     const token = await getAccessToken();

@@ -1,4 +1,5 @@
 import express from 'express';
+import authMiddleware from '../middleware/auth.js';
 import { verifyStripeWebhook, createStripeCheckout, cancelStripeSubscription, STRIPE_TIERS } from '../services/stripeService.js';
 import { ensureCreditEntitlement, getSupabaseClient } from '../services/databaseService.js';
 import { validatePromoCode, redeemPromoCode } from '../services/promoService.js';
@@ -152,14 +153,33 @@ router.post('/checkout', async (req, res) => {
 });
 
 // Cancel subscription
-router.post('/cancel', async (req, res) => {
+router.post('/cancel', authMiddleware, async (req, res) => {
   try {
     const { userId } = req;
-    const { subscriptionId } = req.body || {};
 
-    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+    // Look up the Stripe subscription ID from entitlements
+    const supabase = getSupabaseClient();
+    const { data: entitlement } = await supabase
+      .from('user_billing_entitlements')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const subscriptionId = entitlement?.stripe_subscription_id;
+    if (!subscriptionId) {
+      return res.status(404).json({ error: 'No active Stripe subscription found' });
+    }
 
     await cancelStripeSubscription(subscriptionId);
+
+    // Mark entitlements as inactive
+    await supabase.from('user_billing_entitlements').upsert({
+      user_id: userId,
+      stripe_status: 'canceled',
+      is_pro_active: false,
+      stripe_updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+
     return res.json({ success: true });
   } catch (error) {
     console.error('[Stripe] Cancel error:', error.message);

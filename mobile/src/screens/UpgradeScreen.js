@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
-import { getBillingStatus } from '../services/api.js';
+import { getBillingStatus, cancelStripeSubscription } from '../services/api.js';
 import {
   getRevenueCatDisplayMessage,
   getRevenueCatOfferings,
@@ -86,6 +86,32 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
       setBilling(response.billing || null);
       setCredits(response.credits || null);
     }
+  };
+
+  const handleCancelSubscription = () => {
+    Alert.alert(
+      'Cancel subscription',
+      'Your credits and Pro access will remain active until the end of the current billing period.',
+      [
+        { text: 'Keep subscription', style: 'cancel' },
+        {
+          text: 'Cancel', style: 'destructive',
+          onPress: async () => {
+            const result = await cancelStripeSubscription();
+            if (result.success) {
+              Alert.alert('Canceled', 'Your subscription has been canceled.');
+              const response = await getBillingStatus();
+              if (response.success) {
+                setBilling(response.billing || null);
+                setCredits(response.credits || null);
+              }
+            } else {
+              Alert.alert('Error', result.error || 'Unable to cancel subscription.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleIapPurchase = async () => {
@@ -175,11 +201,21 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={() => Linking.openURL('https://oov.digital/account')}>
-          <Text style={[styles.manageLink, { color: colors.accent, marginTop: 8 }]}>
-            Manage subscription →
-          </Text>
-        </TouchableOpacity>
+        {billing?.billingState === 'pro_stripe' ? (
+          <TouchableOpacity
+            style={[styles.cancelButton, { borderColor: colors.border }]}
+            onPress={handleCancelSubscription}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.cancelButtonText, { color: colors.mutedText }]}>Cancel subscription</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => Linking.openURL('https://oov.digital/account')}>
+            <Text style={[styles.manageLink, { color: colors.accent, marginTop: 8 }]}>
+              Manage subscription →
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Apple IAP — one-off credit purchase for compliance */}
@@ -388,6 +424,17 @@ const styles = StyleSheet.create({
   manageLink: {
     fontSize: 13,
     textAlign: 'center'
+  },
+  cancelButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center'
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600'
   },
   heroDescription: {
     fontSize: designTokens.typography.body,
