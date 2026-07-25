@@ -28,6 +28,7 @@ const TOOLBAR_DOCK_HEIGHT = 58;
 const EDITOR_HORIZONTAL_PADDING = 7;
 const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
 const ANDROID_KEYBOARD_FALLBACK_HEIGHT = 280;
+const ANDROID_KEYBOARD_DISMISS_DELAY_MS = 180;
 
 /**
  * CreateNoteScreen
@@ -67,6 +68,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const titleInputRef = useRef(null);
   const pendingEditorFocusRef = useRef(false);
   const editorFocusedRef = useRef(false);
+  const androidKeyboardDismissTimeoutRef = useRef(null);
 
   const updateSaveState = (nextValue) => {
     if (isMountedRef.current) {
@@ -78,6 +80,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
       autoSaveTimeoutRef.current = null;
+    }
+  };
+
+  const clearAndroidKeyboardDismissTimeout = () => {
+    if (androidKeyboardDismissTimeoutRef.current) {
+      clearTimeout(androidKeyboardDismissTimeoutRef.current);
+      androidKeyboardDismissTimeoutRef.current = null;
     }
   };
 
@@ -535,6 +544,8 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         metricsHeight: Keyboard.metrics?.()?.height || 0
       });
 
+      clearAndroidKeyboardDismissTimeout();
+
       if (Platform.OS === 'android' && (editorFocusedRef.current || pendingEditorFocusRef.current)) {
         setAndroidToolbarArmed(true);
       }
@@ -553,12 +564,34 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         setAndroidToolbarArmed(false);
       }
 
+      if (Platform.OS === 'android' && editorFocusedRef.current && !pendingEditorFocusRef.current) {
+        clearAndroidKeyboardDismissTimeout();
+        androidKeyboardDismissTimeoutRef.current = setTimeout(() => {
+          androidKeyboardDismissTimeoutRef.current = null;
+
+          if (!editorFocusedRef.current || pendingEditorFocusRef.current) {
+            return;
+          }
+
+          if ((Keyboard.metrics?.()?.height || 0) > 0) {
+            return;
+          }
+
+          logNoteEditorEvent('keyboard_dismiss_blur');
+          richTextRef.current?.blurContentEditor?.();
+          editorFocusedRef.current = false;
+          setEditorFocused(false);
+          setAndroidToolbarArmed(false);
+        }, ANDROID_KEYBOARD_DISMISS_DELAY_MS);
+      }
+
       pendingEditorFocusRef.current = false;
       setKeyboardVisible(false);
       setKeyboardHeight(0);
     });
 
     return () => {
+      clearAndroidKeyboardDismissTimeout();
       showSubscription.remove();
       hideSubscription.remove();
     };
@@ -600,6 +633,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     return () => {
       onAppHeaderScroll?.(0);
       isMountedRef.current = false;
+      clearAndroidKeyboardDismissTimeout();
       clearAutoSaveTimeout();
       flushAutoSave(true).catch(() => {
         // Best-effort save when leaving the note screen.
@@ -803,6 +837,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
                 keyboardHeight: Keyboard.metrics?.()?.height || 0,
                 pendingEditorFocus: pendingEditorFocusRef.current
               });
+              clearAndroidKeyboardDismissTimeout();
               pendingEditorFocusRef.current = false;
               editorFocusedRef.current = true;
               setEditorFocused(true);
@@ -817,6 +852,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             }}
             onBlur={() => {
               logNoteEditorEvent('blur', { keyboardVisible });
+              clearAndroidKeyboardDismissTimeout();
               pendingEditorFocusRef.current = false;
               editorFocusedRef.current = false;
               setEditorFocused(false);
