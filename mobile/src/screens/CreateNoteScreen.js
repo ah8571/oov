@@ -27,6 +27,7 @@ const NOTE_TEXT_SCALE_OPTIONS = [0.95, 1, 1.15, 1.3];
 const TOOLBAR_DOCK_HEIGHT = 58;
 const EDITOR_HORIZONTAL_PADDING = 7;
 const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
+const ANDROID_KEYBOARD_FALLBACK_HEIGHT = 280;
 
 /**
  * CreateNoteScreen
@@ -527,10 +528,18 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSubscription = Keyboard.addListener(showEvent, (event) => {
+      logNoteEditorEvent('keyboard_show', {
+        eventHeight: event?.endCoordinates?.height || 0,
+        metricsHeight: Keyboard.metrics?.()?.height || 0
+      });
       setKeyboardVisible(true);
       setKeyboardHeight(event?.endCoordinates?.height || Keyboard.metrics?.()?.height || 0);
     });
     const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      logNoteEditorEvent('keyboard_hide', {
+        metricsHeight: Keyboard.metrics?.()?.height || 0,
+        editorFocused
+      });
       pendingEditorFocusRef.current = false;
       setKeyboardVisible(false);
       setKeyboardHeight(0);
@@ -649,7 +658,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const titleLineHeight = Math.round(titleFontSize * 1.15);
   const safeBottomInset = Math.max(insets.bottom, 12);
   const readerBarBottomInset = 0;
-  const effectiveKeyboardHeight = keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0;
+  const androidKeyboardActive = Platform.OS === 'android' && editorFocused;
+  const effectiveKeyboardHeight = Platform.OS === 'android'
+    ? (androidKeyboardActive ? Math.max(keyboardHeight || 0, Keyboard.metrics?.()?.height || 0, ANDROID_KEYBOARD_FALLBACK_HEIGHT) : 0)
+    : (keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0);
   const toolbarBottomPadding = Platform.OS === 'android'
     ? ANDROID_TOOLBAR_BOTTOM_PADDING
     : Math.max(safeBottomInset - 2, 8);
@@ -659,7 +671,9 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       ? 0
       : Math.max(effectiveKeyboardHeight - insets.bottom, 0)
     : safeBottomInset;
-  const toolbarVisible = keyboardVisible && editorFocused;
+  const toolbarVisible = Platform.OS === 'android'
+    ? editorFocused
+    : keyboardVisible && editorFocused;
   const editorContentBottomPadding = toolbarVisible ? toolbarVisualHeight + 96 : safeBottomInset + 44;
   const contentBottomPadding = toolbarVisible
     ? Platform.OS === 'android'
