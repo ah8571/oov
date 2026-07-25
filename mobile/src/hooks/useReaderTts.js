@@ -148,10 +148,12 @@ export const useReaderTts = () => {
     activeSoundRef.current = null;
     // Backend auto-saves during generation — refresh the list so the recording appears
     refreshSavedAudio();
-  }, [isSpeaking, refreshSavedAudio]);
+  }, [refreshSavedAudio]);
 
   // Unload on unmount
-  useEffect(() => () => { stopReading(); }, [stopReading]);
+  const stopReadingRef = useRef(stopReading);
+  stopReadingRef.current = stopReading;
+  useEffect(() => () => { stopReadingRef.current(); }, []);
 
   // ── Fallback audio playback (Resemble / backend TTS) ────────
   const playFallbackAudio = useCallback(async ({ text, title, provider, voiceProfile, voiceLabel, languagePreference, speechRate }) => {
