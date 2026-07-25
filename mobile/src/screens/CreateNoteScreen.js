@@ -754,7 +754,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               setContent(nextContent || '');
             }}
             style={styles.richEditor}
-            useContainer={Platform.OS !== 'android'}
+            useContainer
             initialHeight={320}
             disabled={false}
             editorStyle={{
@@ -898,7 +898,9 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   richEditor: {
-    minHeight: 320
+    minHeight: 320,
+    width: '100%',
+    alignSelf: 'stretch'
   },
   toolbarRichArea: {
     flex: 1
