@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { deleteCall, deleteNote, getCalls, getNotes, getTopics, getSavedReaderAudio, getSavedReaderAudioById } from '../services/api.js';
 import { loadLocalAudioRecordings, persistLocalAudioRecordings } from '../utils/localAudioStorage.js';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -165,34 +166,32 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
     onAppHeaderScroll?.(nextOffsetY);
   };
 
-  useEffect(() => {
-    const unsubscribeFocus = navigation.addListener('focus', () => {
-      loadNotes(selectedTopic, { silent: true });
-      loadTopics();
-      getNoteTextScalePreference().then((savedScale) => {
-        setNoteTextScale(savedScale || 1);
-      });
-    });
+  useEffect(() => {}, [loadNotes, loadTopics, navigation, selectedTopic]);
 
-    return () => {
-      unsubscribeFocus();
-    };
-  }, [loadNotes, loadTopics, navigation, selectedTopic]);
+  useEffect(() => {
+    setSelectedNoteIds((currentSelection) => currentSelection.filter((noteId) => notes.some((note) => note.id === noteId)));
+  }, [notes]);
+
+  // Auto-refresh all sections when screen focuses or app returns to foreground
+  useFocusEffect(useCallback(() => {
+    loadNotes(selectedTopic, { silent: true });
+    loadTopics();
+    loadTranscripts({ silent: true });
+    loadRecordings({ silent: true });
+  }, [loadNotes, loadTopics, loadTranscripts, loadRecordings, selectedTopic]));
 
   useEffect(() => {
     const handleAppStateChange = (nextState) => {
       if (nextState === 'active') {
         loadNotes(selectedTopic, { silent: true });
         loadTopics();
+        loadTranscripts({ silent: true });
+        loadRecordings({ silent: true });
       }
     };
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
-  }, [loadNotes, loadTopics, selectedTopic]);
-
-  useEffect(() => {
-    setSelectedNoteIds((currentSelection) => currentSelection.filter((noteId) => notes.some((note) => note.id === noteId)));
-  }, [notes]);
+  }, [loadNotes, loadTopics, loadTranscripts, loadRecordings, selectedTopic]);
 
   // ── Transcripts ──
   const loadTranscripts = useCallback(async (options = {}) => {
@@ -209,23 +208,6 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   }, []);
 
   useEffect(() => { loadTranscripts(); }, [loadTranscripts]);
-
-  useEffect(() => {
-    const unsubscribeFocus = navigation.addListener('focus', () => {
-      loadTranscripts({ silent: true });
-    });
-    return () => unsubscribeFocus();
-  }, [loadTranscripts, navigation]);
-
-  useEffect(() => {
-    const handleAppStateChange = (nextState) => {
-      if (nextState === 'active') {
-        loadTranscripts({ silent: true });
-      }
-    };
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, [loadTranscripts]);
 
   useEffect(() => {
     setSelectedTranscriptIds((current) =>
@@ -342,24 +324,6 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
   }, []);
 
   useEffect(() => { loadRecordings(); }, [loadRecordings]);
-
-  useEffect(() => {
-    const unsubscribeFocus = navigation.addListener('focus', () => {
-      loadRecordings({ silent: true });
-    });
-    return () => unsubscribeFocus();
-  }, [loadRecordings, navigation]);
-
-  // Auto-refresh recordings when app comes to foreground
-  useEffect(() => {
-    const handleAppStateChange = (nextState) => {
-      if (nextState === 'active') {
-        loadRecordings({ silent: true });
-      }
-    };
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, [loadRecordings]);
 
   const handleCreateNote = () => {
     navigation.navigate('CreateNote');
