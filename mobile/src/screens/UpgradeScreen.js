@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as WebBrowser from 'expo-web-browser';
 import { getBillingStatus, cancelStripeSubscription } from '../services/api.js';
@@ -209,13 +209,7 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
           >
             <Text style={[styles.cancelButtonText, { color: colors.mutedText }]}>Cancel subscription</Text>
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => Linking.openURL('https://oov.digital/account')}>
-            <Text style={[styles.manageLink, { color: colors.accent, marginTop: 8 }]}>
-              Manage subscription →
-            </Text>
-          </TouchableOpacity>
-        )}
+        ) : null}
       </View>
 
       {/* Apple IAP — one-off credit purchase for compliance */}
