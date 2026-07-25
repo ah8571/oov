@@ -1,4 +1,6 @@
 import express from 'express';
+import authMiddleware from '../middleware/auth.js';
+import { assertUserCanStartVoiceSession } from '../services/billingService.js';
 import { createInworldSession, buildInworldRealtimeConfig } from '../services/inworldVoiceService.js';
 import { inworldRtcConfigHandler } from '../controllers/inworldRtcController.js';
 
@@ -6,8 +8,9 @@ const router = express.Router();
 
 router.get('/rtc-config', inworldRtcConfigHandler);
 
-router.post('/session', async (req, res) => {
+router.post('/session', authMiddleware, async (req, res) => {
   try {
+    await assertUserCanStartVoiceSession(req.user?.userId);
     const sessionResponse = await createInworldSession(req.body || {});
     return res.json({
       success: true,

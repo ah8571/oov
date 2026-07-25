@@ -1,10 +1,13 @@
 import express from 'express';
+import authMiddleware from '../middleware/auth.js';
+import { assertUserCanStartVoiceSession } from '../services/billingService.js';
 import { createGeminiVoiceSession, buildGeminiRealtimeConfig } from '../services/geminiVoiceService.js';
 
 const router = express.Router();
 
-router.post('/session', async (req, res) => {
+router.post('/session', authMiddleware, async (req, res) => {
   try {
+    await assertUserCanStartVoiceSession(req.user?.userId);
     const tokenResponse = await createGeminiVoiceSession();
     return res.json({
       success: true,
