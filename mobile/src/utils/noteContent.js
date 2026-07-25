@@ -151,6 +151,33 @@ export const convertMarkdownishToHtml = (value) => {
   return html.join('');
 };
 
+export const convertImportedHtmlToPlainText = (value) => {
+  const raw = String(value || '');
+
+  if (!raw) {
+    return '';
+  }
+
+  return raw
+    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\s*li[^>]*>/gi, '- ')
+    .replace(/<\/(p|div|li|h1|h2|h3|h4|h5|h6|ul|ol|blockquote|section|article|tr|table)\s*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\r\n/g, '\n')
+    .replace(/\t/g, ' ')
+    .replace(/[ \f\v]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
 export const normalizeNoteContentToHtml = (value, options = {}) => {
   const raw = String(value || '').trim();
 
@@ -163,6 +190,20 @@ export const normalizeNoteContentToHtml = (value, options = {}) => {
   }
 
   return stripLeadingTitleHeading(convertMarkdownishToHtml(raw), options.title);
+};
+
+export const normalizeImportedNoteContentToHtml = (value, options = {}) => {
+  const raw = String(value || '').trim();
+
+  if (!raw) {
+    return '';
+  }
+
+  const normalizedSource = looksLikeHtml(raw)
+    ? convertImportedHtmlToPlainText(raw)
+    : raw;
+
+  return stripLeadingTitleHeading(convertMarkdownishToHtml(normalizedSource), options.title);
 };
 
 export const stripNoteContentToPlainText = (value) => {

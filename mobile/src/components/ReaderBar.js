@@ -114,7 +114,6 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     btnIcon: { fontSize: 16 },
     btnText: { color: textColor, fontSize: 13, fontWeight: '600', marginLeft: 4 },
     divider: { width: 1, height: 24, backgroundColor: borderColor, marginHorizontal: 8 },
-    readerLabel: { color: mutedColor, fontSize: 11, fontWeight: '500', marginRight: 8 },
     playBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -126,8 +125,14 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     playBtnActive: { backgroundColor: accentColor },
     playBtnIcon: { fontSize: 13, marginRight: 5 },
     playBtnText: { color: accentColor, fontSize: 14, fontWeight: '700' },
-    voiceChip: {
+    metaGroup: {
       marginLeft: 'auto',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8
+    },
+    estimateText: { color: mutedColor, fontSize: 12, fontWeight: '600' },
+    voiceChip: {
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 6,
@@ -173,9 +178,6 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
 
       <View style={s.divider} />
 
-      {/* Reader label */}
-      <Text style={s.readerLabel}>Reader</Text>
-
       {/* Play/Stop button */}
       <TouchableOpacity
         style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
@@ -183,7 +185,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       >
         <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
         <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-          {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : timeEstimate ? `Read ~${timeEstimate}` : 'Read'}
+          {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
         </Text>
       </TouchableOpacity>
 
@@ -192,10 +194,16 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
         <Text style={{ color: '#4caf50', fontSize: 11, fontWeight: '600', marginLeft: 6 }}>✓ Saved</Text>
       )}
 
-      {/* Voice chip */}
-      <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>
-        <Text style={s.voiceChipText}>{currentVoice?.label || 'Voice'}</Text>
-      </TouchableOpacity>
+      <View style={s.metaGroup}>
+        {timeEstimate && !isPreparing && !isSpeaking ? (
+          <Text style={s.estimateText}>~{timeEstimate}</Text>
+        ) : null}
+
+        {/* Voice chip */}
+        <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>
+          <Text style={s.voiceChipText}>{currentVoice?.label || 'Voice'}</Text>
+        </TouchableOpacity>
+      </View>
       </View>
 
       {/* ── Import options modal ─────────────────────────────── */}

@@ -18,7 +18,7 @@ import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 import FloatingBackButton from '../components/FloatingBackButton';
 import { ReaderBar } from '../components/ReaderBar.js';
-import { normalizeNoteContentToHtml, stripNoteContentToPlainText } from '../utils/noteContent.js';
+import { normalizeImportedNoteContentToHtml, normalizeNoteContentToHtml, stripNoteContentToPlainText } from '../utils/noteContent.js';
 import { getNoteTextScalePreference, saveNoteTextScalePreference } from '../utils/secureStorage.js';
 
 const AUTO_SAVE_DELAY_MS = 900;
@@ -472,6 +472,31 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           }
         });
       }
+
+      if (!window.emmalinePlainPasteInstalled) {
+        window.emmalinePlainPasteInstalled = true;
+        document.addEventListener('paste', function(event) {
+          var clipboard = event.clipboardData || window.clipboardData;
+          if (!clipboard) {
+            return;
+          }
+
+          var pastedText = clipboard.getData('text/plain') || clipboard.getData('Text');
+          if (!pastedText) {
+            return;
+          }
+
+          event.preventDefault();
+          var escapedText = pastedText
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+          var html = '<p>' + escapedText.replace(/\r\n/g, '\n').replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+          document.execCommand('insertHTML', false, html);
+        });
+      }
     `);
   }, [colors.background, colors.mutedText, colors.text, editorContentBottomPadding, editorFontSize, editorLineHeight, heading1Size, heading2Size, heading3Size]);
 
@@ -818,7 +843,13 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     <ReaderBar
       text={stripNoteContentToPlainText(content)}
       title={title}
-      onTextChange={(newText) => { try { richTextRef.current?.setContentHTML?.(newText); setContent(newText); } catch {} }}
+      onTextChange={(newText) => {
+        const normalizedText = normalizeImportedNoteContentToHtml(newText, { title });
+        try {
+          richTextRef.current?.setContentHTML?.(normalizedText || '<p></p>');
+          setContent(normalizedText);
+        } catch {}
+      }}
       onTitleChange={setTitle}
       safeBottomInset={readerBarBottomInset}
     />
