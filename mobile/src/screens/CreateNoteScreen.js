@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
-  Pressable
+  Pressable,
+  useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';
@@ -35,6 +36,7 @@ const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
 const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToken = 0 }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const existingNote = route?.params?.note || null;
   const [noteId, setNoteId] = useState(existingNote?.id || null);
   const [title, setTitle] = useState(existingNote?.title || '');
@@ -653,16 +655,21 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const toolbarBottomPadding = Platform.OS === 'android'
     ? ANDROID_TOOLBAR_BOTTOM_PADDING
     : Math.max(safeBottomInset - 2, 8);
+  const toolbarVisualHeight = TOOLBAR_DOCK_HEIGHT + toolbarBottomPadding;
+  const androidToolbarTopOffset = Platform.OS === 'android' && editorFocused && effectiveKeyboardHeight > 0
+    ? Math.max(windowHeight - effectiveKeyboardHeight - toolbarVisualHeight, 0)
+    : null;
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
     ? Platform.OS === 'android'
       ? 0
       : Math.max(effectiveKeyboardHeight - insets.bottom, 0)
     : safeBottomInset;
   const toolbarVisible = keyboardVisible && editorFocused;
-  const toolbarVisualHeight = TOOLBAR_DOCK_HEIGHT + toolbarBottomPadding;
   const editorContentBottomPadding = toolbarVisible ? toolbarVisualHeight + 96 : safeBottomInset + 44;
   const contentBottomPadding = toolbarVisible
-    ? toolbarVisualHeight + toolbarBottomOffset + 28
+    ? Platform.OS === 'android'
+      ? effectiveKeyboardHeight + toolbarVisualHeight + 28
+      : toolbarVisualHeight + toolbarBottomOffset + 28
     : safeBottomInset + 36;
   const floatingBackInset = Math.max(insets.top - 12, 0) + 30;
   const editorWrapperPointerEvents = editorFocused ? 'box-none' : 'auto';
@@ -670,7 +677,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   return (
     <>
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.container, { backgroundColor: colors.background, flex: 1 }]}
     >
       <FloatingBackButton onPress={() => navigation.goBack()} />
@@ -853,7 +860,8 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             {
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
-              bottom: toolbarBottomOffset,
+              bottom: Platform.OS === 'android' ? undefined : toolbarBottomOffset,
+              top: androidToolbarTopOffset,
               paddingBottom: toolbarBottomPadding
             }
           ]}
