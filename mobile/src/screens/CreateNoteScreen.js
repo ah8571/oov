@@ -27,6 +27,7 @@ const NOTE_TEXT_SCALE_OPTIONS = [0.95, 1, 1.15, 1.3];
 const TOOLBAR_DOCK_HEIGHT = 58;
 const EDITOR_HORIZONTAL_PADDING = 7;
 const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
+const ANDROID_TOOLBAR_OVERLAP = 10;
 
 /**
  * CreateNoteScreen
@@ -655,7 +656,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     : Math.max(safeBottomInset - 2, 8);
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
     ? Platform.OS === 'android'
-      ? 0
+      ? Math.max(effectiveKeyboardHeight - ANDROID_TOOLBAR_OVERLAP, 0)
       : Math.max(effectiveKeyboardHeight - insets.bottom, 0)
     : safeBottomInset;
   const toolbarVisible = keyboardVisible && editorFocused;
