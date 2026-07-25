@@ -26,7 +26,7 @@ const UNTITLED_NOTE_TITLE = 'Untitled note';
 const NOTE_TEXT_SCALE_OPTIONS = [0.95, 1, 1.15, 1.3];
 const TOOLBAR_DOCK_HEIGHT = 58;
 const EDITOR_HORIZONTAL_PADDING = 7;
-const ANDROID_TOOLBAR_BOTTOM_PADDING = 8;
+const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
 
 /**
  * CreateNoteScreen
@@ -716,6 +716,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         />
 
         <Pressable
+          disabled={editorFocused}
           style={[styles.editorShell, { borderTopColor: colors.border }]}
           pointerEvents={editorWrapperPointerEvents}
           onPress={() => {
