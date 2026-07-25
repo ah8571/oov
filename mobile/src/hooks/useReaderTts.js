@@ -89,6 +89,7 @@ export const useReaderTts = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [savedAudioEntries, setSavedAudioEntries] = useState([]);
+  const [estimatedTime, setEstimatedTime] = useState(null);
 
   const speechChunksRef = useRef([]);
   const speechIndexRef = useRef(0);
@@ -105,17 +106,20 @@ export const useReaderTts = () => {
   const kokoroTtsRef = useRef(kokoroTts);
   kokoroTtsRef.current = kokoroTts;
 
-  // ── Stop all playback ──────────────────────────────────────
+  // ── Stop all playback + refresh saved list ─────────────────
   const stopReading = useCallback(async () => {
     speechCancelledRef.current = true;
     speechChunksRef.current = [];
     speechIndexRef.current = 0;
     setIsPreparing(false);
     setIsSpeaking(false);
+    setEstimatedTime(null);
     try { await Speech.stop(); } catch {}
     try { activeSoundRef.current?.unloadAsync(); } catch {}
     activeSoundRef.current = null;
-  }, []);
+    // Backend auto-saves during generation — refresh the list so the recording appears
+    refreshSavedAudio();
+  }, [refreshSavedAudio]);
 
   // Unload on unmount
   useEffect(() => () => { stopReading(); }, [stopReading]);
@@ -241,6 +245,7 @@ export const useReaderTts = () => {
         .then((r) => { if (r.success) refreshSavedAudio(); }).catch(() => {});
     }
     setIsSpeaking(false);
+    setEstimatedTime(null);
     for (const uri of wavQueue) { FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {}); }
   }, []);
 
@@ -291,6 +296,14 @@ export const useReaderTts = () => {
 
     speechCancelledRef.current = false;
 
+    // Estimate time based on provider and text length
+    const charCount = normalized.length;
+    const msPerChar = voice.provider === 'kokoro-runpod' ? 3 : voice.provider === 'resemble' ? 15 : 250;
+    const estSecs = Math.ceil(charCount * msPerChar / 1000);
+    const mins = Math.floor(estSecs / 60);
+    const secs = estSecs % 60;
+    setEstimatedTime(mins > 0 ? `~${mins}m ${secs}s` : `~${secs}s`);
+
     if (voice.provider === 'device') {
       const chunks = splitTextIntoSpeechChunks(normalized);
       speechChunksRef.current = chunks;
@@ -317,6 +330,7 @@ export const useReaderTts = () => {
     readAloud,
     stopReading,
     refreshSavedAudio,
+    estimatedTime,
     voiceOptions: READER_VOICE_OPTIONS
   };
 };

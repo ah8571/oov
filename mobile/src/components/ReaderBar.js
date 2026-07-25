@@ -11,7 +11,7 @@ import { useAppTheme } from '../theme/appTheme.js';
 import { designTokens } from '../theme/designSystem.js';
 
 export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions } = useReaderTts();
+  const { isSpeaking, isPreparing, readAloud, stopReading, estimatedTime, voiceOptions, savedAudioEntries } = useReaderTts();
   const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [showImportOptions, setShowImportOptions] = useState(false);
@@ -52,10 +52,25 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     setShowVoicePicker(false);
     if (isSpeaking) {
       stopReading();
+      return;
+    }
+    // Warn if a saved audio already exists for this text + title
+    const duplicate = savedAudioEntries?.find(
+      entry => entry.title === title && entry.text === text
+    );
+    if (duplicate) {
+      Alert.alert(
+        'Already saved',
+        'A recording for this text already exists in your Saved Audio. Generate again?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Generate', onPress: () => readAloud(text, title, selectedVoice) }
+        ]
+      );
     } else {
       readAloud(text, title, selectedVoice);
     }
-  }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice]);
+  }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice, savedAudioEntries]);
 
   // ── Styles ──────────────────────────────────────────────────
   const s = StyleSheet.create({
@@ -147,7 +162,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       >
         <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
         <Text style={[s.playBtnText, isSpeaking && { color: '#fff' }]}>
-          {isPreparing ? 'Wait' : isSpeaking ? 'Stop' : 'Read'}
+          {isPreparing ? 'Wait' : isSpeaking ? 'Stop' : estimatedTime ? `Read ${estimatedTime}` : 'Read'}
         </Text>
       </TouchableOpacity>
 
@@ -178,6 +193,27 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
               <Text style={{ fontSize: 18 }}>🌐</Text>
               <Text style={s.importOptionText}>Import from URL</Text>
             </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ── Voice picker modal ────────────────────────────────── */}
+      <Modal visible={showVoicePicker} transparent animationType="slide" onRequestClose={() => setShowVoicePicker(false)}>
+        <TouchableOpacity style={s.backdrop} onPress={() => setShowVoicePicker(false)} activeOpacity={1}>
+          <View style={s.modalSheet}>
+            <Text style={s.modalTitle}>Choose voice</Text>
+            {voiceOptions.map(voice => (
+              <TouchableOpacity
+                key={voice.id}
+                style={[s.voiceOption, selectedVoice === voice.id && { backgroundColor: accentColor + '11' }]}
+                onPress={() => { setSelectedVoice(voice.id); setShowVoicePicker(false); }}
+              >
+                <Text style={s.voiceLabel}>
+                  {selectedVoice === voice.id ? '● ' : '  '}{voice.label}
+                </Text>
+                <Text style={s.voiceMeta}>{voice.description}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </TouchableOpacity>
       </Modal>
