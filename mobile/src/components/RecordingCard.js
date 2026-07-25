@@ -130,7 +130,7 @@ const RecordingCard = ({ entry, colors, onRefresh }) => {
       {/* Title row — minimal when collapsed */}
       <View style={styles.titleRow}>
         <TouchableOpacity
-          style={[styles.playButton, { borderColor: colors.border, backgroundColor: isPlaying ? colors.accent : colors.surface }]}
+          style={[styles.playButton, { borderColor: colors.border, backgroundColor: isPlaying ? colors.accent : colors.surfaceAlt }]}
           onPress={() => {
             if (!menuOpen) { setMenuOpen(true); }
             togglePlayback();
@@ -167,11 +167,15 @@ const RecordingCard = ({ entry, colors, onRefresh }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.menuButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          style={[styles.menuButton, { borderColor: colors.border, backgroundColor: colors.surfaceAlt }]}
           onPress={() => setMenuOpen((v) => !v)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.menuButtonText, { color: colors.text }]}>{menuOpen ? '−' : '⋮'}</Text>
+          <Ionicons
+            name={menuOpen ? 'remove-outline' : 'ellipsis-horizontal'}
+            size={20}
+            color={colors.text}
+          />
         </TouchableOpacity>
       </View>
 

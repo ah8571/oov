@@ -65,6 +65,16 @@ const READER_PROVIDER_CONFIG = {
       languageCode: 'es-US',
       voiceProfile: 'ef_dora'
     }
+  },
+  'kokoro-runpod': {
+    en: {
+      languageCode: 'en-US',
+      voice: 'af_heart'
+    },
+    es: {
+      languageCode: 'es-US',
+      voice: 'ef_dora'
+    }
   }
 };
 
@@ -159,18 +169,21 @@ const resolveReaderVoiceConfig = (provider, languagePreference, voiceProfile) =>
   const providerConfig = READER_PROVIDER_CONFIG[provider] || READER_PROVIDER_CONFIG.google;
   const baseConfig = providerConfig[languagePreference] || providerConfig.en;
 
-  if (provider !== 'resemble') {
-    return baseConfig;
+  if (provider === 'resemble') {
+    const normalizedProfile = String(voiceProfile || baseConfig.voiceProfile || DEFAULT_RESEMBLE_VOICE_PROFILE).trim().toLowerCase();
+    const profileConfig = RESEMBLE_VOICE_PROFILES[normalizedProfile] || RESEMBLE_VOICE_PROFILES[DEFAULT_RESEMBLE_VOICE_PROFILE] || RESEMBLE_VOICE_PROFILES.lucy;
+    return {
+      ...baseConfig,
+      voiceProfile: normalizedProfile,
+      voiceUuid: profileConfig.voiceUuid
+    };
   }
 
-  const normalizedProfile = String(voiceProfile || baseConfig.voiceProfile || DEFAULT_RESEMBLE_VOICE_PROFILE).trim().toLowerCase();
-  const profileConfig = RESEMBLE_VOICE_PROFILES[normalizedProfile] || RESEMBLE_VOICE_PROFILES[DEFAULT_RESEMBLE_VOICE_PROFILE] || RESEMBLE_VOICE_PROFILES.lucy;
+  if (provider === 'kokoro-runpod' && voiceProfile) {
+    return { ...baseConfig, voice: voiceProfile };
+  }
 
-  return {
-    ...baseConfig,
-    voiceProfile: normalizedProfile,
-    voiceUuid: profileConfig.voiceUuid
-  };
+  return baseConfig;
 };
 
 const normalizeReaderAudioRequest = (body = {}) => {

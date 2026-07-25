@@ -17,12 +17,38 @@ import {
 } from '../services/api.js';
 import { getCallLanguagePreference, getSpeechRatePreference } from '../utils/secureStorage.js';
 
-// ── Voice options ──────────────────────────────────────────────
+// ── Voice options (Kokoro only) ────────────────────────────────
+// Full catalog: 9 languages, 20 voices from Kokoro-82M
 export const READER_VOICE_OPTIONS = [
-  { id: 'kokoro', label: 'Kokoro', description: 'Fast GPU voice — best quality', provider: 'kokoro-runpod' },
-  { id: 'lucy', label: 'Lucy', description: 'Premium female voice', provider: 'resemble' },
-  { id: 'ethan', label: 'Ethan', description: 'Premium male voice', provider: 'resemble' },
-  { id: 'basic', label: 'Basic', description: 'Built-in device speech', provider: 'device' }
+  // ── American English ──
+  { id: 'kokoro_heart',   label: 'Heart',   description: 'American English · Female', provider: 'kokoro-runpod', voice: 'af_heart',   language: 'en-us' },
+  { id: 'kokoro_river',   label: 'River',   description: 'American English · Female', provider: 'kokoro-runpod', voice: 'af_river',   language: 'en-us' },
+  { id: 'kokoro_sarah',   label: 'Sarah',   description: 'American English · Female', provider: 'kokoro-runpod', voice: 'af_sarah',   language: 'en-us' },
+  { id: 'kokoro_adam',    label: 'Adam',    description: 'American English · Male',   provider: 'kokoro-runpod', voice: 'am_adam',    language: 'en-us' },
+  { id: 'kokoro_michael', label: 'Michael', description: 'American English · Male',   provider: 'kokoro-runpod', voice: 'am_michael', language: 'en-us' },
+  { id: 'kokoro_santa',   label: 'Santa',   description: 'American English · Male',   provider: 'kokoro-runpod', voice: 'am_santa',   language: 'en-us' },
+  // ── British English ──
+  { id: 'kokoro_emma',    label: 'Emma',    description: 'British English · Female',  provider: 'kokoro-runpod', voice: 'bf_emma',    language: 'en-gb' },
+  { id: 'kokoro_daniel',  label: 'Daniel',  description: 'British English · Male',    provider: 'kokoro-runpod', voice: 'bm_daniel',  language: 'en-gb' },
+  // ── Spanish ──
+  { id: 'kokoro_es_dora', label: 'Dora',    description: 'Spanish · Female',          provider: 'kokoro-runpod', voice: 'ef_dora',    language: 'es' },
+  { id: 'kokoro_es_alex', label: 'Alex',    description: 'Spanish · Male',            provider: 'kokoro-runpod', voice: 'em_alex',    language: 'es' },
+  // ── French ──
+  { id: 'kokoro_siwis',   label: 'Siwis',   description: 'French · Female',           provider: 'kokoro-runpod', voice: 'ff_siwis',   language: 'fr' },
+  // ── Italian ──
+  { id: 'kokoro_it_sara',  label: 'Sara',    description: 'Italian · Female',          provider: 'kokoro-runpod', voice: 'if_sara',    language: 'it' },
+  { id: 'kokoro_it_nicola',label: 'Nicola',  description: 'Italian · Male',            provider: 'kokoro-runpod', voice: 'im_nicola',  language: 'it' },
+  // ── Portuguese ──
+  { id: 'kokoro_pt_dora',  label: 'Dora',    description: 'Portuguese · Female',       provider: 'kokoro-runpod', voice: 'pf_dora',    language: 'pt' },
+  { id: 'kokoro_pt_santa', label: 'Santa',   description: 'Portuguese · Male',         provider: 'kokoro-runpod', voice: 'pm_santa',   language: 'pt' },
+  // ── German ──
+  { id: 'kokoro_anna',     label: 'Anna',    description: 'German · Female',           provider: 'kokoro-runpod', voice: 'df_anna',    language: 'de' },
+  // ── Hindi ──
+  { id: 'kokoro_alpha',    label: 'Alpha',   description: 'Hindi · Female',            provider: 'kokoro-runpod', voice: 'hf_alpha',   language: 'hi' },
+  { id: 'kokoro_omega',    label: 'Omega',   description: 'Hindi · Male',              provider: 'kokoro-runpod', voice: 'hm_omega',   language: 'hi' },
+  { id: 'kokoro_psi',      label: 'Psi',     description: 'Hindi · Male',              provider: 'kokoro-runpod', voice: 'hm_psi',     language: 'hi' },
+  // ── Polish ──
+  { id: 'kokoro_mateusz',  label: 'Mateusz', description: 'Polish · Male',             provider: 'kokoro-runpod', voice: 'pm_mateusz', language: 'pl' },
 ];
 
 // ── WAV helpers ────────────────────────────────────────────────
@@ -303,24 +329,24 @@ export const useReaderTts = () => {
 
     speechCancelledRef.current = false;
 
-    // Estimate time based on provider and text length
+    // Estimate time
     const charCount = normalized.length;
-    const msPerChar = voice.provider === 'kokoro-runpod' ? 3 : voice.provider === 'resemble' ? 15 : 250;
+    const msPerChar = 3; // GPU Kokoro ~3ms/char
     const estSecs = Math.ceil(charCount * msPerChar / 1000);
     const mins = Math.floor(estSecs / 60);
     const secs = estSecs % 60;
     setEstimatedTime(mins > 0 ? `~${mins}m ${secs}s` : `~${secs}s`);
 
-    if (voice.provider === 'device') {
-      const chunks = splitTextIntoSpeechChunks(normalized);
-      speechChunksRef.current = chunks;
-      speechIndexRef.current = 0;
-      setIsSpeaking(true);
-      speakNextChunk(language, rate);
-    } else if (voice.provider === 'kokoro-runpod' || voice.provider === 'resemble') {
-      playFallbackAudio({ text: normalized, title, provider: voice.provider, voiceProfile: voice.id, languagePreference: lang, speechRate: rate });
-    }
-  }, [stopReading, speakNextChunk, playFallbackAudio]);
+    // All voices use the Kokoro GPU backend — pass the voice name (e.g. af_heart)
+    playFallbackAudio({
+      text: normalized,
+      title,
+      provider: 'kokoro-runpod',
+      voiceProfile: voice.voice || 'af_heart',
+      languagePreference: lang,
+      speechRate: rate
+    });
+  }, [stopReading, playFallbackAudio]);
 
   // ── Saved audio ─────────────────────────────────────────────
   const refreshSavedAudio = useCallback(async () => {

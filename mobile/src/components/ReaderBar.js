@@ -4,6 +4,7 @@
  */
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { useReaderTts } from '../hooks/useReaderTts';
 import { importReaderDocument } from '../services/api.js';
@@ -28,12 +29,11 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   const timeEstimate = useMemo(() => {
     const len = (text || '').trim().length;
     if (!len) return null;
-    const msPerChar = currentVoice.provider === 'kokoro-runpod' ? 3 : currentVoice.provider === 'resemble' ? 15 : 250;
-    const estSecs = Math.ceil(len * msPerChar / 1000);
+    const estSecs = Math.ceil(len * 3 / 1000); // GPU Kokoro ~3ms/char
     const mins = Math.floor(estSecs / 60);
     const secs = estSecs % 60;
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-  }, [text, currentVoice?.provider]);
+  }, [text]);
 
   // ── Already saved? ──────────────────────────────────────────
   const alreadySaved = useMemo(() => {
@@ -123,9 +123,9 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       paddingVertical: 8,
       borderRadius: 8
     },
-    btnIcon: { fontSize: 16 },
     btnText: { color: textColor, fontSize: 13, fontWeight: '600', marginLeft: 4 },
     divider: { width: 1, height: 24, backgroundColor: borderColor, marginHorizontal: 8 },
+    savedChip: { fontSize: 11, fontWeight: '600', marginLeft: 6 },
     playBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -135,7 +135,6 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       backgroundColor: accentColor + '22'
     },
     playBtnActive: { backgroundColor: accentColor },
-    playBtnIcon: { fontSize: 13, marginRight: 5 },
     playBtnText: { color: accentColor, fontSize: 14, fontWeight: '700' },
     metaGroup: {
       marginLeft: 'auto',
@@ -201,13 +200,13 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       <View style={s.contentRow}>
       {/* Import */}
       <TouchableOpacity style={s.btn} onPress={() => setShowImportOptions(true)}>
-        <Text style={s.btnIcon}>📎</Text>
+        <Ionicons name="attach-outline" size={16} color={textColor} />
         <Text style={s.btnText}>Import</Text>
       </TouchableOpacity>
 
       {/* Saved indicator */}
       {alreadySaved && !isSpeaking && !isPreparing && (
-        <Text style={{ color: '#4caf50', fontSize: 11, fontWeight: '600', marginLeft: 6 }}>✓ Saved</Text>
+        <Text style={[s.savedChip, { color: mutedColor }]}>Saved</Text>
       )}
 
       <View style={s.metaGroup}>
@@ -216,9 +215,14 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
           style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
           onPress={handleRead}
         >
-          <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
+          <Ionicons
+            name={isPreparing ? 'hourglass-outline' : isSpeaking ? 'stop' : 'play'}
+            size={14}
+            color={isSpeaking || isPreparing ? '#fff' : accentColor}
+            style={{ marginRight: 4 }}
+          />
           <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-            {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
+            {isPreparing ? 'Preparing' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
           </Text>
         </TouchableOpacity>
 
@@ -239,8 +243,8 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
           <View style={s.modalSheet}>
             <Text style={s.modalTitle}>Import document</Text>
             <TouchableOpacity style={s.importOption} onPress={handleImportFile}>
-              <Text style={{ fontSize: 18 }}>📄</Text>
-              <Text style={s.importOptionText}>Select PDF or TXT file</Text>
+              <Ionicons name="document-outline" size={20} color={textColor} style={{ marginRight: 10 }} />
+              <Text style={[s.importOptionText, { marginLeft: 0 }]}>Select PDF or TXT file</Text>
             </TouchableOpacity>
             <TouchableOpacity style={s.importOption} onPress={() => {
               setShowImportOptions(false);
@@ -252,8 +256,8 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
                 }
               });
             }}>
-              <Text style={{ fontSize: 18 }}>🌐</Text>
-              <Text style={s.importOptionText}>Import from URL</Text>
+              <Ionicons name="globe-outline" size={20} color={textColor} style={{ marginRight: 10 }} />
+              <Text style={[s.importOptionText, { marginLeft: 0 }]}>Import from URL</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
