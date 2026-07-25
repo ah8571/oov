@@ -320,7 +320,7 @@ const NotesScreen = ({ navigation, onAppHeaderScroll }) => {
               title: entry.title || 'Recording',
               uri,
               fileName: `${entry.id}-${stem}.mp3`,
-              voiceLabel: entry.metadata?.voiceProfile || 'Kokoro',
+              voiceLabel: entry.metadata?.voiceLabel || entry.metadata?.voiceProfile || 'Kokoro',
               createdAt: entry.createdAt || new Date().toISOString()
             });
           }

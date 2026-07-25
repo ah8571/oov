@@ -154,10 +154,10 @@ export const useReaderTts = () => {
   useEffect(() => () => { stopReading(); }, [stopReading]);
 
   // ── Fallback audio playback (Resemble / backend TTS) ────────
-  const playFallbackAudio = useCallback(async ({ text, title, provider, voiceProfile, languagePreference, speechRate }) => {
+  const playFallbackAudio = useCallback(async ({ text, title, provider, voiceProfile, voiceLabel, languagePreference, speechRate }) => {
     setIsPreparing(true);
     try {
-      const response = await generateReaderAudio({ text, title, provider, voiceProfile, languagePreference, speechRate });
+      const response = await generateReaderAudio({ text, title, provider, voiceProfile, voiceLabel, languagePreference, speechRate });
       if (!response?.success || !response.audioBase64) {
         throw new Error(response?.error || 'Unable to generate audio');
       }
@@ -351,6 +351,7 @@ export const useReaderTts = () => {
       title,
       provider: 'kokoro-runpod',
       voiceProfile: voice.voice || 'af_heart',
+      voiceLabel: voice.label || 'Kokoro',
       languagePreference: lang,
       speechRate: rate
     });

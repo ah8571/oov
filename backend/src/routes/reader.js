@@ -193,6 +193,7 @@ const normalizeReaderAudioRequest = (body = {}) => {
   const speechRate = Math.max(0.75, Math.min(1.1, Number(body.speechRate) || 1));
   const provider = String(body.provider || DEFAULT_READER_PROVIDER).trim().toLowerCase();
   const voiceProfile = String(body.voiceProfile || '').trim().toLowerCase();
+  const voiceLabel = String(body.voiceLabel || '').trim();
 
   return {
     normalizedText,
@@ -200,11 +201,12 @@ const normalizeReaderAudioRequest = (body = {}) => {
     languagePreference,
     speechRate,
     provider,
-    voiceProfile
+    voiceProfile,
+    voiceLabel
   };
 };
 
-const buildReaderAudioResponse = async ({ normalizedText, title, languagePreference, speechRate, provider, voiceProfile }) => {
+const buildReaderAudioResponse = async ({ normalizedText, title, languagePreference, speechRate, provider, voiceProfile, voiceLabel }) => {
   if (!normalizedText) {
     throw new Error('Paste text or import a document first.');
   }
@@ -321,6 +323,7 @@ router.post('/audio', authMiddleware, async (req, res) => {
           languageCode: audioResponse.metadata.languageCode,
           provider: audioResponse.metadata.provider,
           voiceProfile: audioResponse.metadata.voiceProfile,
+          voiceLabel: voiceLabel || null,
         });
       } catch (saveError) {
         console.error('Auto-save failed for reader audio:', saveError.message);
