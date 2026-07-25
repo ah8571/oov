@@ -5,16 +5,14 @@ const { width, height } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    title: 'Notes & Reader',
-    description: 'Free features — create and organize notes anytime, listen with the free basic reader. Find them anytime from the Dashboard.',
+    title: 'Free Features',
+    subtitle: 'Natural Reader & Transcription',
+    description: 'Create and organize notes anytime, listen with the free reader using natural open source voices. Try the transcription option.',
   },
   {
-    title: 'Transcriptions & Natural Voice Reader',
-    description: 'Use Listen mode to generate transcriptions of your audio. Premium natural voices available with a subscription.',
-  },
-  {
-    title: 'Voice Mode',
-    description: 'Have real-time conversations with oov in 8 languages. Switch your speaking language anytime in Settings.',
+    title: 'Voice Mode & Tutor',
+    subtitle: 'Paid feature',
+    description: 'Have real-time conversations with oov in 8 languages. Work with your voice assistant to create and edit notes, study plans, and to read text directly in notes.',
   },
 ];
 
@@ -32,6 +30,7 @@ const OnboardingScreen = ({ onComplete }) => {
 
   const renderSlide = ({ item }) => (
     <View style={styles.slide}>
+      {item.subtitle && <Text style={styles.subtitle}>{item.subtitle}</Text>}
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.description}>{item.description}</Text>
     </View>
@@ -114,6 +113,15 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   description: {
     fontSize: 16,
