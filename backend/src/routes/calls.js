@@ -8,36 +8,6 @@ const router = express.Router();
 const mapCallRecord = (call) => {
   const transcript = Array.isArray(call.transcripts) ? call.transcripts[0] : call.transcripts;
   const summary = Array.isArray(call.summaries) ? call.summaries[0] : call.summaries;
-  const messages = Array.isArray(call.call_messages)
-    ? [...call.call_messages]
-        .sort((left, right) => left.sequence_number - right.sequence_number)
-        .map((message) => ({
-          id: message.id,
-          speaker: message.speaker,
-          text: message.content,
-          sequenceNumber: message.sequence_number,
-          createdAt: message.created_at
-        }))
-    : [];
-  const costs = Array.isArray(call.call_costs)
-    ? [...call.call_costs]
-        .sort((left, right) => Number(left.vendor_cost_usd || 0) - Number(right.vendor_cost_usd || 0))
-        .map((cost) => ({
-          id: cost.id,
-          pricingTier: cost.pricing_tier,
-          provider: cost.provider,
-          service: cost.service,
-          quantity: Number(cost.quantity || 0),
-          unit: cost.unit,
-          vendorCostUsd: Number(cost.vendor_cost_usd || 0),
-          billableCostUsd: Number(cost.billable_cost_usd || 0),
-          measurementSource: cost.measurement_source,
-          costSource: cost.cost_source,
-          metadata: cost.metadata || {},
-          createdAt: cost.created_at
-        }))
-    : [];
-  const costSummary = summarizeEstimatedCallCosts(costs);
 
   return {
     id: call.id,
@@ -53,16 +23,15 @@ const mapCallRecord = (call) => {
     createdAt: call.created_at,
     updatedAt: call.updated_at,
     fullTranscript: transcript?.full_text || '',
-    summary: summary?.summary_text || '',
-    keyPoints: summary?.key_points || [],
-    actionItems: summary?.action_items || [],
-    sentiment: summary?.sentiment || 'neutral',
-    messages,
-    costs,
-    pricingTier: costs[0]?.pricingTier || 'tier1',
-    totalVendorCostUsd: costSummary.totalVendorCostUsd,
-    totalBillableCostUsd: costSummary.totalBillableCostUsd,
-    providerCostBreakdown: costSummary.providerBreakdown
+    summary: summary?.summary_text || transcript?.summary_text || '',
+    keyPoints: summary?.key_points || transcript?.key_points || [],
+    actionItems: summary?.action_items || transcript?.action_items || [],
+    sentiment: summary?.sentiment || transcript?.sentiment || 'neutral',
+    messages: [],
+    costs: [],
+    totalVendorCostUsd: 0,
+    totalBillableCostUsd: 0,
+    providerCostBreakdown: {}
   };
 };
 

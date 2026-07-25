@@ -169,65 +169,9 @@ export const saveTranscript = async (callId, userId, fullText) => {
   return data[0];
 };
 
-export const saveCallMessages = async (callId, userId, messages = []) => {
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from('call_messages')
-    .insert(
-      messages.map((message, index) => ({
-        call_id: callId,
-        user_id: userId,
-        sequence_number: index + 1,
-        speaker: message.speaker,
-        content: message.text,
-        created_at: message.createdAt || new Date().toISOString()
-      }))
-    )
-    .select();
-
-  if (error) {
-    console.error('Error saving call messages:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-export const saveCallCosts = async (callId, userId, costEntries = []) => {
-  if (!Array.isArray(costEntries) || costEntries.length === 0) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from('call_costs')
-    .insert(
-      costEntries.map((entry) => ({
-        call_id: callId,
-        user_id: userId,
-        pricing_tier: entry.pricingTier,
-        provider: entry.provider,
-        service: entry.service,
-        quantity: entry.quantity,
-        unit: entry.unit,
-        vendor_cost_usd: entry.vendorCostUsd,
-        billable_cost_usd: entry.billableCostUsd,
-        measurement_source: entry.measurementSource,
-        cost_source: entry.costSource,
-        metadata: entry.metadata || {}
-      }))
-    )
-    .select();
-
-  if (error) {
-    console.error('Error saving call costs:', error);
-    throw error;
-  }
-
-  return data;
-};
+// Deprecated — tables dropped in 20260725 cleanup
+export const saveCallMessages = async () => [];
+export const saveCallCosts = async () => [];
 
 export const saveSummary = async (callId, userId, summaryData) => {
   const { data, error } = await supabase
@@ -544,20 +488,8 @@ export const getNotesForUser = async (userId, options = {}) => {
   };
 };
 
-export const getTopicsForUser = async (userId) => {
-  const { data, error } = await supabase
-    .from('topics')
-    .select('*')
-    .eq('user_id', userId)
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching topics:', error);
-    throw error;
-  }
-
-  return data || [];
-};
+// Deprecated — topics table dropped in 20260725 cleanup
+export const getTopicsForUser = async () => [];
 
 export const getNoteById = async (userId, noteId) => {
   const { data, error } = await supabase

@@ -84,17 +84,8 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/topics', authMiddleware, async (req, res) => {
-  try {
-    const topics = await getTopicsForUser(req.user.userId);
-
-    return res.status(200).json({
-      topics: topics.map(mapTopicRecord)
-    });
-  } catch (error) {
-    console.error('Error fetching topics:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch topics' });
-  }
+router.get('/topics', authMiddleware, async (_req, res) => {
+  return res.status(200).json({ topics: [] });
 });
 
 router.get('/:noteId', authMiddleware, async (req, res) => {

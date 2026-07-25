@@ -60,13 +60,18 @@ though TECHNICALLY we could have a seperate tab devoted to inbound calls to a nu
 
 ## Phase 1: Publishable MVP
 
-Coconote features: ingestion of pdf's, video links, perhaps people can take photos in order to have access to the info and to break it down; they have flash cards, note taking, quizzes built in as well
+saving directly to device as soon as possible
+
+Coconote features: ingestion of pdf's, video links, they have flash cards, note taking, quizzes built in as well 
+other apps: people can take photos in order to have access to the info and to break it down; 
 
 consider a 'silent text' option in the speaker section but designed with this kind of voice mode screen (ie a kind of transparent overlay screen), where you can type in to chat and the ai responds, so you can see (but we would need to go through the process of integrating the providers )
 
 - perhaps first screens for new users teach them some of the benefits of the app
 
 - confirmation email set up eventually
+
+saving directly to device as soon as possible
 
 cleaner product framing:
 Also in the app or on the website: Call or text Emmaline at <number>
