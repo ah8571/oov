@@ -69,9 +69,12 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
             console.log('[Stripe] Entitlements upserted for', userId, 'tier:', tier);
           }
 
-          // Keep users.billing_state in sync
+          // Keep users.billing_state in sync with tier for transparency
+          const billingState = tier ? `pro_stripe:${tier}` : 'pro_stripe';
           const { error: userUpdateErr } = await supabase.from('users').update({
-            billing_state: 'pro_stripe',
+            billing_state: billingState,
+            monthly_credit_allocation: credits,
+            last_credit_allocation_date: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }).eq('id', userId);
 
@@ -111,7 +114,9 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
           }, { onConflict: 'user_id' });
 
           await supabase.from('users').update({
-            billing_state: subStatus === 'active' ? 'pro_stripe' : 'trial',
+            billing_state: subStatus === 'active' ? `pro_stripe:${tier || 'unknown'}` : 'trial',
+            monthly_credit_allocation: subStatus === 'active' ? (STRIPE_TIERS[tier]?.credits || 0) : 0,
+            last_credit_allocation_date: subStatus === 'active' ? new Date().toISOString() : null,
             updated_at: new Date().toISOString()
           }).eq('id', userId);
         }
@@ -209,6 +214,8 @@ router.post('/cancel', authMiddleware, async (req, res) => {
 
     await supabase.from('users').update({
       billing_state: 'trial',
+      monthly_credit_allocation: 0,
+      last_credit_allocation_date: null,
       updated_at: new Date().toISOString()
     }).eq('id', userId);
 
