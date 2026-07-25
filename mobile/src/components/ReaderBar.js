@@ -2,16 +2,15 @@
  * ReaderBar — Bottom bar for CreateNoteScreen.
  * Import (URL/PDF/Photo) on the left, Read aloud (voice picker) on the right.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { useReaderTts, READER_VOICE_OPTIONS } from '../hooks/useReaderTts';
+import { useReaderTts } from '../hooks/useReaderTts';
 import { importReaderDocument } from '../services/api.js';
 import { useAppTheme } from '../theme/appTheme.js';
-import { designTokens } from '../theme/designSystem.js';
 
 export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottomInset = 0 }) => {
-  const { isSpeaking, isPreparing, readAloud, stopReading, estimatedTime, voiceOptions, savedAudioEntries } = useReaderTts();
+  const { isSpeaking, isPreparing, readAloud, stopReading, voiceOptions, savedAudioEntries } = useReaderTts();
   const [selectedVoice, setSelectedVoice] = useState(voiceOptions[0]?.id || 'kokoro');
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   const [showImportOptions, setShowImportOptions] = useState(false);
@@ -24,6 +23,26 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   const textColor = colors.text || '#fff';
 
   const currentVoice = voiceOptions.find(v => v.id === selectedVoice) || voiceOptions[0];
+
+  // ── Proactive time estimate ─────────────────────────────────
+  const timeEstimate = useMemo(() => {
+    const len = (text || '').trim().length;
+    if (!len) return null;
+    const msPerChar = currentVoice.provider === 'kokoro-runpod' ? 3 : currentVoice.provider === 'resemble' ? 15 : 250;
+    const estSecs = Math.ceil(len * msPerChar / 1000);
+    const mins = Math.floor(estSecs / 60);
+    const secs = estSecs % 60;
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  }, [text, currentVoice?.provider]);
+
+  // ── Already saved? ──────────────────────────────────────────
+  const alreadySaved = useMemo(() => {
+    const t = (text || '').trim();
+    if (!t || !title) return false;
+    return savedAudioEntries?.some(
+      entry => entry.title === title && (entry.text || '').trim() === t
+    );
+  }, [text, title, savedAudioEntries]);
 
   // ── Import ──────────────────────────────────────────────────
   const handleImportFile = useCallback(async () => {
@@ -54,23 +73,19 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       stopReading();
       return;
     }
-    // Warn if a saved audio already exists for this text + title
-    const duplicate = savedAudioEntries?.find(
-      entry => entry.title === title && entry.text === text
-    );
-    if (duplicate) {
+    if (alreadySaved) {
       Alert.alert(
-        'Already saved',
-        'A recording for this text already exists in your Saved Audio. Generate again?',
+        'Recording already saved',
+        'This text already has a saved recording. Generate a new one?',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Generate', onPress: () => readAloud(text, title, selectedVoice) }
+          { text: 'Regenerate', onPress: () => readAloud(text, title, selectedVoice) }
         ]
       );
     } else {
       readAloud(text, title, selectedVoice);
     }
-  }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice, savedAudioEntries]);
+  }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice, alreadySaved]);
 
   // ── Styles ──────────────────────────────────────────────────
   const s = StyleSheet.create({
@@ -157,14 +172,19 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
 
       {/* Play/Stop button */}
       <TouchableOpacity
-        style={[s.playBtn, isSpeaking && s.playBtnActive]}
+        style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
         onPress={handleRead}
       >
         <Text style={s.playBtnIcon}>{isPreparing ? '⏳' : isSpeaking ? '⏹' : '▶'}</Text>
-        <Text style={[s.playBtnText, isSpeaking && { color: '#fff' }]}>
-          {isPreparing ? 'Wait' : isSpeaking ? 'Stop' : estimatedTime ? `Read ${estimatedTime}` : 'Read'}
+        <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
+          {isPreparing ? 'Preparing…' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : timeEstimate ? `Read ~${timeEstimate}` : 'Read'}
         </Text>
       </TouchableOpacity>
+
+      {/* Saved indicator */}
+      {alreadySaved && !isSpeaking && !isPreparing && (
+        <Text style={{ color: '#4caf50', fontSize: 11, fontWeight: '600', marginLeft: 6 }}>✓ Saved</Text>
+      )}
 
       {/* Voice chip */}
       <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>

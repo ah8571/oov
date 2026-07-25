@@ -19,10 +19,10 @@ import { getCallLanguagePreference, getSpeechRatePreference } from '../utils/sec
 
 // ── Voice options ──────────────────────────────────────────────
 export const READER_VOICE_OPTIONS = [
-  { id: 'kokoro', label: 'Free voice', provider: 'kokoro-runpod' },
-  { id: 'lucy', label: 'Lucy', provider: 'resemble' },
-  { id: 'ethan', label: 'Ethan', provider: 'resemble' },
-  { id: 'basic', label: 'Basic', provider: 'device' }
+  { id: 'kokoro', label: 'Kokoro', description: 'Fast GPU voice — best quality', provider: 'kokoro-runpod' },
+  { id: 'lucy', label: 'Lucy', description: 'Premium female voice', provider: 'resemble' },
+  { id: 'ethan', label: 'Ethan', description: 'Premium male voice', provider: 'resemble' },
+  { id: 'basic', label: 'Basic', description: 'Built-in device speech', provider: 'device' }
 ];
 
 // ── WAV helpers ────────────────────────────────────────────────
