@@ -58,6 +58,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             stripe_updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
 
+          // Keep users.billing_state in sync
+          await supabase.from('users').update({
+            billing_state: 'pro_stripe',
+            updated_at: new Date().toISOString()
+          }).eq('id', userId);
+
           if (credits > 0) {
             await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
           }
@@ -87,6 +93,11 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             is_pro_active: subStatus === 'active',
             stripe_updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
+
+          await supabase.from('users').update({
+            billing_state: subStatus === 'active' ? 'pro_stripe' : 'trial',
+            updated_at: new Date().toISOString()
+          }).eq('id', userId);
         }
         break;
       }
@@ -179,6 +190,11 @@ router.post('/cancel', authMiddleware, async (req, res) => {
       is_pro_active: false,
       stripe_updated_at: new Date().toISOString()
     }, { onConflict: 'user_id' });
+
+    await supabase.from('users').update({
+      billing_state: 'trial',
+      updated_at: new Date().toISOString()
+    }).eq('id', userId);
 
     return res.json({ success: true });
   } catch (error) {
