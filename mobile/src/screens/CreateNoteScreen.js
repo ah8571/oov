@@ -543,10 +543,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       pendingEditorFocusRef.current = false;
       setKeyboardVisible(false);
       setKeyboardHeight(0);
-
-      if (Platform.OS === 'android') {
-        setEditorFocused(false);
-      }
     });
 
     return () => {
