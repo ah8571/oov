@@ -34,9 +34,11 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Arrow pointing down-right from bottom corner */}
+        {/* Long diagonal arrow from card corner to bottom-right */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="arrow-down" size={36} color="#ffffff" style={styles.arrow} />
+          <Ionicons name="chevron-forward" size={28} color="#ffffff" style={styles.arrow1} />
+          <Ionicons name="chevron-forward" size={28} color="#ffffff" style={styles.arrow2} />
+          <Ionicons name="chevron-forward" size={32} color="#ffffff" style={styles.arrow3} />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -48,25 +50,39 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: height * 0.08,
+    alignItems: 'flex-end',
+    paddingRight: 24,
     zIndex: 1000,
   },
   content: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   arrowWrap: {
-    marginTop: 12,
-    alignItems: 'center',
+    marginRight: -8,
+    marginTop: -4,
+    alignItems: 'flex-end',
   },
-  arrow: {
-    opacity: 0.8,
+  arrow1: {
+    transform: [{ rotate: '45deg' }],
+    marginRight: 22,
+    marginBottom: -10,
+    opacity: 0.4,
+  },
+  arrow2: {
+    transform: [{ rotate: '45deg' }],
+    marginRight: 14,
+    marginBottom: -8,
+    opacity: 0.6,
+  },
+  arrow3: {
+    transform: [{ rotate: '45deg' }],
+    marginRight: 2,
   },
   card: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
     padding: 24,
-    maxWidth: 300,
+    maxWidth: 280,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
