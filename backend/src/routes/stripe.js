@@ -10,6 +10,8 @@ const router = express.Router();
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
     const sig = req.headers['stripe-signature'] || '';
+    console.log('[Stripe] Webhook received, sig present:', !!sig, 'body length:', (req.body || '').length);
+
     const event = verifyStripeWebhook(req.body, sig);
 
     if (!event) {
@@ -24,7 +26,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     const subscriptionId = session?.subscription || session?.id;
     const customerEmail = session?.customer_details?.email || session?.customer_email || '';
 
-    console.log('[Stripe] Webhook:', eventType, { userId, subscriptionId, tier });
+    console.log('[Stripe] Webhook:', eventType, 'userId:', userId, 'tier:', tier, 'subId:', subscriptionId, 'email:', customerEmail);
 
     const supabase = getSupabaseClient();
 
@@ -45,11 +47,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
     switch (eventType) {
       case 'checkout.session.completed': {
+        console.log('[Stripe] checkout.session.completed — mode:', session.mode, 'userId:', userId);
         if (session.mode === 'subscription' && userId) {
           const tierConfig = STRIPE_TIERS[tier];
           const credits = tierConfig?.credits || 0;
+          console.log('[Stripe] Tier config:', tier, '→', credits, 'credits');
 
-          await supabase.from('user_billing_entitlements').upsert({
+          const { error: upsertErr } = await supabase.from('user_billing_entitlements').upsert({
             user_id: userId,
             stripe_subscription_id: subscriptionId,
             stripe_tier: tier,
@@ -58,13 +62,24 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             stripe_updated_at: new Date().toISOString()
           }, { onConflict: 'user_id' });
 
+          if (upsertErr) {
+            console.error('[Stripe] Upsert entitlements error:', upsertErr.message);
+          } else {
+            console.log('[Stripe] Entitlements upserted for', userId, 'tier:', tier);
+          }
+
           // Keep users.billing_state in sync
-          await supabase.from('users').update({
+          const { error: userUpdateErr } = await supabase.from('users').update({
             billing_state: 'pro_stripe',
             updated_at: new Date().toISOString()
           }).eq('id', userId);
 
+          if (userUpdateErr) {
+            console.error('[Stripe] User billing_state update error:', userUpdateErr.message);
+          }
+
           if (credits > 0) {
+            console.log('[Stripe] Granting', credits, 'credits to', userId);
             await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
           }
 
