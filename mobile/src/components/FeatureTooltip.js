@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
-    paddingBottom: 80,
+    paddingBottom: 120,
   },
   arrowWrap: {
     alignItems: 'center',
@@ -100,8 +100,9 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   body: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 15,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 17,
+    lineHeight: 26,
     fontWeight: '600',
     lineHeight: 22,
     marginBottom: 16,
