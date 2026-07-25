@@ -866,7 +866,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 14,
     paddingTop: 10
   },
   contentContainer: {
@@ -880,13 +879,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#212529',
     marginBottom: 14,
+    paddingHorizontal: 14,
     paddingTop: 4,
     paddingBottom: 8,
     borderBottomWidth: 0,
     textAlignVertical: 'top'
   },
   editorShell: {
-    paddingTop: 4
+    paddingTop: 4,
+    width: '100%'
   },
   richEditor: {
     minHeight: 320
@@ -953,7 +954,8 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline'
   },
   topicSelector: {
-    marginTop: 16
+    marginTop: 16,
+    paddingHorizontal: 14
   },
   topicSelectorLabel: {
     fontSize: designTokens.typography.label,
