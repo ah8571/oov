@@ -171,7 +171,12 @@ export const useReaderTts = () => {
       await FileSystem.writeAsStringAsync(uri, response.audioBase64, { encoding: FileSystem.EncodingType.Base64 });
       activeSoundUriRef.current = uri;
 
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        playThroughEarpieceAndroid: false,
+        shouldDuckAndroid: false
+      });
 
       // Load silently first — shouldPlay:true can fire didJustFinish in a
       // microtask before setIsSpeaking(true) takes effect, which hides Stop.
@@ -185,6 +190,8 @@ export const useReaderTts = () => {
         activeSoundRef.current = null;
         throw new Error('Audio failed to decode. The format may not be supported on this device.');
       }
+
+      await sound.setVolumeAsync(1.0);
 
       // Set up the finish callback after we know the sound is valid.
       // Use a ref guard so a premature didJustFinish (from a microtask
