@@ -9,8 +9,7 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Platform,
-  Pressable,
-  useWindowDimensions
+  Pressable
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RichEditor, RichToolbar, actions } from 'react-native-pell-rich-editor';
@@ -36,7 +35,6 @@ const ANDROID_TOOLBAR_BOTTOM_PADDING = 0;
 const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToken = 0 }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
   const existingNote = route?.params?.note || null;
   const [noteId, setNoteId] = useState(existingNote?.id || null);
   const [title, setTitle] = useState(existingNote?.title || '');
@@ -656,9 +654,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     ? ANDROID_TOOLBAR_BOTTOM_PADDING
     : Math.max(safeBottomInset - 2, 8);
   const toolbarVisualHeight = TOOLBAR_DOCK_HEIGHT + toolbarBottomPadding;
-  const androidToolbarTopOffset = Platform.OS === 'android' && editorFocused && effectiveKeyboardHeight > 0
-    ? Math.max(windowHeight - effectiveKeyboardHeight - toolbarVisualHeight, 0)
-    : null;
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
     ? Platform.OS === 'android'
       ? 0
@@ -672,6 +667,12 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       : toolbarVisualHeight + toolbarBottomOffset + 28
     : safeBottomInset + 36;
   const floatingBackInset = Math.max(insets.top - 12, 0) + 30;
+  const androidToolbarTopOffset = Platform.OS === 'android' && toolbarVisible
+    ? floatingBackInset - 6
+    : null;
+  const contentTopPadding = Platform.OS === 'android' && toolbarVisible
+    ? floatingBackInset + toolbarVisualHeight + 12
+    : floatingBackInset;
   const editorWrapperPointerEvents = editorFocused ? 'box-none' : 'auto';
 
   return (
@@ -686,7 +687,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
         contentContainerStyle={[
           styles.contentContainer,
           keyboardVisible ? styles.contentContainerWithKeyboard : null,
-          { paddingTop: floatingBackInset, paddingBottom: contentBottomPadding }
+          { paddingTop: contentTopPadding, paddingBottom: contentBottomPadding }
         ]}
         keyboardShouldPersistTaps="handled"
         onScroll={handleEditorScroll}
