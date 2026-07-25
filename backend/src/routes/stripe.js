@@ -79,8 +79,20 @@ export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), 
           }
 
           if (credits > 0) {
-            console.log('[Stripe] Granting', credits, 'credits to', userId);
-            await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
+            // Only grant credits on first subscription — re-activations
+            // after cancel just restore access without double-crediting.
+            const { data: existingUser } = await supabase
+              .from('users')
+              .select('last_credit_allocation_date')
+              .eq('id', userId)
+              .maybeSingle();
+
+            if (!existingUser?.last_credit_allocation_date) {
+              console.log('[Stripe] First subscription — granting', credits, 'credits to', userId);
+              await ensureCreditEntitlement(userId, credits, `stripe_${tier}`);
+            } else {
+              console.log('[Stripe] Re-activation — skipping credit grant for', userId);
+            }
           }
 
           // Grant bonus credits if a promo code was used at checkout
