@@ -641,9 +641,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
     ? toolbarVisualHeight + toolbarBottomOffset + 28
     : safeBottomInset + 36;
   const floatingBackInset = Math.max(insets.top - 12, 0) + 30;
-  const editorWrapperPointerEvents = Platform.OS === 'android'
-    ? 'box-none'
-    : (editorFocused ? 'box-none' : 'auto');
+  const editorWrapperPointerEvents = editorFocused ? 'box-none' : 'auto';
 
   return (
     <>
@@ -697,10 +695,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           style={[styles.editorShell, { borderTopColor: colors.border }]}
           pointerEvents={editorWrapperPointerEvents}
           onPress={() => {
-            if (Platform.OS === 'android') {
-              return;
-            }
-
             if (editorFocused) {
               return;
             }
@@ -711,10 +705,6 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             });
           }}
           onPressIn={() => {
-            if (Platform.OS === 'android') {
-              return;
-            }
-
             if (editorFocused) {
               return;
             }
