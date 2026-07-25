@@ -170,19 +170,30 @@ export const useReaderTts = () => {
       activeSoundUriRef.current = uri;
 
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: false });
-      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true }, (status) => {
-        if (status.didJustFinish) {
-          setIsSpeaking(false);
-          setEstimatedTime(null);
-          setJustCompletedTs(Date.now());
-          sound.unloadAsync().catch(() => {});
-          activeSoundRef.current = null;
-          FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
-          // Refresh saved list so the "Saved" indicator appears
-          refreshSavedAudio();
+      const { sound } = await Audio.Sound.createAsync(
+        { uri },
+        { shouldPlay: false },
+        (status) => {
+          if (status.didJustFinish && status.durationMillis > 0) {
+            setIsSpeaking(false);
+            setEstimatedTime(null);
+            setJustCompletedTs(Date.now());
+            sound.unloadAsync().catch(() => {});
+            activeSoundRef.current = null;
+            FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+            refreshSavedAudio();
+          }
         }
-      });
+      );
       activeSoundRef.current = sound;
+
+      // Verify the sound loaded correctly before playing
+      const initialStatus = await sound.getStatusAsync();
+      if (!initialStatus.isLoaded || (initialStatus.durationMillis || 0) <= 0) {
+        throw new Error('Audio failed to load — the generated file may be in an unsupported format.');
+      }
+
+      await sound.playAsync();
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {

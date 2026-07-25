@@ -66,10 +66,11 @@ def handler(event):
 
     voice = job_input.get("voice", "af_heart")
     speed = job_input.get("speed", 1.0)
+    response_format = job_input.get("response_format", "mp3")
 
     response = requests.post(
         "http://127.0.0.1:8880/v1/audio/speech",
-        json={"model": "kokoro", "voice": voice, "input": text, "speed": speed},
+        json={"model": "kokoro", "voice": voice, "input": text, "speed": speed, "response_format": response_format},
         timeout=120,
     )
 

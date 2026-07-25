@@ -152,7 +152,7 @@ const textToAudioRunPodKokoro = async (text, options = {}) => {
   const voice = options.voice || 'af_heart';
   const response = await axios.post(
     `https://api.runpod.ai/v2/${RUNPOD_KOKORO_ENDPOINT}/runsync`,
-    { input: { text, voice } },
+    { input: { text, voice, response_format: 'mp3' } },
     {
       headers: {
         Authorization: `Bearer ${RUNPOD_API_KEY}`,

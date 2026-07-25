@@ -81,7 +81,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   // ── Read ────────────────────────────────────────────────────
   const handleRead = useCallback(() => {
     setShowVoicePicker(false);
-    if (isSpeaking) {
+    if (isSpeaking || isPreparing) {
       stopReading();
       return;
     }
@@ -97,7 +97,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
     } else {
       readAloud(text, title, selectedVoice);
     }
-  }, [isSpeaking, stopReading, readAloud, text, title, selectedVoice, alreadySaved]);
+  }, [isSpeaking, isPreparing, stopReading, readAloud, text, title, selectedVoice, alreadySaved]);
 
   // ── Styles ──────────────────────────────────────────────────
   const s = StyleSheet.create({
@@ -224,7 +224,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             />
           )}
           <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-            {isPreparing ? (timeEstimate ? `Preparing ~${timeEstimate}` : 'Preparing') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
+            {isPreparing ? (timeEstimate ? `Stop · ~${timeEstimate}` : 'Stop') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
           </Text>
         </TouchableOpacity>
 
