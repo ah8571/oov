@@ -90,15 +90,19 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   // ── Styles ──────────────────────────────────────────────────
   const s = StyleSheet.create({
     container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minHeight: 56 + Math.max(safeBottomInset, 0),
-      paddingTop: 4,
       paddingBottom: safeBottomInset,
-      paddingHorizontal: 12,
+      justifyContent: 'flex-end',
       backgroundColor: barBg,
       borderTopWidth: 1,
       borderTopColor: borderColor
+    },
+    contentRow: {
+      minHeight: 56,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingTop: 4,
+      paddingBottom: 4
     },
     btn: {
       flexDirection: 'row',
@@ -160,6 +164,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
 
   return (
     <View style={s.container}>
+      <View style={s.contentRow}>
       {/* Import */}
       <TouchableOpacity style={s.btn} onPress={() => setShowImportOptions(true)}>
         <Text style={s.btnIcon}>📎</Text>
@@ -191,6 +196,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
       <TouchableOpacity style={s.voiceChip} onPress={() => setShowVoicePicker(true)}>
         <Text style={s.voiceChipText}>{currentVoice?.label || 'Voice'}</Text>
       </TouchableOpacity>
+      </View>
 
       {/* ── Import options modal ─────────────────────────────── */}
       <Modal visible={showImportOptions} transparent animationType="slide" onRequestClose={() => setShowImportOptions(false)}>
