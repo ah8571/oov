@@ -175,15 +175,14 @@ export const saveCallCosts = async () => [];
 
 export const saveSummary = async (callId, userId, summaryData) => {
   const { data, error } = await supabase
-    .from('summaries')
-    .insert({
-      call_id: callId,
-      user_id: userId,
+    .from('transcripts')
+    .update({
       summary_text: summaryData.text,
       key_points: summaryData.keyPoints,
       sentiment: summaryData.sentiment,
       action_items: summaryData.actionItems
     })
+    .eq('call_id', callId)
     .select();
 
   if (error) {
@@ -191,7 +190,7 @@ export const saveSummary = async (callId, userId, summaryData) => {
     throw error;
   }
 
-  return data[0];
+  return data?.[0] || null;
 };
 
 export const saveReaderAudio = async (userId, readerAudio) => {
@@ -316,62 +315,18 @@ const attachRelatedCallRows = async (calls = [], options = {}) => {
     return calls;
   }
 
-  const includeMessages = options.includeMessages === true;
-
-  const [costsResult, messagesResult] = await Promise.all([
-    supabase
-      .from('call_costs')
-      .select('*')
-      .in('call_id', callIds)
-      .order('created_at', { ascending: true }),
-    includeMessages
-      ? supabase
-          .from('call_messages')
-          .select('*')
-          .in('call_id', callIds)
-          .order('sequence_number', { ascending: true })
-      : Promise.resolve({ data: [], error: null })
-  ]);
-
-  if (costsResult.error) {
-    console.error('Error fetching call costs:', costsResult.error);
-    throw costsResult.error;
-  }
-
-  if (messagesResult.error) {
-    console.error('Error fetching call messages:', messagesResult.error);
-    throw messagesResult.error;
-  }
-
-  const costsByCallId = new Map();
-  for (const cost of costsResult.data || []) {
-    const rows = costsByCallId.get(cost.call_id) || [];
-    rows.push(cost);
-    costsByCallId.set(cost.call_id, rows);
-  }
-
-  const messagesByCallId = new Map();
-  for (const message of messagesResult.data || []) {
-    const rows = messagesByCallId.get(message.call_id) || [];
-    rows.push(message);
-    messagesByCallId.set(message.call_id, rows);
-  }
-
+  // call_costs and call_messages tables dropped — return empty arrays
   return calls.map((call) => ({
     ...call,
-    call_costs: costsByCallId.get(call.id) || [],
-    call_messages: messagesByCallId.get(call.id) || []
+    call_costs: [],
+    call_messages: []
   }));
 };
 
 export const getCallsForUser = async (userId) => {
   const { data, error } = await supabase
     .from('calls')
-    .select(`
-      *,
-      transcripts(*),
-      summaries(*)
-    `)
+    .select('*, transcripts(*)')
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
 
@@ -386,11 +341,7 @@ export const getCallsForUser = async (userId) => {
 export const getCallById = async (userId, callId) => {
   const { data, error } = await supabase
     .from('calls')
-    .select(`
-      *,
-      transcripts(*),
-      summaries(*)
-    `)
+    .select('*, transcripts(*)')
     .eq('user_id', userId)
     .eq('id', callId)
     .maybeSingle();
@@ -423,39 +374,8 @@ export const deleteCallForUser = async (userId, callId) => {
   return Number(count || 0) > 0;
 };
 
-const persistNoteRevision = async (noteId, userId, revisionData = {}) => {
-  if (!noteId || !userId) {
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('note_revisions')
-      .insert({
-        note_id: noteId,
-        user_id: userId,
-        call_id: revisionData.callId || null,
-        edit_type: revisionData.editType || 'update',
-        edit_summary: revisionData.editSummary || null,
-        previous_title: revisionData.previousTitle || null,
-        previous_content: revisionData.previousContent || null,
-        new_title: revisionData.newTitle || null,
-        new_content: revisionData.newContent || null,
-        source: revisionData.source || 'app',
-        metadata: revisionData.metadata || {}
-      })
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.warn('Unable to persist note revision:', error.message);
-    return null;
-  }
+// Deprecated — note_revisions table dropped
+const persistNoteRevision = async () => null;
 };
 
 export const getNotesForUser = async (userId, options = {}) => {
