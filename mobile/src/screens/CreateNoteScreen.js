@@ -26,6 +26,7 @@ const UNTITLED_NOTE_TITLE = 'Untitled note';
 const NOTE_TEXT_SCALE_OPTIONS = [0.95, 1, 1.15, 1.3];
 const TOOLBAR_DOCK_HEIGHT = 58;
 const EDITOR_HORIZONTAL_PADDING = 7;
+const ANDROID_TOOLBAR_BOTTOM_PADDING = 8;
 
 /**
  * CreateNoteScreen
@@ -75,6 +76,12 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
       clearTimeout(autoSaveTimeoutRef.current);
       autoSaveTimeoutRef.current = null;
     }
+  };
+
+  const logNoteEditorEvent = (eventName, payload) => {
+    try {
+      console.log('NOTE_EDITOR', eventName, payload ?? '');
+    } catch {}
   };
 
   const buildDraftPayload = () => {
@@ -637,11 +644,14 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
   const safeBottomInset = Math.max(insets.bottom, 12);
   const readerBarBottomInset = 0;
   const effectiveKeyboardHeight = keyboardVisible ? (keyboardHeight || Keyboard.metrics?.()?.height || 0) : 0;
+  const toolbarBottomPadding = Platform.OS === 'android'
+    ? ANDROID_TOOLBAR_BOTTOM_PADDING
+    : Math.max(safeBottomInset - 2, 8);
   const toolbarBottomOffset = editorFocused && effectiveKeyboardHeight > 0
-    ? Math.max(effectiveKeyboardHeight - safeBottomInset, 0)
+    ? Math.max(effectiveKeyboardHeight - insets.bottom, 0)
     : safeBottomInset;
   const toolbarVisible = keyboardVisible && editorFocused;
-  const toolbarVisualHeight = TOOLBAR_DOCK_HEIGHT + Math.max(safeBottomInset - 2, 8);
+  const toolbarVisualHeight = TOOLBAR_DOCK_HEIGHT + toolbarBottomPadding;
   const editorContentBottomPadding = toolbarVisible ? toolbarVisualHeight + 96 : safeBottomInset + 44;
   const contentBottomPadding = toolbarVisible
     ? toolbarVisualHeight + toolbarBottomOffset + 28
@@ -709,6 +719,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
           style={[styles.editorShell, { borderTopColor: colors.border }]}
           pointerEvents={editorWrapperPointerEvents}
           onPress={() => {
+            logNoteEditorEvent('shell_press', { editorFocused, keyboardVisible });
             if (editorFocused) {
               return;
             }
@@ -719,6 +730,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             });
           }}
           onPressIn={() => {
+            logNoteEditorEvent('shell_press_in', { editorFocused, keyboardVisible });
             if (editorFocused) {
               return;
             }
@@ -733,6 +745,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
             initialFocus={false}
             placeholder="Start typing your note..."
             editorInitializedCallback={() => {
+              logNoteEditorEvent('editor_initialized');
               richTextRef.current?.setContentHTML?.(pendingContentRef.current || '<p></p>');
 
               if (!editorFocused) {
@@ -741,6 +754,10 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               }
             }}
             onFocus={() => {
+              logNoteEditorEvent('focus', {
+                keyboardHeight: Keyboard.metrics?.()?.height || 0,
+                pendingEditorFocus: pendingEditorFocusRef.current
+              });
               pendingEditorFocusRef.current = false;
               setEditorFocused(true);
               const metricsHeight = Keyboard.metrics?.()?.height || 0;
@@ -750,12 +767,29 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               }
             }}
             onBlur={() => {
+              logNoteEditorEvent('blur', { keyboardVisible });
               pendingEditorFocusRef.current = false;
               setEditorFocused(false);
             }}
             onChange={(nextContent) => {
+              logNoteEditorEvent('change', { contentLength: (nextContent || '').length });
               pendingContentRef.current = nextContent || '';
               setContent(nextContent || '');
+            }}
+            onKeyDown={(event) => {
+              logNoteEditorEvent('key_down', event);
+            }}
+            onKeyUp={(event) => {
+              logNoteEditorEvent('key_up', event);
+            }}
+            onInput={(event) => {
+              logNoteEditorEvent('input', event);
+            }}
+            onCursorPosition={(offsetY) => {
+              logNoteEditorEvent('cursor_position', { offsetY });
+            }}
+            onMessage={(message) => {
+              logNoteEditorEvent('message', message);
             }}
             style={styles.richEditor}
             useContainer
@@ -811,7 +845,7 @@ const CreateNoteScreen = ({ route, navigation, onAppHeaderScroll, notesResetToke
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
               bottom: toolbarBottomOffset,
-              paddingBottom: Math.max(safeBottomInset - 2, 8)
+              paddingBottom: toolbarBottomPadding
             }
           ]}
         >
