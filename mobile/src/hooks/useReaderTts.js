@@ -135,18 +135,20 @@ export const useReaderTts = () => {
 
   // ── Stop all playback + refresh saved list ─────────────────
   const stopReading = useCallback(async () => {
+    const wasSpeaking = isSpeaking; // capture before state reset
     speechCancelledRef.current = true;
     speechChunksRef.current = [];
     speechIndexRef.current = 0;
     setIsPreparing(false);
     setIsSpeaking(false);
     setEstimatedTime(null);
+    if (wasSpeaking) setJustCompletedTs(Date.now());
     try { await Speech.stop(); } catch {}
     try { activeSoundRef.current?.unloadAsync(); } catch {}
     activeSoundRef.current = null;
     // Backend auto-saves during generation — refresh the list so the recording appears
     refreshSavedAudio();
-  }, [refreshSavedAudio]);
+  }, [isSpeaking, refreshSavedAudio]);
 
   // Unload on unmount
   useEffect(() => () => { stopReading(); }, [stopReading]);

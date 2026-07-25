@@ -3,7 +3,7 @@
  * Import (URL/PDF/Photo) on the left, Read aloud (voice picker) on the right.
  */
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { useReaderTts } from '../hooks/useReaderTts';
@@ -215,14 +215,16 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
           style={[s.playBtn, (isSpeaking || isPreparing) && s.playBtnActive]}
           onPress={handleRead}
         >
-          <Ionicons
-            name={isPreparing ? 'hourglass-outline' : isSpeaking ? 'stop' : 'play'}
-            size={14}
-            color={isSpeaking || isPreparing ? '#fff' : accentColor}
-            style={{ marginRight: 4 }}
-          />
+          {isPreparing ? null : (
+            <Ionicons
+              name={isSpeaking ? 'stop' : 'play'}
+              size={14}
+              color={isSpeaking ? '#fff' : accentColor}
+              style={{ marginRight: 4 }}
+            />
+          )}
           <Text style={[s.playBtnText, (isSpeaking || isPreparing) && { color: '#fff' }]}>
-            {isPreparing ? 'Preparing' : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
+            {isPreparing ? (timeEstimate ? `Preparing ~${timeEstimate}` : 'Preparing') : isSpeaking ? 'Stop' : alreadySaved ? 'Regenerate' : 'Read'}
           </Text>
         </TouchableOpacity>
 
@@ -268,6 +270,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
         <TouchableOpacity style={s.backdrop} onPress={() => setShowVoicePicker(false)} activeOpacity={1}>
           <View style={s.modalSheet}>
             <Text style={s.modalTitle}>Choose voice</Text>
+            <ScrollView style={{ maxHeight: 420 }} bounces={false}>
             {voiceOptions.map(voice => (
               <TouchableOpacity
                 key={voice.id}
@@ -280,6 +283,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
                 <Text style={s.voiceMeta}>{voice.description}</Text>
               </TouchableOpacity>
             ))}
+            </ScrollView>
           </View>
         </TouchableOpacity>
       </Modal>
