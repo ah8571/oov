@@ -27,7 +27,7 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
       <Animated.View style={[styles.content, { opacity }]}>
         <View style={styles.card}>
           <Text style={styles.body}>
-            Start a live voice conversation or record and transcribe. oov listens and responds in real time.
+            Click the speaker icon to start a live voice conversation or record and transcribe. oov listens and responds in real time.
           </Text>
           <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
             <Text style={styles.dismissText}>Got it</Text>
