@@ -45,7 +45,8 @@
       "package": "com.emmaline.app"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      ["expo-build-properties", { "ios": { "deploymentTarget": "15.1" } }]
     ],
     "extra": {
       "eas": {

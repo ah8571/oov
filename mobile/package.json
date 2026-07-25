@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "React Native app for Emmaline AI Phone Call Buddy",
   "main": "index.js",
+  "packageManager": "npm@10.9.2",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -31,6 +32,7 @@
     "expo-audio": "~1.1.1",
     "expo-auth-session": "~7.0.11",
     "expo-av": "~16.0.8",
+    "expo-build-properties": "~1.0.10",
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.21",
     "expo-document-picker": "~14.0.8",

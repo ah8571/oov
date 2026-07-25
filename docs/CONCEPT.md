@@ -60,7 +60,11 @@ though TECHNICALLY we could have a seperate tab devoted to inbound calls to a nu
 
 ## Phase 1: Publishable MVP
 
+ "Launch" someone into a new note as a new customer
+
 saving directly to device as soon as possible
+
+also recording w/ transcripts, so if someone is trying to do a transcript, it would be nice if someone can record it as well as create a transcript out of it. what do you think that would involve
 
 Coconote features: ingestion of pdf's, video links, they have flash cards, note taking, quizzes built in as well 
 other apps: people can take photos in order to have access to the info and to break it down; 

@@ -4,6 +4,12 @@
       "eas": {
         "projectId": "fc34b757-3492-45c6-8517-ed22abab10a1"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "com.emmaline.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     }
   }
 }

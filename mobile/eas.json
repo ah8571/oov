@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 16.12.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "packageManager": "npm"
   },
   "build": {
     "development": {
@@ -26,7 +27,8 @@
     },
     "production": {
       "ios": {
-        "autoIncrement": "buildNumber"
+        "autoIncrement": "buildNumber",
+        "image": "latest"
       },
       "env": {
         "APP_VARIANT": "production",
