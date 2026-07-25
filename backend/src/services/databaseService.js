@@ -641,7 +641,7 @@ export const saveUserPhoneNumber = async (userId, phoneNumberData) => {
 
 export const ensureCreditEntitlement = async (userId, creditsToAdd, reason) => {
   const supabase = getSupabaseClient();
-  const amount = Math.max(0, Math.round(Number(creditsToAdd || 0)));
+  const amount = Math.max(0, Number(Number(creditsToAdd || 0).toFixed(2)));
 
   if (!amount) {
     console.warn('[CreditEntitlement] No credits to add for', userId, reason);

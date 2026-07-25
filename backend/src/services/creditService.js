@@ -13,9 +13,8 @@ const PRO_MONTHLY_CREDITS = 100;
 const MAX_ROLLOVER_CREDITS = 100; // cap rollover at 1x monthly allocation
 
 const roundUpCredits = (durationSeconds, ratePerMinute) => {
-  // Always round up to the nearest credit so partial minutes cost at least 1 credit
   const minutes = Math.max(0, Number(durationSeconds || 0)) / 60;
-  return Math.ceil(minutes * ratePerMinute);
+  return Number((minutes * ratePerMinute).toFixed(2));
 };
 
 const getCreditBalance = async (userId) => {
