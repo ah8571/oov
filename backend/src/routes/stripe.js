@@ -157,9 +157,9 @@ router.get('/subscribe', async (req, res) => {
 });
 
 // Create checkout session
-router.post('/checkout', async (req, res) => {
+router.post('/checkout', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req;
+    const userId = req.user?.userId;
     const { tier, email, successUrl, cancelUrl } = req.body || {};
 
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
@@ -178,7 +178,7 @@ router.post('/checkout', async (req, res) => {
 // Cancel subscription
 router.post('/cancel', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req;
+    const userId = req.user?.userId;
     console.log('[Stripe] Cancel requested by user:', userId);
 
     // Look up the Stripe subscription ID from users table
