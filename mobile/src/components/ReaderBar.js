@@ -29,7 +29,7 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   const timeEstimate = useMemo(() => {
     const len = (text || '').trim().length;
     if (!len) return null;
-    const estSecs = Math.ceil(len * 3 / 1000); // GPU Kokoro ~3ms/char
+    const estSecs = Math.ceil(len * 3 / 1000) + 30; // GPU Kokoro ~3ms/char + 30s cold start
     const mins = Math.floor(estSecs / 60);
     const secs = estSecs % 60;
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;

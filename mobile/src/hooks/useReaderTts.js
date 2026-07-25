@@ -171,12 +171,10 @@ export const useReaderTts = () => {
 
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        playThroughEarpieceAndroid: false,
-        shouldDuckAndroid: false
+        staysActiveInBackground: false
       });
 
-      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true, volume: 1.0 }, (status) => {
+      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: false }, (status) => {
         if (status.didJustFinish) {
           setIsSpeaking(false);
           setEstimatedTime(null);
@@ -188,6 +186,8 @@ export const useReaderTts = () => {
         }
       });
       activeSoundRef.current = sound;
+      await sound.setVolumeAsync(1.0);
+      await sound.playAsync();
       setIsPreparing(false);
       setIsSpeaking(true);
     } catch (error) {
@@ -340,7 +340,7 @@ export const useReaderTts = () => {
     // Estimate time
     const charCount = normalized.length;
     const msPerChar = 3; // GPU Kokoro ~3ms/char
-    const estSecs = Math.ceil(charCount * msPerChar / 1000);
+    const estSecs = Math.ceil(charCount * msPerChar / 1000) + 30; // +30s cold start
     const mins = Math.floor(estSecs / 60);
     const secs = estSecs % 60;
     setEstimatedTime(mins > 0 ? `~${mins}m ${secs}s` : `~${secs}s`);
