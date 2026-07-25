@@ -115,12 +115,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subtitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 26,
+    fontWeight: '700',
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
     marginBottom: 8,
   },
   description: {
