@@ -129,6 +129,20 @@ const AppContent = () => {
   const [showModePicker, setShowModePicker] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // Check if tooltip was already dismissed
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const checkTooltip = async () => {
+      const { getTooltipDismissed } = require('./utils/secureStorage.js');
+      const dismissed = await getTooltipDismissed();
+      if (!dismissed && !showOnboarding) {
+        // Show tooltip if onboarding already complete but tooltip not dismissed
+        setShowTooltip(true);
+      }
+    };
+    checkTooltip();
+  }, [isAuthenticated]);
   const [shouldPreferSpeaker, setShouldPreferSpeaker] = useState(false);
   const hasInitializedAppsFlyerRef = useRef(false);
   const liveCallTraceRef = useRef({
@@ -999,7 +1013,11 @@ const AppContent = () => {
         {showTooltip && isAuthenticated ? (
           <FeatureTooltip
             visible={showTooltip}
-            onDismiss={() => setShowTooltip(false)}
+            onDismiss={async () => {
+              setShowTooltip(false);
+              const { saveTooltipDismissed } = require('./utils/secureStorage.js');
+              await saveTooltipDismissed();
+            }}
           />
         ) : null}
 

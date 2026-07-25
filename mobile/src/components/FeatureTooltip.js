@@ -11,7 +11,6 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
   useEffect(() => {
     if (visible) {
       Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-      // Pulsing arrow
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulse, { toValue: 1.2, duration: 600, useNativeDriver: true }),
@@ -35,11 +34,9 @@ const FeatureTooltip = ({ visible, onDismiss }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Curvy arrow pointing down-right to the speaker button */}
+        {/* Arrow pointing down-right from bottom corner */}
         <Animated.View style={[styles.arrowWrap, { transform: [{ scale: pulse }] }]}>
-          <Ionicons name="chevron-down" size={28} color="#ffffff" style={styles.arrow1} />
-          <Ionicons name="chevron-down" size={28} color="#ffffff" style={styles.arrow2} />
-          <Ionicons name="arrow-down" size={36} color="#ffffff" style={styles.arrow3} />
+          <Ionicons name="arrow-down" size={36} color="#ffffff" style={styles.arrow} />
         </Animated.View>
       </Animated.View>
     </TouchableOpacity>
@@ -50,35 +47,20 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    paddingBottom: height * 0.15,
-    paddingRight: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: height * 0.08,
     zIndex: 1000,
   },
   content: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   arrowWrap: {
-    marginRight: 8,
-    marginTop: -8,
-    alignItems: 'flex-end',
+    marginTop: 12,
+    alignItems: 'center',
   },
-  arrow1: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 18,
-    marginBottom: -12,
-    opacity: 0.5,
-  },
-  arrow2: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 12,
-    marginBottom: -10,
-    opacity: 0.7,
-  },
-  arrow3: {
-    transform: [{ rotate: '315deg' }],
-    marginRight: 4,
+  arrow: {
+    opacity: 0.8,
   },
   card: {
     backgroundColor: '#1a1a2e',

@@ -175,6 +175,21 @@ export const saveOnboardingComplete = async () => {
   } catch {}
 };
 
+export const getTooltipDismissed = async () => {
+  try {
+    const value = await SecureStore.getItemAsync('ali_tooltip_dismissed');
+    return value === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const saveTooltipDismissed = async () => {
+  try {
+    await SecureStore.setItemAsync('ali_tooltip_dismissed', 'true');
+  } catch {}
+};
+
 export const getCallLanguagePreference = async () => {
   const preferences = await getPreferences();
   return preferences.callLanguage || 'en';
@@ -330,5 +345,7 @@ export default {
   saveNoteTextScalePreference,
   getOnboardingComplete,
   saveOnboardingComplete,
+  getTooltipDismissed,
+  saveTooltipDismissed,
   logout
 };
