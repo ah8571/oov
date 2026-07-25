@@ -6,8 +6,9 @@ import { validatePromoCode, redeemPromoCode } from '../services/promoService.js'
 
 const router = express.Router();
 
-// Stripe webhook — raw body required for signature verification
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+// Stripe webhook — raw body required for signature verification.
+// Exported separately so it can be mounted before bodyParser.json().
+export const stripeWebhookHandler = [express.raw({ type: 'application/json' }), async (req, res) => {
   try {
     const sig = req.headers['stripe-signature'] || '';
     console.log('[Stripe] Webhook received, sig present:', !!sig, 'body length:', (req.body || '').length);
@@ -123,7 +124,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     console.error('[Stripe] Webhook error:', error.message);
     return res.status(500).json({ error: 'Webhook processing failed' });
   }
-});
+}];
 
 // Website subscribe redirect — GET for browser redirect flow
 router.get('/subscribe', async (req, res) => {

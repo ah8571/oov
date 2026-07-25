@@ -24,7 +24,6 @@ import grokVoiceRoutes from './routes/grokVoice.js';
 import geminiVoiceRoutes from './routes/geminiVoice.js';
 import inworldVoiceRoutes from './routes/inworldVoice.js';
 import openRouterVoiceRoutes from './routes/openRouterVoice.js';
-import stripeRoutes from './routes/stripe.js';
 import promoRoutes from './routes/promo.js';
 
 // Import middleware
@@ -91,6 +90,12 @@ server.on('upgrade', (request, socket, head) => {
     wss.emit('connection', ws, request);
   });
 });
+
+// Stripe webhook MUST be registered before bodyParser.json() —
+// it needs the raw request body for signature verification.
+import stripeRoutes, { stripeWebhookHandler } from './routes/stripe.js';
+app.post('/api/stripe/webhook', stripeWebhookHandler);
+app.post('/stripe/webhook', stripeWebhookHandler);
 
 // Middleware
 app.use(cors());
