@@ -29,6 +29,9 @@
         "autoIncrement": "buildNumber",
         "image": "latest"
       },
+      "android": {
+        "autoIncrement": "versionCode"
+      },
       "env": {
         "APP_VARIANT": "production",
         "EXPO_PUBLIC_API_URL": "https://api.oov.digital/api"
@@ -45,12 +48,26 @@
         "EXPO_PUBLIC_API_URL": "https://api.oov.digital/api",
         "SENTRY_AUTH_TOKEN": "none"
       }
+    },
+    "debug_production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.oov.digital/api",
+        "SENTRY_AUTH_TOKEN": "none"
+      }
     }
   },
   "submit": {
     "production": {
       "ios": {
         "ascAppId": "6783906612"
+      },
+      "android": {
+        "track": "internal"
       }
     }
   }

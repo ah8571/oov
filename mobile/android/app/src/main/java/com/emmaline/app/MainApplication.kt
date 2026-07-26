@@ -1,4 +1,4 @@
-package com.emmaline.app.dev
+package com.emmaline.app
 
 import android.app.Application
 import android.content.res.Configuration
@@ -32,9 +32,9 @@ class MainApplication : Application(), ReactApplication {
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
-          override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
+          override fun getUseDeveloperSupport(): Boolean = false // production build
 
-          override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
+          override val isNewArchEnabled: Boolean = true // New Architecture enabled
       }
   )
 
@@ -44,7 +44,7 @@ class MainApplication : Application(), ReactApplication {
   override fun onCreate() {
     super.onCreate()
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
-      ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
+      ReleaseLevel.valueOf("STABLE".uppercase())
     } catch (e: IllegalArgumentException) {
       ReleaseLevel.STABLE
     }

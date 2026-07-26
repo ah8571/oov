@@ -2,7 +2,7 @@
   "expo": {
     "name": "oov: Transcriber & Reader",
     "slug": "emmaline",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "icon": "./assets/new oov app icon (v3).png",
     "newArchEnabled": true,
     "orientation": "portrait",
@@ -28,6 +28,7 @@
       "backgroundColor": "#000000"
     },
     "android": {
+      "versionCode": 21,
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-icon-dark-1024.png",
         "backgroundColor": "#000000"

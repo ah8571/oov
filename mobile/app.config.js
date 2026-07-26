@@ -65,11 +65,13 @@ function buildSkAdNetworkItems(existingItems = [], networkIds = []) {
 }
 
 function getAppDisplayName(baseName, variant) {
-  if (variant === 'production') {
+  // EAS_BUILD_PROFILE is always set by EAS to the profile name (e.g. "production")
+  const easProfile = process.env.EAS_BUILD_PROFILE || '';
+  if (variant === 'production' || easProfile === 'production') {
     return baseName;
   }
 
-  if (variant === 'preview') {
+  if (variant === 'preview' || easProfile === 'preview') {
     return `${baseName} Preview`;
   }
 
@@ -139,8 +141,6 @@ module.exports = () => {
     scheme: baseConfig.scheme || 'oov',
     plugins: filteredPlugins,
     ios: {
-      // Numeric App Store ID for this app. Can be overridden with env `EXPO_IOS_APP_ID` or `EXPO_APPLE_APP_ID`.
-      appStoreId: normalizeOptionalConfigValue(process.env.EXPO_IOS_APP_ID || process.env.EXPO_APPLE_APP_ID || '6783906612'),
       ...(baseConfig.ios || {}),
       infoPlist: {
         ...iosInfoPlist,

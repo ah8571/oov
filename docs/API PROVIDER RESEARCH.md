@@ -118,6 +118,7 @@ Livekit 50 per month paired with another model above like grok could be more aff
 
 "Modular Chained Stacks: You can build a cheaper custom stack by pairing an open-source model (like Llama via OpenRouter) with specialized live STT/TTS providers like Deepgram or Cartesia" - google.com/ai
 
+Self hostable combo: livekit (open source) with faster whisper or whisper.live for STT, Kokoro for TTS, Ollama or vLLM as the thinker [ie no API costs]
 
 ### Natural Voices (TTS)
 Recommended evaluation order:
@@ -135,12 +136,11 @@ Alternatives to Elevanlabs
 low cost models
 
 Self-hosted providers
-
+Piper?
 podtts (need to find the correct name)
 StyleTTS 2 [for long form content]
 ChatTTS
 XTTS v2 by Coqui
-RunPod hosting 
 
 ### LLM Summaries
 
@@ -148,7 +148,7 @@ Gemini 1.5 Flash
 
 Self hosted
 LLama 3.1 8B (deepinfra, openrouter) -
-
+Mistral
 
 
 

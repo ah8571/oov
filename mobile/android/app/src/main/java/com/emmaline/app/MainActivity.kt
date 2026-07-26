@@ -1,4 +1,4 @@
-package com.emmaline.app.dev
+package com.emmaline.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
@@ -36,7 +36,7 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate {
     return ReactActivityDelegateWrapper(
           this,
-          BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
+          true, // New Architecture enabled
           object : DefaultReactActivityDelegate(
               this,
               mainComponentName,

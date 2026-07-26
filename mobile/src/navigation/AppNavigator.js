@@ -307,6 +307,7 @@ const AppHome = ({ onLogout }) => {
 
 const AppNavigator = ({ onAuthStateChange }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
   const [pendingProfileSetup, setPendingProfileSetup] = useState(null);
   const [user, setUser] = useState(null);
   const [hasAcceptedAiDisclosure, setHasAcceptedAiDisclosure] = useState(false);
@@ -483,6 +484,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
           Sentry.setUser(null);
           await syncRevenueCatUser(null);
           setIsAuthenticated(false);
+          setAuthResolved(true);
           setUser(null);
           setHasAcceptedAiDisclosure(false);
           setHasResolvedAiDisclosure(false);
@@ -494,6 +496,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
         if (currentUserResponse?.requiresProfileCompletion) {
           setPendingProfileSetup(currentUserResponse.profileSetup || null);
           setIsAuthenticated(false);
+          setAuthResolved(true);
           setUser(null);
           setHasAcceptedAiDisclosure(false);
           setHasResolvedAiDisclosure(false);
@@ -506,6 +509,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
           Sentry.setUser(null);
           await syncRevenueCatUser(null);
           setIsAuthenticated(false);
+          setAuthResolved(true);
           setUser(null);
           setHasAcceptedAiDisclosure(false);
           setHasResolvedAiDisclosure(false);
@@ -525,6 +529,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
         setPendingProfileSetup(null);
         setUser(nextUser);
         setIsAuthenticated(true);
+        setAuthResolved(true);
         await hydrateAiDisclosureState();
         onAuthStateChange?.(true);
         syncRevenueCatIdentity(nextUser?.id ? String(nextUser.id) : null);
@@ -536,6 +541,7 @@ const AppNavigator = ({ onAuthStateChange }) => {
         });
         Sentry.setUser(null);
         setIsAuthenticated(false);
+        setAuthResolved(true);
         setUser(null);
         onAuthStateChange?.(false);
       });
@@ -586,7 +592,9 @@ const AppNavigator = ({ onAuthStateChange }) => {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {!isAuthenticated ? (
+      {!authResolved ? (
+        <View style={{ flex: 1, backgroundColor: colors.background }} />
+      ) : !isAuthenticated ? (
         <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor: colors.background } }}>
           <Stack.Screen 
             name="Login"
