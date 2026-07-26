@@ -14,7 +14,7 @@
       "**/*"
     ],
     "ios": {
-      "icon": "./assets/new oov app icon (v3).png",
+      "icon": "./assets/app-icon-dark-1024.png",
       "bundleIdentifier": "com.emmaline.app",
       "supportsTablet": true,
       "infoPlist": {
@@ -23,13 +23,13 @@
       }
     },
     "splash": {
-      "image": "./assets/new oov app icon (v3).png",
+      "image": "./assets/app-icon-dark-1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#000000"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/new oov app icon (v3).png",
+        "foregroundImage": "./assets/app-icon-dark-1024.png",
         "backgroundColor": "#000000"
       },
       "permissions": [

@@ -5,7 +5,10 @@ FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
 RUN uv pip install --target=/tmp/runpod-pkgs runpod
 
 # /app = Kokoro-FastAPI code; /tmp/runpod-pkgs = runpod SDK
+# /runpod-volume = shared network volume for model cache
 ENV PYTHONPATH=/app:/tmp/runpod-pkgs
+ENV HF_HOME=/runpod-volume
+ENV TRANSFORMERS_CACHE=/runpod-volume
 
 COPY handler.py /handler.py
 
