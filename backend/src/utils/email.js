@@ -1,6 +1,6 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'support@oov.digital';
-const FROM_EMAIL = 'oov <notify@oov.digital>';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'oov <support@oov.digital>';
 
 /**
  * Notify admin of a new affiliate application.

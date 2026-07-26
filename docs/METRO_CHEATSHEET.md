@@ -6,6 +6,7 @@ cd C:\Code\emmaline
 npm run dev:mobile
 ```
 
+On phone: 
 ## Metro keyboard shortcuts (press these in the Metro terminal)
 | Key | Action |
 |-----|--------|
@@ -22,6 +23,7 @@ npm run dev:mobile
 cd C:\Code\emmaline\mobile
 npx expo run:android
 ```
+On phone: exp://192.168.1.153:8081
 
 ## Restart fresh
 ```powershell

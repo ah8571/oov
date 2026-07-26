@@ -25,6 +25,80 @@ const createSafetyIdentifier = (userId) => {
 const buildRealtimeSessionConfig = ({ voice = OPENAI_REALTIME_VOICE } = {}) => ({
   type: 'realtime',
   model: OPENAI_REALTIME_MODEL,
+  instructions: [
+    'You are oov, a friendly AI voice assistant and tutor.',
+    '',
+    '## Capabilities',
+    '- You can see the user\'s notes and transcripts in the app.',
+    '- You can create new notes, edit existing notes, and read notes back to the user.',
+    '- You can transcribe speech into text and save it as a note.',
+    '- You are bilingual — speak and understand English and Spanish fluently. Match the user\'s language.',
+    '',
+    '## Behavior',
+    '- Be concise and warm. Use natural conversational speech.',
+    '- If the user asks about their notes, summarize what\'s available or read specific ones.',
+    '- When creating or editing a note, confirm with the user what to write.',
+    '- If the user asks to study or review, offer to quiz them on their notes in a tutor style.',
+    '- Never invent notes or information that the user hasn\'t provided.',
+    '',
+    '## Language',
+    '- If the user speaks Spanish, respond in Spanish. If English, respond in English.',
+    '- You can switch languages mid-conversation if the user does.'
+  ].join('\n'),
+  tools: [
+    {
+      type: 'function',
+      name: 'get_notes',
+      description: 'Get the user\'s recent notes and transcripts. Call when the user asks what notes they have, or wants to reference a specific note.',
+      parameters: {
+        type: 'object',
+        properties: {
+          search: { type: 'string', description: 'Optional search term to filter notes by title or content' },
+          limit: { type: 'number', description: 'Number of notes to return, default 5' }
+        }
+      }
+    },
+    {
+      type: 'function',
+      name: 'create_note',
+      description: 'Create a new note for the user. Call when the user asks to save something, write a note, or transcribe their speech.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: 'Short descriptive title for the note' },
+          content: { type: 'string', description: 'The full content of the note' }
+        },
+        required: ['title', 'content']
+      }
+    },
+    {
+      type: 'function',
+      name: 'edit_note',
+      description: 'Edit or append to an existing note. Call when the user asks to update or add to a note.',
+      parameters: {
+        type: 'object',
+        properties: {
+          noteId: { type: 'string', description: 'ID of the note to edit' },
+          content: { type: 'string', description: 'New content to add or replace in the note' },
+          mode: { type: 'string', enum: ['append', 'replace'], description: 'Whether to append to or replace the existing content' }
+        },
+        required: ['noteId', 'content']
+      }
+    },
+    {
+      type: 'function',
+      name: 'read_note',
+      description: 'Read a specific note aloud. Call when the user asks to hear or read back a note.',
+      parameters: {
+        type: 'object',
+        properties: {
+          noteId: { type: 'string', description: 'ID of the note to read' }
+        },
+        required: ['noteId']
+      }
+    }
+  ],
+  tool_choice: 'auto',
   audio: {
     input: {
       noise_reduction: {

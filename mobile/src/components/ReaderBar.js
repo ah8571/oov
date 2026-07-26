@@ -59,6 +59,8 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
   // ── Import ──────────────────────────────────────────────────
   const handleImportFile = useCallback(async () => {
     setShowImportOptions(false);
+    // Small delay to let modal dismiss before system picker opens (iOS deadlock fix)
+    await new Promise(r => setTimeout(r, 300));
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['text/plain', 'application/pdf'],
@@ -248,19 +250,6 @@ export const ReaderBar = ({ text, title, onTextChange, onTitleChange, safeBottom
             <TouchableOpacity style={s.importOption} onPress={handleImportFile}>
               <Ionicons name="document-outline" size={20} color={textColor} style={{ marginRight: 10 }} />
               <Text style={[s.importOptionText, { marginLeft: 0 }]}>Select PDF or TXT file</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.importOption} onPress={() => {
-              setShowImportOptions(false);
-              Alert.prompt?.('Import URL', 'Paste a webpage URL to extract text', (url) => {
-                if (url) {
-                  importReaderDocument({ uri: url, name: 'webpage', type: 'text/html' })
-                    .then(r => { if (r?.text) { onTextChange?.(r.text); onTitleChange?.(r.title || url); } })
-                    .catch(e => Alert.alert('Import failed', e?.message));
-                }
-              });
-            }}>
-              <Ionicons name="globe-outline" size={20} color={textColor} style={{ marginRight: 10 }} />
-              <Text style={[s.importOptionText, { marginLeft: 0 }]}>Import from URL</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

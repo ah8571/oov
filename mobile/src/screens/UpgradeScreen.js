@@ -220,20 +220,15 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
             One-time credit purchase via App Store.
           </Text>
           <TouchableOpacity
-            style={[styles.upgradeButton, { backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderWidth: 1 }, (purchaseLoading || !offeringPackage) && styles.buttonDisabled]}
+            style={[styles.upgradeButton, { backgroundColor: colors.surfaceAlt, borderColor: colors.border, borderWidth: 1 }, purchaseLoading && styles.buttonDisabled]}
             onPress={handleIapPurchase}
             disabled={purchaseLoading || !offeringPackage}
             activeOpacity={0.85}
           >
             <Text style={[styles.upgradeButtonText, { color: colors.text }]}>
-              {purchaseLoading ? 'Processing...' : offeringPackage ? `Purchase 100 credits — ${offeringPackage?.product?.priceString || '$9.99'}` : 'Purchase 100 credits — unavailable in dev'}
+              {purchaseLoading ? 'Processing...' : 'Purchase 100 credits — $7.99'}
             </Text>
           </TouchableOpacity>
-          {!offeringPackage && (
-            <Text style={[styles.helperText, { color: colors.mutedText, marginTop: 8, textAlign: 'center', fontSize: 12 }]}>
-              IAP requires a preview or production build — your credits will be available on App Store / Play Store builds.
-            </Text>
-          )}
         </View>
       </View>
 
@@ -266,6 +261,21 @@ const UpgradeScreen = ({ navigation: _navigation }) => {
               <Text style={[styles.usageLabel, { color: colors.mutedText }]}>Available</Text>
             </View>
           </View>
+        </View>
+      </View>
+
+      {/* Legal links */}
+      <View style={[styles.section, { alignItems: 'center', paddingTop: 8 }]}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16 }}>
+          <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync('https://oov.digital/terms')}>
+            <Text style={[styles.legalLink, { color: colors.mutedText }]}>Terms of Use</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync('https://oov.digital/privacy')}>
+            <Text style={[styles.legalLink, { color: colors.mutedText }]}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync('https://oov.digital/eula')}>
+            <Text style={[styles.legalLink, { color: colors.mutedText }]}>EULA</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
@@ -447,6 +457,10 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.55
+  },
+  legalLink: {
+    fontSize: 13,
+    textDecorationLine: 'underline'
   },
   upgradeButtonText: {
     fontSize: 16,

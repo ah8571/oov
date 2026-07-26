@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import SiteFooter from '../components/SiteFooter';
+import SiteHeader from '../components/SiteHeader';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.oov.digital';
 
@@ -38,6 +40,8 @@ export default function AffiliatesPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <SiteHeader />
+
       {/* Hero */}
       <section className="text-center px-6 py-24 max-w-2xl mx-auto">
         <h1 className="text-5xl font-bold mb-4">oov Affiliate Program</h1>
@@ -154,6 +158,8 @@ export default function AffiliatesPage() {
           )}
         </div>
       </section>
+
+      <SiteFooter />
     </main>
   );
 }

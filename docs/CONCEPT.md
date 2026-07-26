@@ -66,8 +66,9 @@ saving directly to device as soon as possible
 
 also recording w/ transcripts, so if someone is trying to do a transcript, it would be nice if someone can record it as well as create a transcript out of it. what do you think that would involve
 
-Coconote features: ingestion of pdf's, video links, they have flash cards, note taking, quizzes built in as well 
-other apps: people can take photos in order to have access to the info and to break it down; 
+Coconote features: ingestion of pdf's, video links, they have flash cards, quizzes built in as well 
+
+people can take photos to OCR
 
 consider a 'silent text' option in the speaker section but designed with this kind of voice mode screen (ie a kind of transparent overlay screen), where you can type in to chat and the ai responds, so you can see (but we would need to go through the process of integrating the providers )
 

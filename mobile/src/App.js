@@ -7,6 +7,7 @@ import AppNavigator from './navigation/AppNavigator';
 import FloatingCallButton from './components/FloatingCallButton';
 import OnboardingScreen from './components/OnboardingScreen';
 import FeatureTooltip from './components/FeatureTooltip';
+import { enableNetworkLog } from './utils/networkLogger';
 import { getVoiceSession, uploadListenModeRecording } from './services/api.js';
 import { initializeAttribution } from './services/attributionService.js';
 import { syncRevenueCatAttribution } from './services/revenueCatService.js';
@@ -111,6 +112,11 @@ const VOICE_MODE_ENABLED = true;
 const AppContent = () => {
   const isLiveCallAvailable = VOICE_MODE_ENABLED && (Platform.OS === 'ios' || Platform.OS === 'android');
   const insets = useSafeAreaInsets();
+
+  // Network logger for iOS debugging — logs to scripts/ios-log-listener.mjs on your PC
+  useEffect(() => {
+    if (isDevelopmentVariant) enableNetworkLog();
+  }, []);
   const [isCalling, setIsCalling] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [callStatus, setCallStatus] = useState('idle');
