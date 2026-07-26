@@ -96,7 +96,7 @@ android {
         }
     }
 
-    namespace 'com.emmaline.app.dev'
+    namespace 'com.emmaline.app'
     defaultConfig {
         applicationId 'com.emmaline.app'
         minSdkVersion rootProject.ext.minSdkVersion
