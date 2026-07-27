@@ -1,6 +1,6 @@
 # Kokoro-FastAPI Queue handler for RunPod Serverless
-# Pinned to v0.0.5post2 — latest requires CUDA 12.6, RunPod GPUs have 12.4
-FROM ghcr.io/remsky/kokoro-fastapi-gpu:v0.0.5post2
+# v0.4.0 — last stable before CUDA 12.6 requirement (38K downloads on RunPod)
+FROM ghcr.io/remsky/kokoro-fastapi-gpu:v0.4.0
 
 # Install runpod to isolated dir (uv can't modify the venv at build time)
 RUN uv pip install --target=/tmp/runpod-pkgs runpod
