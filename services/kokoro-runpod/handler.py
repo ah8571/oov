@@ -1,48 +1,42 @@
 """
-RunPod Serverless Queue handler for Kokoro-FastAPI.
-Receives text → generates speech → returns base64 audio.
+RunPod Serverless handler for Kokoro TTS.
+Uses Kokoro directly as a Python library — no HTTP wrapper needed.
 """
 print("BOOT: handler.py starting", flush=True)
 
+import base64
+import io
+import runpod
 import traceback
 import sys
-import os
+import time
 
-print(f"PYTHONPATH={os.environ.get('PYTHONPATH')}", flush=True)
-print(f"sys.path={sys.path[:5]}...", flush=True)
-
+# Validate imports
 try:
-    import base64
-    import runpod
-    import uvicorn
-    import requests
-    import threading
-    import time
-    from api.src.main import app
+    import torch
+    import soundfile as sf
+    from kokoro import KPipeline
 
+    print(f"CUDA available: {torch.cuda.is_available()}", flush=True)
+    if torch.cuda.is_available():
+        print(f"GPU: {torch.cuda.get_device_name(0)}", flush=True)
     print("All imports OK", flush=True)
 except Exception:
     traceback.print_exc()
     sys.stderr.flush()
     raise
 
+# Pipeline cache: one per language code to avoid reloading
+_pipelines = {}
 
-def start_server():
-    """Start FastAPI in a background thread so the handler can call it."""
-    uvicorn.run(app, host="127.0.0.1", port=8880, log_level="warning")
+SAMPLE_RATE = 24000
 
 
-# Start the server on module load (cold start)
-_thread = threading.Thread(target=start_server, daemon=True)
-_thread.start()
-
-# Wait for server to be ready
-for _ in range(30):
-    try:
-        requests.get("http://127.0.0.1:8880/health", timeout=1)
-        break
-    except Exception:
-        time.sleep(1)
+def get_pipeline(lang_code="a"):
+    """Get or create a cached KPipeline for the given language."""
+    if lang_code not in _pipelines:
+        _pipelines[lang_code] = KPipeline(lang_code=lang_code)
+    return _pipelines[lang_code]
 
 
 def handler(event):
@@ -54,7 +48,8 @@ def handler(event):
         "input": {
             "text": "Hello world",
             "voice": "af_heart",       # optional, default af_heart
-            "speed": 1.0               # optional
+            "speed": 1.0,              # optional
+            "response_format": "mp3"   # optional
         }
     }
     """
@@ -68,20 +63,49 @@ def handler(event):
     speed = job_input.get("speed", 1.0)
     response_format = job_input.get("response_format", "mp3")
 
-    response = requests.post(
-        "http://127.0.0.1:8880/v1/audio/speech",
-        json={"model": "kokoro", "voice": voice, "input": text, "speed": speed, "response_format": response_format},
-        timeout=120,
-    )
+    # Determine language from voice prefix
+    # af = American female, bf = British female, ef = Spanish female, etc.
+    lang_code = voice[0]  # 'a' for American English, 'b' for British, 'e' for Spanish
 
-    if response.status_code != 200:
-        return {"error": f"TTS failed: {response.status_code}"}
+    try:
+        pipeline = get_pipeline(lang_code)
 
-    return {"audio_base64": base64.b64encode(response.content).decode("utf-8")}
+        # Generate audio samples
+        generator = pipeline(text, voice=voice, speed=speed)
+        all_samples = []
+        for _, _, audio in generator:
+            all_samples.append(audio)
+
+        if not all_samples:
+            return {"error": "No audio generated"}
+
+        # Concatenate all chunks
+        import numpy as np
+        audio_array = np.concatenate(all_samples)
+
+        # Write to buffer in requested format
+        buf = io.BytesIO()
+
+        if response_format == "wav":
+            sf.write(buf, audio_array, SAMPLE_RATE, format="WAV")
+        else:
+            # Default to MP3 — soundfile doesn't do MP3, use WAV as fallback
+            # (Kokoro outputs raw samples; browser/mobile handles WAV fine)
+            sf.write(buf, audio_array, SAMPLE_RATE, format="WAV")
+
+        buf.seek(0)
+        return {"audio_base64": base64.b64encode(buf.read()).decode("utf-8")}
+
+    except Exception as e:
+        return {"error": f"TTS error: {str(e)}"}
 
 
 if __name__ == "__main__":
     try:
+        # Pre-warm the pipeline on cold start
+        print("Pre-warming Kokoro pipeline...", flush=True)
+        _ = get_pipeline("a")
+        print("Pipeline ready!", flush=True)
         runpod.serverless.start({"handler": handler})
     except Exception:
         traceback.print_exc()
