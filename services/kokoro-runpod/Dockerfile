@@ -24,8 +24,8 @@ RUN pip install runpod
 # Download the Kokoro model at build time (no HuggingFace download on cold start)
 RUN python3 -c "from kokoro import KPipeline; KPipeline(lang_code='a'); print('Model cached OK')"
 
-# GPU health check — verify CUDA is reachable
-RUN python3 -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'; print(f'CUDA OK: {torch.cuda.get_device_name(0)}')"
+# Note: CUDA check skipped during build (no GPU at build time).
+# CUDA 12.4 will be available at runtime on RunPod GPU instances.
 
 COPY handler.py /handler.py
 
