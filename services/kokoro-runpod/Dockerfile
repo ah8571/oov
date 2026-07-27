@@ -1,14 +1,13 @@
 # Kokoro-FastAPI Queue handler for RunPod Serverless
-FROM ghcr.io/remsky/kokoro-fastapi-gpu:latest
+# Pinned to v0.0.5post2 — latest requires CUDA 12.6, RunPod GPUs have 12.4
+FROM ghcr.io/remsky/kokoro-fastapi-gpu:v0.0.5post2
 
 # Install runpod to isolated dir (uv can't modify the venv at build time)
 RUN uv pip install --target=/tmp/runpod-pkgs runpod
 
 # /app = Kokoro-FastAPI code; /tmp/runpod-pkgs = runpod SDK
-# /runpod-volume = shared network volume for model cache
+# Models download to container local disk (~330MB) — no network volume needed
 ENV PYTHONPATH=/app:/tmp/runpod-pkgs
-ENV HF_HOME=/runpod-volume
-ENV TRANSFORMERS_CACHE=/runpod-volume
 
 COPY handler.py /handler.py
 
